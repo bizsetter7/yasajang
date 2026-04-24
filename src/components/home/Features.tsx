@@ -1,41 +1,41 @@
-import { Shield, Zap, Target, BarChart, Users, Globe } from 'lucide-react';
+import { Shield, Zap, Target, BarChart, Users, MapPin } from 'lucide-react';
 
 export default function Features() {
   const features = [
     {
-      title: '엄격한 멤버십 관리',
-      description: '아무나 입점할 수 없습니다. 신원 확인 및 업소 실사를 통과한 검증된 비즈니스 파트너만을 선별합니다.',
-      icon: Shield,
+      title: '📍 밤길 지도 핀 노출',
+      description: '내 업소가 밤길 지도에 핀으로 표시됩니다. 근처에 있는 손님이 실시간으로 위치를 확인하고 찾아옵니다. 프리미엄일수록 더 크고 눈에 띄는 핀으로 노출됩니다.',
+      icon: MapPin,
       color: 'text-amber-500',
     },
     {
-      title: '압도적 마케팅 솔루션',
-      description: '타겟 고객에게 정확히 노출되는 정교한 광고 시스템과 점프 기능을 통해 비즈니스 효율을 극대화합니다.',
-      icon: Target,
+      title: '👔 웨이터 · 아가씨 구인',
+      description: '빈자리가 생겼을 때 빠르게 구인 공고를 올리세요. 검증된 지원자들이 직접 연락합니다. 구직자와 업소를 직접 연결해 중간 수수료 없이 채용합니다.',
+      icon: Users,
       color: 'text-blue-500',
     },
     {
-      title: '실시간 데이터 분석',
-      description: '방문자 트래픽, 클릭률, 고객 선호도 등을 실시간으로 분석하여 대시보드로 제공합니다.',
-      icon: BarChart,
+      title: '🛡️ 합법 영업 인증 배지',
+      description: '영업허가 확인을 통과한 업소에 합법 인증 배지가 부여됩니다. 손님은 인증된 업소를 신뢰하고, 사장님은 신뢰도 있는 이미지로 더 많은 고객을 유치합니다.',
+      icon: Shield,
       color: 'text-emerald-500',
     },
     {
-      title: '프리미엄 네트워크',
-      description: '업계 최고의 리더들이 모인 프라이빗 커뮤니티에서 실시간 정보를 공유하고 전략적 파트너십을 맺으세요.',
-      icon: Users,
+      title: '📊 실시간 운영 대시보드',
+      description: '내 업소 프로필 조회수, 전화 클릭수, 오픈톡 유입을 실시간으로 확인하세요. 어떤 요일, 어떤 시간대에 손님이 가장 많이 보는지 데이터로 파악합니다.',
+      icon: BarChart,
       color: 'text-purple-500',
     },
     {
-      title: '업계 최저 수수료',
-      description: '불필요한 중간 수수료를 제거하고 투명한 결제 시스템을 통해 사업주의 이익을 최우선으로 생각합니다.',
+      title: '⚡ 광고 점프 기능',
+      description: '목록 최상단으로 내 업소를 끌어올리는 점프 기능으로 경쟁 업소를 압도하세요. 스페셜 이상 구독 시 매일 무제한 점프가 가능합니다.',
       icon: Zap,
       color: 'text-yellow-500',
     },
     {
-      title: '글로벌 확장성',
-      description: '전국 주요 지역은 물론, 해외 시장 진출을 위한 다양한 마케팅 지원 시스템을 갖추고 있습니다.',
-      icon: Globe,
+      title: '🎯 타겟 광고 노출',
+      description: '특정 지역, 특정 카테고리를 검색하는 손님에게 정확히 노출됩니다. 불특정 다수 광고비를 절감하고, 실제 방문 의사가 있는 고객에게만 노출합니다.',
+      icon: Target,
       color: 'text-indigo-500',
     },
   ];
@@ -45,13 +45,14 @@ export default function Features() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-20">
           <h2 className="text-amber-500 font-bold tracking-[0.2em] uppercase text-sm mb-4">
-            Our Excellence
+            야사장이 하는 일
           </h2>
           <h3 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            평범함을 거부하는<br className="md:hidden" /> 초격차 비즈니스 지원
+            손님 유입부터 직원 채용까지<br className="md:hidden" /> 모든 것을 해결합니다
           </h3>
           <p className="text-zinc-500 text-lg max-w-2xl mx-auto">
-            야사장은 사업주의 성공을 위해 필요한 모든 기술적, 네트워킹적 요소를 집약했습니다.
+            코코알바·웨이터나라·희야 등 여러 플랫폼에 따로 광고할 필요 없습니다.<br className="hidden md:block" />
+            야사장 하나로 손님 모집, 직원 구인, 합법 인증까지 한 번에.
           </p>
         </div>
 
