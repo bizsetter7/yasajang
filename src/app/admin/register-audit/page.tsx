@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function RegisterAuditPage() {
-  const [shops, setShops] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [auditMessage, setAuditMessage] = useState('');
@@ -30,51 +30,47 @@ export default function RegisterAuditPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const fetchShops = async () => {
+  const fetchBusinesses = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('shops')
+      .from('businesses')
       .select('*')
-      .eq('status', 'PENDING_REVIEW')
+      .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
-    if (!error) setShops(data || []);
+    if (!error) setBusinesses(data || []);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchShops();
+    fetchBusinesses();
   }, []);
 
   const handleAudit = async (status: 'active' | 'rejected') => {
     if (!selectedShop) return;
 
-    const { error } = await supabase
-      .from('shops')
-      .update({ 
-        status,
-        audit_note: auditMessage,
-        audited_at: new Date().toISOString()
-      })
-      .eq('id', selectedShop.id);
-
-    if (!error) {
-      alert(`성공적으로 ${status === 'active' ? '승인' : '거절'} 처리되었습니다.`);
-      
-      // Notify via Telegram
-      await fetch('/api/notify', {
-        method: 'POST',
+    try {
+      const res = await fetch('/api/admin/business-audit', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `<b>[업소 심사 완료]</b>\n업소명: ${selectedShop.name}\n결과: ${status === 'active' ? '✅ 승인' : '❌ 거절'}\n사유: ${auditMessage || '없음'}\n\n파트너의 상태가 업데이트되었습니다.`
-        })
+          businessId: selectedShop.id,
+          status,
+          auditNote: auditMessage,
+        }),
       });
 
-      setSelectedShop(null);
-      setAuditMessage('');
-      fetchShops();
-      
-      // Here we would call the Telegram utility to notify
+      if (res.ok) {
+        alert(`성공적으로 ${status === 'active' ? '승인' : '거절'} 처리되었습니다.`);
+        setSelectedShop(null);
+        setAuditMessage('');
+        fetchBusinesses();
+      } else {
+        const data = await res.json();
+        alert(data.error || '처리 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      alert('서버와 통신 중 오류가 발생했습니다.');
     }
   };
 
@@ -104,7 +100,7 @@ export default function RegisterAuditPage() {
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : shops.length === 0 ? (
+      ) : businesses.length === 0 ? (
         <div className="text-center py-20 bg-zinc-900/30 border border-dashed border-zinc-800 rounded-[2rem]">
           <CheckCircle2 className="mx-auto mb-4 text-zinc-700" size={48} />
           <h3 className="text-xl font-bold text-zinc-500">대기 중인 심사가 없습니다</h3>
@@ -112,7 +108,7 @@ export default function RegisterAuditPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {shops.map((shop) => (
+          {businesses.map((shop) => (
             <div 
               key={shop.id}
               className="group p-6 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex items-center justify-between hover:bg-zinc-900 hover:border-zinc-700 transition-all cursor-pointer"
@@ -125,7 +121,7 @@ export default function RegisterAuditPage() {
                 <div>
                   <h3 className="text-lg font-bold text-white mb-1">{shop.name}</h3>
                   <div className="flex items-center space-x-4 text-xs text-zinc-500">
-                    <span className="flex items-center"><MapPin size={12} className="mr-1" /> {shop.region}</span>
+                    <span className="flex items-center"><MapPin size={12} className="mr-1" /> {shop.region_code}</span>
                     <span className="flex items-center"><Clock size={12} className="mr-1" /> {new Date(shop.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>

@@ -50,7 +50,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">내 업소 정보</h2>
           </div>
-          <BusinessCard business={business} />
+          <BusinessCard business={business} subscription={subscription} />
         </section>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
