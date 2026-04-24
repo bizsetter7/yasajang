@@ -67,7 +67,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/?auth=login', request.url));
     }
     // 어드민 권한 체크 (이메일 기반)
-    if (user.email !== process.env.ADMIN_EMAIL) {
+    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }
@@ -80,7 +80,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 로그인 상태에서 루트 접근 시 어드민이면 리다이렉트 (선택 사항)
-  if (path === '/' && user && user.email === process.env.ADMIN_EMAIL) {
+  if (path === '/' && user && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
     // 관리자는 첫 화면 접근 시 관리자 페이지로 리다이렉트 가능
     // return NextResponse.redirect(new URL('/admin', request.url));
   }
