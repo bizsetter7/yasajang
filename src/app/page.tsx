@@ -1,5 +1,6 @@
 import Hero from "@/components/home/Hero";
 import Features from "@/components/home/Features";
+import PlatformShowcase from "@/components/home/PlatformShowcase";
 import Pricing from "@/components/home/Pricing";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -9,6 +10,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <Hero />
       <Features />
+      <PlatformShowcase />
       <Pricing />
       
       {/* Final CTA Section */}
