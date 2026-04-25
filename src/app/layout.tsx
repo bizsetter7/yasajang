@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import AuthModal from "@/components/auth/AuthModal";
+import { Suspense } from "react";
+import AuthModalWrapper from "@/components/auth/AuthModalWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +51,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
-        {/* <AuthModal isOpen={false} onClose={() => {}} /> */}
+        <Suspense><AuthModalWrapper /></Suspense>
       </body>
     </html>
   );
