@@ -51,8 +51,8 @@ export default function Features() {
             손님 유입부터 직원 채용까지<br className="md:hidden" /> 모든 것을 해결합니다
           </h3>
           <p className="text-zinc-500 text-lg max-w-2xl mx-auto">
-            코코알바·웨이터나라·희야 등 여러 플랫폼에 따로 광고할 필요 없습니다.<br className="hidden md:block" />
-            야사장 하나로 손님 모집, 직원 구인, 합법 인증까지 한 번에.
+            밤길(손님) · 코코알바(아가씨 구인) · 웨이터존(웨이터 구인) · 선수존(선수 구인)<br className="hidden md:block" />
+            야사장 하나로 4개 플랫폼에 동시 노출, 따로 광고할 필요 없습니다.
           </p>
         </div>
 
