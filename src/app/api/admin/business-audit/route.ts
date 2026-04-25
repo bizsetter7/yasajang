@@ -29,7 +29,14 @@ export async function PATCH(request: Request) {
   // status: 'active' | 'rejected'
 
   try {
-    const updateData: any = {
+    const updateData: {
+      status: string;
+      audit_note: string;
+      audited_at: string;
+      updated_at: string;
+      is_verified?: boolean;
+      is_active?: boolean;
+    } = {
       status,
       audit_note: auditNote,
       audited_at: new Date().toISOString(),
@@ -60,8 +67,9 @@ export async function PATCH(request: Request) {
     await sendTelegramAlert(msg);
 
     return NextResponse.json({ ok: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Business audit API error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

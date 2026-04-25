@@ -16,13 +16,29 @@ import {
   Clock,
   Building,
   Hash,
-  Phone
+  Phone,
+  ShieldCheck
 } from 'lucide-react';
+import { useCallback } from 'react';
+
+interface Business {
+  id: string;
+  name: string;
+  category: string;
+  region_code: string;
+  created_at: string;
+  representative?: string;
+  business_number?: string;
+  phone: string;
+  license_path: string;
+  status: string;
+  address_detail?: string;
+}
 
 export default function RegisterAuditPage() {
-  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedShop, setSelectedShop] = useState<any>(null);
+  const [selectedShop, setSelectedShop] = useState<Business | null>(null);
   const [auditMessage, setAuditMessage] = useState('');
 
   const supabase = createBrowserClient(
@@ -30,21 +46,23 @@ export default function RegisterAuditPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const fetchBusinesses = async () => {
-    setLoading(true);
+  const fetchBusinesses = useCallback(async () => {
     const { data, error } = await supabase
       .from('businesses')
       .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
-    if (!error) setBusinesses(data || []);
+    if (!error) setBusinesses((data as Business[]) || []);
     setLoading(false);
-  };
+  }, [supabase]);
 
   useEffect(() => {
-    fetchBusinesses();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchBusinesses();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchBusinesses]);
 
   const handleAudit = async (status: 'active' | 'rejected') => {
     if (!selectedShop) return;
@@ -69,7 +87,7 @@ export default function RegisterAuditPage() {
         const data = await res.json();
         alert(data.error || '처리 중 오류가 발생했습니다.');
       }
-    } catch (error) {
+    } catch {
       alert('서버와 통신 중 오류가 발생했습니다.');
     }
   };
@@ -263,26 +281,5 @@ export default function RegisterAuditPage() {
         </div>
       )}
     </div>
-  );
-}
-
-// Dummy Icon to fill ShieldCheck if not imported
-function ShieldCheck(props: any) {
-  return (
-    <svg 
-      {...props}
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      <path d="m9 12 2 2 4-4"/>
-    </svg>
   );
 }

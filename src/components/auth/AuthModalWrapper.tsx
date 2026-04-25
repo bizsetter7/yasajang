@@ -11,7 +11,8 @@ export default function AuthModalWrapper() {
 
   useEffect(() => {
     if (searchParams.get('auth') === 'login') {
-      setIsOpen(true);
+      const timer = setTimeout(() => setIsOpen(true), 0);
+      return () => clearTimeout(timer);
     }
   }, [searchParams]);
 

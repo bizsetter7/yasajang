@@ -8,11 +8,13 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   businessId: string;
+  plan: string;
 }
 
-export default function PaymentModal({ isOpen, onClose, businessId }: PaymentModalProps) {
+export default function PaymentModal({ isOpen, onClose, businessId, plan }: PaymentModalProps) {
   const [payerName, setPayerName] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
+  const [platformChoice, setPlatformChoice] = useState<'cocoalba' | 'seonsuzone'>('cocoalba');
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -32,6 +34,7 @@ export default function PaymentModal({ isOpen, onClose, businessId }: PaymentMod
           businessId,
           payerName,
           payDate,
+          platform_choice: plan === 'basic' ? null : platformChoice,
           note,
         }),
       });
@@ -44,7 +47,7 @@ export default function PaymentModal({ isOpen, onClose, businessId }: PaymentMod
         const data = await res.json();
         alert(data.error || '신청 중 오류가 발생했습니다.');
       }
-    } catch (error) {
+    } catch {
       alert('서버와 통신 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
@@ -73,19 +76,19 @@ export default function PaymentModal({ isOpen, onClose, businessId }: PaymentMod
             <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">계좌 정보</p>
             <p className="text-white font-bold tracking-tight">토스뱅크 1002-4683-1712</p>
             <p className="text-amber-500 text-sm font-medium">예금주: 고남우 (초코아이디어)</p>
-            <div className="grid grid-cols-3 gap-2 mt-4">
-              <div className="text-[10px] text-center p-2 rounded-lg bg-zinc-950/50">
-                <p className="text-zinc-500">베이직</p>
-                <p className="text-white font-bold">9.9만</p>
-              </div>
-              <div className="text-[10px] text-center p-2 rounded-lg bg-zinc-950/50 border border-amber-500/30">
-                <p className="text-zinc-500">스탠다드</p>
-                <p className="text-amber-500 font-bold">19.9만</p>
-              </div>
-              <div className="text-[10px] text-center p-2 rounded-lg bg-zinc-950/50">
-                <p className="text-zinc-500">프리미엄</p>
-                <p className="text-white font-bold">49.9만</p>
-              </div>
+            <div className="grid grid-cols-5 gap-1.5 mt-4">
+              {[
+                { label: '베이직', price: '2.2만', highlight: false },
+                { label: '스탠다드', price: '6.6만', highlight: false },
+                { label: '스페셜', price: '8.8만', highlight: true },
+                { label: '디럭스', price: '19.9만', highlight: false },
+                { label: '프리미엄', price: '39.9만', highlight: false },
+              ].map(({ label, price, highlight }) => (
+                <div key={label} className={`text-[9px] text-center p-2 rounded-lg bg-zinc-950/50 ${highlight ? 'border border-amber-500/30' : ''}`}>
+                  <p className="text-zinc-500">{label}</p>
+                  <p className={`font-bold ${highlight ? 'text-amber-500' : 'text-white'}`}>{price}</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -112,6 +115,37 @@ export default function PaymentModal({ isOpen, onClose, businessId }: PaymentMod
                 className="w-full bg-zinc-800 border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all [color-scheme:dark]"
               />
             </div>
+
+            {plan !== 'basic' && (
+              <div className="space-y-3 p-4 bg-zinc-950/50 rounded-2xl border border-zinc-800">
+                <label className="text-xs font-bold text-zinc-500 block">구인 플랫폼 선택 (코코알바 또는 선수존)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPlatformChoice('cocoalba')}
+                    className={`px-4 py-3 rounded-xl border font-bold text-xs transition-all ${
+                      platformChoice === 'cocoalba'
+                        ? 'bg-rose-500/10 border-rose-500 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.1)]'
+                        : 'bg-zinc-800 border-zinc-700 text-zinc-500'
+                    }`}
+                  >
+                    코코알바 (여성)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPlatformChoice('seonsuzone')}
+                    className={`px-4 py-3 rounded-xl border font-bold text-xs transition-all ${
+                      platformChoice === 'seonsuzone'
+                        ? 'bg-blue-500/10 border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                        : 'bg-zinc-800 border-zinc-700 text-zinc-500'
+                    }`}
+                  >
+                    선수존 (남성)
+                  </button>
+                </div>
+                <p className="text-[10px] text-zinc-600">선택하신 플랫폼에 야사장 연동 광고가 노출됩니다.</p>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-500 ml-1">비고 (선택)</label>

@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, User, LogOut, ShieldCheck } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { type User as SupabaseUser } from '@supabase/supabase-js';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -15,7 +16,7 @@ function cn(...inputs: ClassValue[]) {
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();

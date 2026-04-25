@@ -22,9 +22,22 @@ export default function SubscriptionCard({ subscription, businessId }: Subscript
     const labels: Record<string, string> = {
       basic: '베이직',
       standard: '스탠다드',
+      special: '스페셜',
+      deluxe: '디럭스',
       premium: '프리미엄',
     };
     return labels[plan] || plan;
+  };
+
+  const getPlanPrice = (plan: string) => {
+    const prices: Record<string, string> = {
+      basic: '₩22,000',
+      standard: '₩66,000',
+      special: '₩88,000',
+      deluxe: '₩199,000',
+      premium: '₩399,000',
+    };
+    return prices[plan] || '';
   };
 
   const formatDate = (dateStr: string | null | undefined) => {
@@ -45,8 +58,10 @@ export default function SubscriptionCard({ subscription, businessId }: Subscript
               <CreditCard size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">
-                {subscription ? getPlanLabel(subscription.plan) : '무료 체험'} 구독 현황
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                {subscription ? getPlanLabel(subscription.plan) : '무료 체험'} 
+                {subscription && <span className="text-sm font-medium text-zinc-500">{getPlanPrice(subscription.plan)}/월</span>}
+                구독 현황
               </h2>
               <div className="flex items-center gap-2 mt-0.5">
                 {subscription?.status === 'active' ? (
@@ -121,6 +136,7 @@ export default function SubscriptionCard({ subscription, businessId }: Subscript
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         businessId={businessId}
+        plan={subscription?.plan || 'basic'}
       />
     </div>
   );

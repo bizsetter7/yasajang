@@ -17,6 +17,8 @@ import {
   AlertCircle,
   Shield
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 
 const steps = [
   { id: 1, title: '기본 정보', description: '업소 성격 및 연락처' },
@@ -35,6 +37,9 @@ export default function RegisterForm() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  const searchParams = useSearchParams();
+  const selectedPlan = searchParams.get('plan') || 'basic';
+
   const [formData, setFormData] = useState({
     name: '',
     category: '룸싸롱',
@@ -44,6 +49,7 @@ export default function RegisterForm() {
     phone: '',
     address: '',
     description: '',
+    platform_choice: 'cocoalba' as 'cocoalba' | 'seonsuzone',
   });
 
   const [files, setFiles] = useState<{
@@ -96,34 +102,62 @@ export default function RegisterForm() {
         licenseUrl = uploadData.path;
       }
 
-      // 2. Insert into shops table
-      const { data: shopData, error: shopError } = await supabase
-        .from('shops')
+      // 2. Insert into businesses table
+      const { data: businessData, error: businessError } = await supabase
+        .from('businesses')
         .insert({
-          ...formData,
-          user_id: user.id,
+          name: formData.name,
+          category: formData.category,
+          region: formData.region,
+          representative: formData.representative,
+          business_number: formData.business_number,
+          phone: formData.phone,
+          address: formData.address,
+          description: formData.description,
+          owner_id: user.id,
           license_path: licenseUrl,
-          status: 'PENDING_REVIEW', // Using the M-025 normalization
+          status: 'PENDING_REVIEW',
         })
         .select()
         .single();
 
-      if (shopError) throw shopError;
+      if (businessError) throw businessError;
 
-      // 3. Notify Admin via Telegram
+      // 3. Create initial subscription (trial)
+      const { error: subError } = await supabase
+        .from('subscriptions')
+        .insert({
+          business_id: businessData.id,
+          plan: selectedPlan,
+          status: 'trial',
+          platform_choice: selectedPlan === 'basic' ? null : formData.platform_choice,
+          trial_starts_at: new Date().toISOString(),
+          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일 무료 체험
+        });
+
+      if (subError) throw subError;
+
+      // 4. Notify Admin via Telegram
       await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `<b>[신규 업소 입점 신청]</b>\n업소명: ${formData.name}\n지역: ${formData.region}\n카테고리: ${formData.category}\n대표자: ${formData.representative || '미입력'}\n연락처: ${formData.phone}\n\n심사 대기 상태로 등록되었습니다.`
+          message: `<b>[신규 업소 입점 신청]</b>\n` +
+                   `🏪 업소명: ${formData.name}\n` +
+                   `📦 신청플랜: ${selectedPlan}\n` +
+                   `📍 지역: ${formData.region}\n` +
+                   `📞 연락처: ${formData.phone}\n` +
+                   `${selectedPlan !== 'basic' ? `🔗 선택플랫폼: ${formData.platform_choice}\n` : ''}` +
+                   `\n심사 대기 상태로 등록되었습니다.`
         })
       });
 
       setSuccess(true);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('Registration Error:', err);
-      setError(err.message || '등록 중 오류가 발생했습니다.');
+      const message = err instanceof Error ? err.message : '등록 중 오류가 발생했습니다.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -253,6 +287,42 @@ export default function RegisterForm() {
                 />
               </div>
             </div>
+
+            {/* 플랫폼 선택 (스탠다드 이상일 경우) */}
+            {selectedPlan !== 'basic' && (
+              <div className="space-y-4 p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
+                <label className="text-sm font-bold text-amber-500 flex items-center">
+                  <Shield size={16} className="mr-2" /> 연동 플랫폼 선택 (코코알바 또는 선수존)
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'cocoalba' }))}
+                    className={`p-4 rounded-xl border-2 font-bold transition-all text-sm ${
+                      formData.platform_choice === 'cocoalba'
+                        ? 'bg-rose-500/10 border-rose-500 text-rose-500'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-500'
+                    }`}
+                  >
+                    코코알바 (여성 구인)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'seonsuzone' }))}
+                    className={`p-4 rounded-xl border-2 font-bold transition-all text-sm ${
+                      formData.platform_choice === 'seonsuzone'
+                        ? 'bg-blue-500/10 border-blue-500 text-blue-500'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-500'
+                    }`}
+                  >
+                    선수존 (남성 구인)
+                  </button>
+                </div>
+                <p className="text-xs text-zinc-600 font-medium italic">
+                  * 스탠다드 이상 플랜은 밤길 외에 구인 플랫폼 1곳을 추가로 선택하여 동시 노출할 수 있습니다.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-bold text-zinc-400 flex items-center">
                 <MapPin size={14} className="mr-2" /> 업소 상세 주소
@@ -302,7 +372,13 @@ export default function RegisterForm() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {files.shop_images.map((img, idx) => (
                   <div key={idx} className="aspect-square bg-zinc-900 rounded-xl relative overflow-hidden group">
-                    <img src={URL.createObjectURL(img)} className="w-full h-full object-cover" alt="Shop" />
+                    <Image 
+                      src={URL.createObjectURL(img)} 
+                      className="w-full h-full object-cover" 
+                      alt="Shop" 
+                      fill
+                      unoptimized
+                    />
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                       <AlertCircle size={20} className="text-white" />
                     </div>

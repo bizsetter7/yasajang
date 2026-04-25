@@ -54,7 +54,7 @@ export async function PATCH(request: Request) {
       current?.category !== category ||
       current?.region_code !== regionCode;
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, string | number | boolean | null | object> = {
       // 기본 정보
       name, phone,
       address, address_detail: addressDetail,
@@ -90,8 +90,9 @@ export async function PATCH(request: Request) {
     if (updateErr) throw updateErr;
 
     return NextResponse.json({ ok: true, reaudit: basicChanged });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Business update error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

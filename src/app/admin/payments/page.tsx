@@ -14,9 +14,22 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
+
+interface Subscription {
+  id: string;
+  plan: string;
+  status: string;
+  payment_reference: string;
+  updated_at: string;
+  businesses: {
+    name: string;
+    owner_id: string;
+  } | null;
+}
 
 export default function AdminPaymentsPage() {
-  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   
@@ -24,10 +37,8 @@ export default function AdminPaymentsPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-  const router = useRouter();
 
-  const fetchPendingPayments = async () => {
-    setLoading(true);
+  const fetchPendingPayments = useCallback(async () => {
     // payment_reference가 있고 아직 trial인 항목 (입금 확인 대기)
     const { data, error } = await supabase
       .from('subscriptions')
@@ -37,14 +48,17 @@ export default function AdminPaymentsPage() {
       .order('updated_at', { ascending: false });
 
     if (!error) {
-      setSubscriptions(data || []);
+      setSubscriptions((data as Subscription[]) || []);
     }
     setLoading(false);
-  };
+  }, [supabase]);
 
   useEffect(() => {
-    fetchPendingPayments();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchPendingPayments();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchPendingPayments]);
 
   const handleAction = async (subscriptionId: string, action: 'confirm' | 'reject') => {
     if (!confirm(`${action === 'confirm' ? '승인' : '반려'} 처리하시겠습니까?`)) return;
@@ -64,7 +78,7 @@ export default function AdminPaymentsPage() {
         const data = await res.json();
         alert(data.error || '처리 중 오류가 발생했습니다.');
       }
-    } catch (error) {
+    } catch {
       alert('서버와 통신 중 오류가 발생했습니다.');
     } finally {
       setProcessingId(null);

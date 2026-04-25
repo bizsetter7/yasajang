@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, MapPin, Phone, CheckCircle2, Clock, Edit2, ShieldCheck, Zap } from 'lucide-react';
+import { Building2, Phone, CheckCircle2, Clock, Edit2, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 interface BusinessCardProps {

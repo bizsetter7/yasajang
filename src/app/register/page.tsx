@@ -1,4 +1,5 @@
 import RegisterForm from "@/components/register/RegisterForm";
+import { Suspense } from "react";
 
 export default function RegisterPage() {
   return (
@@ -18,7 +19,9 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <RegisterForm />
+        <Suspense fallback={<div className="text-center py-20 text-zinc-500">로딩 중...</div>}>
+          <RegisterForm />
+        </Suspense>
         
         {/* Helper Footer */}
         <div className="mt-16 text-center">

@@ -20,8 +20,9 @@ export async function POST(request: Request) {
     const success = await sendTelegramAlert(msg);
     
     return NextResponse.json({ ok: success });
-  } catch (err: any) {
+  } catch (err) {
     console.error('API Error (new-business):', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

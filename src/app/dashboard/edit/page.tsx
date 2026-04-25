@@ -97,19 +97,19 @@ export default function BusinessEditPage() {
         floorArea: data.floor_area || '', coverImageUrl: data.cover_image_url || '',
       });
       if (data.menu_items?.length) {
-        setMenuItems(data.menu_items.map((m: any) => ({
+        setMenuItems((data.menu_items as MenuItem[]).map((m: MenuItem) => ({
           name: m.name, price: m.price?.toString() || '', note: m.note || '',
         })));
       }
       if (data.extra_fees?.length) {
-        setExtraFees(data.extra_fees.map((f: any) => ({
+        setExtraFees((data.extra_fees as ExtraFee[]).map((f: ExtraFee) => ({
           label: f.label, value: f.value || '', amount: f.amount?.toString() || '',
         })));
       }
       setLoading(false);
     };
     fetch();
-  }, []);
+  }, [router, supabase]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

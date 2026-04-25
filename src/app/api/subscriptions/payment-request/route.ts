@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { businessId, payerName, payDate, note } = await request.json();
+  const { businessId, payerName, payDate, platform_choice, note } = await request.json();
   if (!payerName || !payDate) {
     return NextResponse.json({ error: '입금자명과 날짜는 필수입니다' }, { status: 400 });
   }
@@ -26,12 +26,12 @@ export async function POST(request: Request) {
   const reference = `${payerName}_${payDate}${note ? `_${note}` : ''}`;
 
   // subscriptions 업데이트
-  // RLS를 고려하여 update
   const { error } = await supabase
     .from('subscriptions')
     .update({
       payment_reference: reference,
       payment_method: 'bank_transfer',
+      platform_choice: platform_choice, // 플랫폼 선택 저장
       updated_at: new Date().toISOString(),
     })
     .eq('business_id', businessId);
