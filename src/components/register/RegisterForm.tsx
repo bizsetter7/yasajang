@@ -54,13 +54,16 @@ export default function RegisterForm() {
 
   const [files, setFiles] = useState<{
     license: File | null;
+    permit: File | null;
     shop_images: File[];
   }>({
     license: null,
+    permit: null,
     shop_images: [],
   });
 
   const licenseInputRef = useRef<HTMLInputElement>(null);
+  const permitInputRef = useRef<HTMLInputElement>(null);
   const imagesInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -102,6 +105,18 @@ export default function RegisterForm() {
         licenseUrl = uploadData.path;
       }
 
+      let permitUrl = '';
+      if (files.permit) {
+        const fileExt = files.permit.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}_permit.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('businesses-docs')
+          .upload(fileName, files.permit);
+        
+        if (uploadError) throw uploadError;
+        permitUrl = uploadData.path;
+      }
+
       // 2. Insert into businesses table
       const { data: businessData, error: businessError } = await supabase
         .from('businesses')
@@ -116,6 +131,7 @@ export default function RegisterForm() {
           description: formData.description,
           owner_id: user.id,
           license_path: licenseUrl,
+          permit_path: permitUrl,
           status: 'PENDING_REVIEW',
         })
         .select()
@@ -181,6 +197,19 @@ export default function RegisterForm() {
         >
           대시보드로 이동
         </button>
+        <div className="mt-4 p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
+          <p className="text-zinc-400 text-sm mb-3">
+            🎉 입점 신청 완료! 이제 코코알바에 구인 광고도 등록하세요.
+          </p>
+          <a
+            href="https://coco-universe.vercel.app/my-shop"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full px-6 py-3 bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold rounded-xl hover:bg-rose-500/30 transition-all text-sm text-center"
+          >
+            코코알바 구인 광고 등록하기 →
+          </a>
+        </div>
       </div>
     );
   }
@@ -362,6 +391,32 @@ export default function RegisterForm() {
                 </div>
               ) : (
                 <div className="text-zinc-600 font-medium text-sm">클릭하여 스캔본 또는 사진 업로드</div>
+              )}
+            </div>
+
+            {/* 영업허가증 */}
+            <div className="p-8 border-2 border-dashed border-zinc-800 rounded-[2rem] bg-zinc-950/50 text-center group hover:border-amber-500/50 transition-all cursor-pointer"
+                 onClick={() => permitInputRef.current?.click()}>
+              <input
+                type="file"
+                hidden
+                ref={permitInputRef}
+                onChange={(e) => {
+                  if (e.target.files) setFiles(prev => ({ ...prev, permit: e.target.files![0] }));
+                }}
+                accept="image/*,.pdf"
+              />
+              <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-500 group-hover:text-black transition-all">
+                <Shield size={28} />
+              </div>
+              <h4 className="text-xl font-bold text-white mb-2">영업허가증 업로드</h4>
+              <p className="text-zinc-500 text-sm mb-4">파일 형식: JPG, PNG, PDF (최대 10MB)</p>
+              {files.permit ? (
+                <div className="text-amber-500 font-bold text-sm bg-amber-500/10 py-2 px-4 rounded-lg inline-block">
+                  {files.permit.name} 선택됨
+                </div>
+              ) : (
+                <div className="text-zinc-600 font-medium text-sm">클릭하여 업로드</div>
               )}
             </div>
 
