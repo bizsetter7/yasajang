@@ -1,6 +1,28 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+
+declare global { interface Window { daum: any; } }
+
+const REGIONS: Record<string, string[]> = {
+  '서울': ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
+  '경기': ['수원시','성남시','고양시','용인시','부천시','안산시','안양시','남양주시','화성시','평택시','의정부시','시흥시','파주시','광명시','김포시','군포시','광주시','이천시','양주시','오산시','구리시','안성시','포천시','의왕시','하남시','여주시','동두천시','과천시','가평군','양평군','연천군'],
+  '인천': ['중구','동구','미추홀구','연수구','남동구','부평구','계양구','서구','강화군','옹진군'],
+  '부산': ['중구','서구','동구','영도구','부산진구','동래구','남구','북구','해운대구','사하구','금정구','강서구','연제구','수영구','사상구','기장군'],
+  '대구': ['중구','동구','서구','남구','북구','수성구','달서구','달성군'],
+  '대전': ['동구','중구','서구','유성구','대덕구'],
+  '광주': ['동구','서구','남구','북구','광산구'],
+  '울산': ['중구','남구','동구','북구','울주군'],
+  '세종': ['세종시'],
+  '강원': ['춘천시','원주시','강릉시','동해시','태백시','속초시','삼척시','홍천군','횡성군','영월군','평창군','정선군','철원군','화천군','양구군','인제군','고성군','양양군'],
+  '충북': ['청주시','충주시','제천시','보은군','옥천군','영동군','증평군','진천군','괴산군','음성군','단양군'],
+  '충남': ['천안시','공주시','보령시','아산시','서산시','논산시','계룡시','당진시','금산군','부여군','서천군','청양군','홍성군','예산군','태안군'],
+  '전북': ['전주시','군산시','익산시','정읍시','남원시','김제시','완주군','진안군','무주군','장수군','임실군','순창군','고창군','부안군'],
+  '전남': ['목포시','여수시','순천시','나주시','광양시','담양군','곡성군','구례군','고흥군','보성군','화순군','장흥군','강진군','해남군','영암군','무안군','함평군','영광군','장성군','완도군','진도군','신안군'],
+  '경북': ['포항시','경주시','김천시','안동시','구미시','영주시','영천시','상주시','문경시','경산시','군위군','의성군','청송군','영양군','영덕군','청도군','고령군','성주군','칠곡군','예천군','봉화군','울진군','울릉군'],
+  '경남': ['창원시','진주시','통영시','사천시','김해시','밀양시','거제시','양산시','의령군','함안군','창녕군','고성군','남해군','하동군','산청군','함양군','거창군','합천군'],
+  '제주': ['제주시','서귀포시'],
+};
 import { createBrowserClient } from '@supabase/ssr';
 import { 
   Building2, 
@@ -40,17 +62,60 @@ export default function RegisterForm() {
   const searchParams = useSearchParams();
   const selectedPlan = searchParams.get('plan') || 'basic';
 
+  const [regionSido, setRegionSido] = useState('서울');
+  const [regionSigungu, setRegionSigungu] = useState('강남구');
+  const [addressMain, setAddressMain] = useState('');
+  const [addressDetail, setAddressDetail] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     category: '룸싸롱',
-    region: '강남',
+    region: '서울 강남구',
     representative: '',
     business_number: '',
     phone: '',
     address: '',
     description: '',
     platform_choice: 'cocoalba' as 'cocoalba' | 'seonsuzone',
+    menu_main: '',
+    menu_liquor: '',
+    menu_snack: '',
   });
+
+  // 지역 연동: sido/sigungu 변경 시 formData.region 자동 업데이트
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, region: `${regionSido} ${regionSigungu}` }));
+  }, [regionSido, regionSigungu]);
+
+  // sigungu 목록이 바뀌면 첫 번째 항목으로 초기화
+  useEffect(() => {
+    const list = REGIONS[regionSido] ?? [];
+    setRegionSigungu(list[0] ?? '');
+  }, [regionSido]);
+
+  // 주소 연동: 도로명주소+상세주소 → formData.address
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, address: [addressMain, addressDetail].filter(Boolean).join(' ') }));
+  }, [addressMain, addressDetail]);
+
+  const openAddressSearch = () => {
+    if (typeof window === 'undefined') return;
+    const load = () => {
+      new window.daum.Postcode({
+        oncomplete: (data: any) => {
+          setAddressMain(data.roadAddress || data.address);
+        },
+      }).open();
+    };
+    if (window.daum?.Postcode) {
+      load();
+    } else {
+      const s = document.createElement('script');
+      s.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+      s.onload = load;
+      document.head.appendChild(s);
+    }
+  };
 
   const [files, setFiles] = useState<{
     license: File | null;
@@ -129,6 +194,9 @@ export default function RegisterForm() {
           phone: formData.phone,
           address: formData.address,
           description: formData.description,
+          menu_main: formData.menu_main,
+          menu_liquor: formData.menu_liquor,
+          menu_snack: formData.menu_snack,
           owner_id: user.id,
           license_path: licenseUrl,
           permit_path: permitUrl,
@@ -293,14 +361,26 @@ export default function RegisterForm() {
                 <label className="text-sm font-bold text-zinc-400 flex items-center">
                   <MapPin size={14} className="mr-2" /> 주요 지역
                 </label>
-                <input
-                  type="text"
-                  name="region"
-                  value={formData.region}
-                  onChange={handleInputChange}
-                  placeholder="예: 강남구, 서초구"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={regionSido}
+                    onChange={e => setRegionSido(e.target.value)}
+                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all appearance-none"
+                  >
+                    {Object.keys(REGIONS).map(sido => (
+                      <option key={sido}>{sido}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={regionSigungu}
+                    onChange={e => setRegionSigungu(e.target.value)}
+                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all appearance-none"
+                  >
+                    {(REGIONS[regionSido] ?? []).map(sg => (
+                      <option key={sg}>{sg}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-zinc-400 flex items-center">
@@ -356,14 +436,32 @@ export default function RegisterForm() {
               <label className="text-sm font-bold text-zinc-400 flex items-center">
                 <MapPin size={14} className="mr-2" /> 업소 상세 주소
               </label>
-              <textarea
-                name="address"
-                rows={2}
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder="지번/도로명 주소와 상세 위치를 입력하세요"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all resize-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={addressMain}
+                  placeholder="주소 검색 버튼을 눌러주세요"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white placeholder-zinc-600 focus:border-amber-500 focus:outline-none transition-all cursor-pointer"
+                  onClick={openAddressSearch}
+                />
+                <button
+                  type="button"
+                  onClick={openAddressSearch}
+                  className="px-4 py-3 bg-amber-500 text-black font-bold rounded-xl hover:bg-amber-400 transition-all text-sm whitespace-nowrap"
+                >
+                  주소 검색
+                </button>
+              </div>
+              {addressMain && (
+                <input
+                  type="text"
+                  value={addressDetail}
+                  onChange={e => setAddressDetail(e.target.value)}
+                  placeholder="상세 주소 (건물명, 호수 등)"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all"
+                />
+              )}
             </div>
           </div>
         )}
@@ -449,13 +547,60 @@ export default function RegisterForm() {
                     <input 
                       type="file" 
                       hidden 
-                      multiple
-                      ref={imagesInputRef} 
+                      ref={imagesInputRef}
                       onChange={(e) => handleFileChange(e, 'images')}
                       accept="image/*"
+                      multiple
                     />
                   </button>
                 )}
+              </div>
+            </div>
+
+            {/* 메뉴 및 가격 정보 (2단계) */}
+            <div className="space-y-6 pt-8 border-t border-zinc-800">
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center">
+                  <span className="text-amber-500 mr-2">📋</span> 메뉴 및 가격 정보
+                </h3>
+                <p className="text-sm text-zinc-400 mt-1">메뉴 정보를 입력하면 손님 신뢰도가 높아집니다</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-400">대표 메뉴</label>
+                <input
+                  type="text"
+                  name="menu_main"
+                  value={formData.menu_main}
+                  onChange={handleInputChange}
+                  placeholder="예: 양주 1병 80,000원"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-400">주류 메뉴 (줄바꿈으로 구분)</label>
+                  <textarea
+                    name="menu_liquor"
+                    value={formData.menu_liquor}
+                    onChange={handleInputChange}
+                    placeholder="예: 맥주 5,000원&#10;소주 4,000원"
+                    rows={4}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all resize-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-400">안주 메뉴 (줄바꿈으로 구분)</label>
+                  <textarea
+                    name="menu_snack"
+                    value={formData.menu_snack}
+                    onChange={handleInputChange}
+                    placeholder="예: 안주모듬 20,000원&#10;과일 30,000원"
+                    rows={4}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all resize-none"
+                  />
+                </div>
               </div>
             </div>
           </div>

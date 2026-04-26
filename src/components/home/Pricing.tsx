@@ -305,7 +305,7 @@ export default function Pricing() {
 
         {/* 하단 안내 */}
         <div className="mt-10 text-center space-y-2">
-          <p className="text-zinc-600 text-sm">무통장 입금 · 카드 자동결제 · 언제든 해지 가능</p>
+          <p className="text-zinc-600 text-sm">무통장 입금 · 언제든 해지 가능</p>
           <p className="text-zinc-700 text-xs">
             구독 관련 문의: 카카오톡 채널{' '}
             <span className="text-amber-500/70">@야사장</span>
