@@ -225,10 +225,11 @@ export default function RegisterForm() {
         permitUrl = uploadData.path;
       }
 
-      // 2. Insert into businesses table
-      const { data: businessData, error: businessError } = await supabase
-        .from('businesses')
-        .insert({
+      // 2. Insert via API route (service_role bypasses RLS)
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: formData.name,
           category: formData.category,
           region: formData.region,
@@ -240,29 +241,15 @@ export default function RegisterForm() {
           menu_main: formData.menu_main,
           menu_liquor: formData.menu_liquor,
           menu_snack: formData.menu_snack,
+          platform_choice: formData.platform_choice,
           owner_id: user.id,
           license_path: licenseUrl,
           permit_path: permitUrl,
-          status: 'PENDING_REVIEW',
-        })
-        .select()
-        .single();
-
-      if (businessError) throw businessError;
-
-      // 3. Create initial subscription (trial)
-      const { error: subError } = await supabase
-        .from('subscriptions')
-        .insert({
-          business_id: businessData.id,
           plan: selectedPlan,
-          status: 'trial',
-          platform_choice: selectedPlan === 'basic' ? null : formData.platform_choice,
-          trial_starts_at: new Date().toISOString(),
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일 무료 체험
-        });
-
-      if (subError) throw subError;
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || '등록 중 오류가 발생했습니다.');
 
       // 4. Notify Admin via Telegram
       await fetch('/api/notify', {
@@ -519,53 +506,56 @@ export default function RegisterForm() {
         {/* Step 2: Document Upload */}
         {currentStep === 2 && (
           <div className="space-y-8 animate-fade-in-up">
-            <div className="p-8 border-2 border-dashed border-zinc-800 rounded-[2rem] bg-zinc-950/50 text-center group hover:border-amber-500/50 transition-all cursor-pointer"
-                 onClick={() => licenseInputRef.current?.click()}>
-              <input 
-                type="file" 
-                hidden 
-                ref={licenseInputRef} 
-                onChange={(e) => handleFileChange(e, 'license')}
-                accept="image/*,.pdf"
-              />
-              <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-500 group-hover:text-black transition-all">
-                <FileCheck size={28} />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-2">사업자등록증 업로드</h4>
-              <p className="text-zinc-500 text-sm mb-4">파일 형식: JPG, PNG, PDF (최대 10MB)</p>
-              {files.license ? (
-                <div className="text-amber-500 font-bold text-sm bg-amber-500/10 py-2 px-4 rounded-lg inline-block">
-                  {files.license.name} 선택됨
+            <div className="grid grid-cols-2 gap-4">
+              {/* 사업자등록증 */}
+              <div className="p-5 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-950/50 text-center group hover:border-amber-500/50 transition-all cursor-pointer"
+                   onClick={() => licenseInputRef.current?.click()}>
+                <input
+                  type="file"
+                  hidden
+                  ref={licenseInputRef}
+                  onChange={(e) => handleFileChange(e, 'license')}
+                  accept="image/*,.pdf"
+                />
+                <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-amber-500 group-hover:text-black transition-all">
+                  <FileCheck size={22} />
                 </div>
-              ) : (
-                <div className="text-zinc-600 font-medium text-sm">클릭하여 스캔본 또는 사진 업로드</div>
-              )}
-            </div>
+                <h4 className="text-base font-bold text-white mb-1">사업자등록증</h4>
+                <p className="text-zinc-500 text-xs mb-3">JPG, PNG, PDF (최대 10MB)</p>
+                {files.license ? (
+                  <div className="text-amber-500 font-bold text-xs bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block truncate max-w-full">
+                    {files.license.name}
+                  </div>
+                ) : (
+                  <div className="text-zinc-600 font-medium text-xs">클릭하여 업로드</div>
+                )}
+              </div>
 
-            {/* 영업허가증 */}
-            <div className="p-8 border-2 border-dashed border-zinc-800 rounded-[2rem] bg-zinc-950/50 text-center group hover:border-amber-500/50 transition-all cursor-pointer"
-                 onClick={() => permitInputRef.current?.click()}>
-              <input
-                type="file"
-                hidden
-                ref={permitInputRef}
-                onChange={(e) => {
-                  if (e.target.files) setFiles(prev => ({ ...prev, permit: e.target.files![0] }));
-                }}
-                accept="image/*,.pdf"
-              />
-              <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-500 group-hover:text-black transition-all">
-                <Shield size={28} />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-2">영업허가증 업로드</h4>
-              <p className="text-zinc-500 text-sm mb-4">파일 형식: JPG, PNG, PDF (최대 10MB)</p>
-              {files.permit ? (
-                <div className="text-amber-500 font-bold text-sm bg-amber-500/10 py-2 px-4 rounded-lg inline-block">
-                  {files.permit.name} 선택됨
+              {/* 영업허가증 */}
+              <div className="p-5 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-950/50 text-center group hover:border-amber-500/50 transition-all cursor-pointer"
+                   onClick={() => permitInputRef.current?.click()}>
+                <input
+                  type="file"
+                  hidden
+                  ref={permitInputRef}
+                  onChange={(e) => {
+                    if (e.target.files) setFiles(prev => ({ ...prev, permit: e.target.files![0] }));
+                  }}
+                  accept="image/*,.pdf"
+                />
+                <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-amber-500 group-hover:text-black transition-all">
+                  <Shield size={22} />
                 </div>
-              ) : (
-                <div className="text-zinc-600 font-medium text-sm">클릭하여 업로드</div>
-              )}
+                <h4 className="text-base font-bold text-white mb-1">영업허가증</h4>
+                <p className="text-zinc-500 text-xs mb-3">JPG, PNG, PDF (최대 10MB)</p>
+                {files.permit ? (
+                  <div className="text-amber-500 font-bold text-xs bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block truncate max-w-full">
+                    {files.permit.name}
+                  </div>
+                ) : (
+                  <div className="text-zinc-600 font-medium text-xs">클릭하여 업로드</div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
