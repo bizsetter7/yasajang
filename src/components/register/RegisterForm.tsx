@@ -4,6 +4,19 @@ import { useState, useRef, useEffect } from 'react';
 
 declare global { interface Window { daum: any; } }
 
+const JOB_CATEGORY_MAP: Record<string, string[]> = {
+  '룸알바': ['퍼블릭', '가라오케', '클럽', '룸싸롱'],
+  '노래주점': ['아가씨', '미씨', 'TC'],
+  '텐프로/쩜오': ['텐프로', '쩜오', '텐카페'],
+  '요정': ['요정'],
+  '바(Bar)': ['정바', '룸바', '토킹바', '섹시바', '라이브바'],
+  '엔터': ['인터넷BJ'],
+  '다방': ['다방'],
+  '카페': ['카페'],
+  '마사지': ['휴게마사지', '아로마마사지', '피부마사지', '에스테틱', '스포츠마사지', '기타마사지'],
+  '기타': ['기타업종', '직업소개소', '회원제업소', '해외'],
+};
+
 const REGIONS: Record<string, string[]> = {
   '서울': ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
   '경기': ['수원시','성남시','고양시','용인시','부천시','안산시','안양시','남양주시','화성시','평택시','의정부시','시흥시','파주시','광명시','김포시','군포시','광주시','이천시','양주시','오산시','구리시','안성시','포천시','의왕시','하남시','여주시','동두천시','과천시','가평군','양평군','연천군'],
@@ -67,9 +80,12 @@ export default function RegisterForm() {
   const [addressMain, setAddressMain] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
 
+  const [mainCategory, setMainCategory] = useState('룸알바');
+  const [subCategory, setSubCategory] = useState('퍼블릭');
+
   const [formData, setFormData] = useState({
     name: '',
-    category: '룸싸롱',
+    category: '룸알바 > 퍼블릭',
     region: '서울 강남구',
     representative: '',
     business_number: '',
@@ -81,6 +97,22 @@ export default function RegisterForm() {
     menu_liquor: '',
     menu_snack: '',
   });
+
+  // 업종 연동: 대분류 변경 시 subCategory 초기화 + formData.category 업데이트
+  useEffect(() => {
+    const list = JOB_CATEGORY_MAP[mainCategory] ?? [];
+    const firstSub = list[0] ?? '';
+    setSubCategory(firstSub);
+    setFormData(prev => ({ ...prev, category: `${mainCategory} > ${firstSub}` }));
+  }, [mainCategory]);
+
+  // 업종 연동: subCategory 변경 시 formData.category 업데이트
+  useEffect(() => {
+    if (subCategory) {
+      setFormData(prev => ({ ...prev, category: `${mainCategory} > ${subCategory}` }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subCategory]);
 
   // 지역 연동: sido/sigungu 변경 시 formData.region 자동 업데이트
   useEffect(() => {
@@ -354,19 +386,26 @@ export default function RegisterForm() {
                 <label className="text-sm font-bold text-zinc-400 flex items-center">
                   <Hash size={14} className="mr-2" /> 업종 선택
                 </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all appearance-none"
-                >
-                  <option>룸싸롱</option>
-                  <option>노래빠</option>
-                  <option>가라오케</option>
-                  <option>셔츠룸</option>
-                  <option>텐카페/텐프로</option>
-                  <option>풀싸롱</option>
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    value={mainCategory}
+                    onChange={e => setMainCategory(e.target.value)}
+                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all appearance-none"
+                  >
+                    {Object.keys(JOB_CATEGORY_MAP).map(cat => (
+                      <option key={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={subCategory}
+                    onChange={e => setSubCategory(e.target.value)}
+                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all appearance-none"
+                  >
+                    {(JOB_CATEGORY_MAP[mainCategory] ?? []).map(sub => (
+                      <option key={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-zinc-400 flex items-center">

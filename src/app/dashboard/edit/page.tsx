@@ -65,10 +65,10 @@ export default function BusinessEditPage() {
   const [saving, setSaving] = useState(false);
   const [businessId, setBusinessId] = useState('');
 
-  // 기본 정보 (재심사 필요)
   const [basic, setBasic] = useState({
     name: '', phone: '', address: '', addressDetail: '',
     openChatUrl: '', category: '', regionCode: '',
+    menu_main: '', menu_liquor: '', menu_snack: '',
   });
 
   // 홍보 정보 (즉시 반영)
@@ -112,6 +112,9 @@ export default function BusinessEditPage() {
         address: data.address || '', addressDetail: data.address_detail || '',
         openChatUrl: data.open_chat_url || '', category: data.category || '',
         regionCode: data.region_code || '',
+        menu_main: data.menu_main || '',
+        menu_liquor: data.menu_liquor || '',
+        menu_snack: data.menu_snack || '',
       });
       setPromo({
         managerName: data.manager_name || '',
@@ -253,6 +256,26 @@ export default function BusinessEditPage() {
             <div>
               <label className={labelCls}><MessageSquare size={13} /> 카카오톡 오픈채팅 URL</label>
               <input type="url" placeholder="https://open.kakao.com/..." className={inputCls} value={basic.openChatUrl} onChange={e => setBasic({...basic, openChatUrl: e.target.value})} />
+            </div>
+            
+            <div className="pt-4 border-t border-zinc-800">
+              <h3 className="text-sm font-bold text-white mb-4">간편 메뉴 (필수)</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>대표 메뉴</label>
+                  <input className={inputCls} placeholder="예: 양주 1병 80,000원" value={basic.menu_main} onChange={e => setBasic({...basic, menu_main: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>주류 메뉴</label>
+                    <textarea rows={3} className={inputCls + ' resize-none'} placeholder="맥주 5,000원..." value={basic.menu_liquor} onChange={e => setBasic({...basic, menu_liquor: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>안주 메뉴</label>
+                    <textarea rows={3} className={inputCls + ' resize-none'} placeholder="안주모듬 20,000원..." value={basic.menu_snack} onChange={e => setBasic({...basic, menu_snack: e.target.value})} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -554,11 +577,35 @@ export default function BusinessEditPage() {
                 })}
               </div>
 
-              {/* 메뉴 */}
+              {/* 간편 메뉴 (새로운 방식) */}
+              {(basic.menu_main || basic.menu_liquor || basic.menu_snack) && (
+                <div className="mt-4 p-4 bg-zinc-900 rounded-2xl space-y-3">
+                  {basic.menu_main && (
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">대표메뉴</p>
+                      <p className="text-xs text-white">{basic.menu_main}</p>
+                    </div>
+                  )}
+                  {basic.menu_liquor && (
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">주류</p>
+                      <p className="text-xs text-zinc-300 whitespace-pre-wrap">{basic.menu_liquor}</p>
+                    </div>
+                  )}
+                  {basic.menu_snack && (
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">안주</p>
+                      <p className="text-xs text-zinc-300 whitespace-pre-wrap">{basic.menu_snack}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 메뉴 (기존 상세 방식) */}
               {(menuCategories.featured.length > 0 || menuCategories.drinks.length > 0 || menuCategories.snacks.length > 0) && (
                 <div className="mt-4 p-4 bg-zinc-900 rounded-2xl space-y-3">
                   {(['featured', 'drinks', 'snacks'] as const).map(cat => {
-                    const labels = { featured: '대표메뉴', drinks: '주류', snacks: '안주' };
+                    const labels = { featured: '상세 대표메뉴', drinks: '상세 주류', snacks: '상세 안주' };
                     if (!menuCategories[cat].length) return null;
                     return (
                       <div key={cat}>

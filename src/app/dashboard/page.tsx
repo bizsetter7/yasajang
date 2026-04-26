@@ -38,6 +38,12 @@ export default async function DashboardPage() {
     .eq('business_id', business.id)
     .gte('contacted_at', thisMonthStart.toISOString());
 
+  // 코코알바 연동 위젯 (shops 테이블 확인)
+  const { count: cocoShopCount } = await supabase
+    .from('shops')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+
   return (
     <div className="min-h-screen bg-zinc-950 py-12 px-4">
       <div className="max-w-4xl mx-auto space-y-10">
@@ -53,7 +59,7 @@ export default async function DashboardPage() {
           <BusinessCard business={business} subscription={subscription} />
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <section className="space-y-6">
             <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">멤버십 상태</h2>
             <SubscriptionCard subscription={subscription} businessId={business.id} />
@@ -62,6 +68,28 @@ export default async function DashboardPage() {
           <section className="space-y-6">
             <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">마케팅 성과</h2>
             <BamgilStatsCard count={bamgilCount ?? 0} />
+          </section>
+
+          <section className="space-y-6">
+            <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">코코알바 현황</h2>
+            <a
+              href="https://cocoalba.kr/my-shop"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block h-full p-6 bg-gradient-to-br from-rose-500/10 to-transparent border border-rose-500/20 rounded-2xl hover:bg-rose-500/10 transition-all group relative overflow-hidden"
+            >
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all" />
+              <h3 className="text-lg font-bold text-rose-500 mb-2 flex items-center gap-2">
+                내 공고 현황
+              </h3>
+              <div className="flex items-end gap-2 mb-4">
+                <span className="text-3xl font-black text-white">{cocoShopCount ?? 0}</span>
+                <span className="text-zinc-400 mb-1">개 공고</span>
+              </div>
+              <span className="text-xs font-bold text-rose-400 flex items-center gap-1 group-hover:gap-2 transition-all mt-auto pt-4 border-t border-rose-500/20">
+                코코알바에서 관리 →
+              </span>
+            </a>
           </section>
         </div>
 
