@@ -146,8 +146,19 @@ export default function RegisterForm() {
     }
   };
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
-  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+  const nextStep = () => {
+    setError(null);
+    if (currentStep === 1) {
+      if (!formData.name.trim()) { setError('업소명을 입력해주세요.'); return; }
+      if (!formData.phone.trim()) { setError('담당자 연락처를 입력해주세요.'); return; }
+      if (!formData.address.trim()) { setError('업소 상세 주소를 검색해주세요.'); return; }
+    }
+    if (currentStep === 2) {
+      if (!files.license) { setError('사업자등록증을 업로드해주세요.'); return; }
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 3));
+  };
+  const prevStep = () => { setError(null); setCurrentStep(prev => Math.max(prev - 1, 1)); };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -675,7 +686,7 @@ export default function RegisterForm() {
             ) : currentStep === 3 ? (
               '최종 입점 신청'
             ) : (
-              <>{steps[currentStep].title}로 이동 <ChevronRight size={20} className="ml-2" /></>
+              <>다음 <ChevronRight size={20} className="ml-2" /></>
             )}
           </button>
         </div>
