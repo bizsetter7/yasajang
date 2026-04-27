@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const adminHeaders = {
-  'Content-Type': 'application/json',
-  'apikey': SB_KEY,
-  'Authorization': `Bearer ${SB_KEY}`,
-  'Prefer': 'return=representation',
-};
+import { createClient } from '@supabase/supabase-js';
 
 // 한글 시/도 → region_code 매핑
 const SIDO_TO_CODE: Record<string, string> = {
@@ -25,7 +16,6 @@ function toRegionCode(region: string): string {
   return SIDO_TO_CODE[sido] || 'gyeonggi';
 }
 
-// 한글 대분류 → businesses.category 허용값 매핑
 const CATEGORY_TO_CODE: Record<string, string> = {
   '룸알바': 'room_salon',
   '노래주점': 'karaoke_bar',
@@ -40,12 +30,10 @@ const CATEGORY_TO_CODE: Record<string, string> = {
 };
 
 function toCategoryCode(category: string): string {
-  // "대분류 > 상세" 형식이면 대분류만 추출
   const main = (category || '').split('>')[0].trim();
   return CATEGORY_TO_CODE[main] || 'other';
 }
 
-// 야사장 플랜 → 코코알바 tier 매핑
 const PLAN_TO_TIER: Record<string, string> = {
   basic:    'p7',
   standard: 'p5',
@@ -54,7 +42,6 @@ const PLAN_TO_TIER: Record<string, string> = {
   premium:  'p2',
 };
 
-// 야사장 플랜 → 코코알바 ad_price 매핑 (원)
 const PLAN_TO_PRICE: Record<string, number> = {
   basic:    22000,
   standard: 66000,
@@ -65,6 +52,18 @@ const PLAN_TO_PRICE: Record<string, number> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!SB_URL || !SB_KEY) {
+      console.error('Supabase env vars missing:', { SB_URL: !!SB_URL, SB_KEY: !!SB_KEY });
+      return NextResponse.json({ error: '서버 환경 설정 오류 (MISSING_ENV)' }, { status: 500 });
+    }
+
+    const supabase = createClient(SB_URL, SB_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
     const body = await req.json();
     const {
       name, category, region, representative, business_number,
@@ -76,21 +75,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '필수 항목이 누락되었습니다.' }, { status: 400 });
     }
 
-    if (!SB_KEY || SB_KEY.length < 10) {
-      console.error('SUPABASE_SERVICE_ROLE_KEY not configured');
-      return NextResponse.json({ error: '서버 환경 설정 오류 (SERVICE_KEY_MISSING)' }, { status: 500 });
-    }
-
     const tier = PLAN_TO_TIER[plan] || 'p7';
     const adPrice = PLAN_TO_PRICE[plan] || 22000;
     const regionCode = toRegionCode(region);
     const categoryCode = toCategoryCode(category);
 
-    // 1. businesses 테이블 INSERT (실제 스키마에 맞춤)
-    const bizRes = await fetch(`${SB_URL}/rest/v1/businesses`, {
-      method: 'POST',
-      headers: adminHeaders,
-      body: JSON.stringify({
+    // 1. businesses 테이블 INSERT
+    const { data: bizData, error: bizError } = await supabase
+      .from('businesses')
+      .insert({
         name,
         category: categoryCode,
         region_code: regionCode,
@@ -108,23 +101,21 @@ export async function POST(req: NextRequest) {
         cocoalba_tier: plan || 'basic',
         is_active: false,
         is_verified: false,
-      }),
-    });
+      })
+      .select('id')
+      .single();
 
-    if (!bizRes.ok) {
-      const err = await bizRes.json().catch(() => ({}));
-      const msg = (err as any)?.message || (err as any)?.error || bizRes.statusText;
-      return NextResponse.json({ error: `신청 등록 실패: ${msg}` }, { status: 500 });
+    if (bizError) {
+      console.error('businesses insert error:', bizError);
+      return NextResponse.json({ error: `신청 등록 실패: ${bizError.message}` }, { status: 500 });
     }
 
-    const bizData = await bizRes.json();
-    const businessId = Array.isArray(bizData) ? bizData[0]?.id : bizData?.id;
+    const businessId = bizData?.id ?? null;
 
-    // 2. shops 테이블에도 INSERT → P2 코코알바 광고 목록에 노출
-    const shopsRes = await fetch(`${SB_URL}/rest/v1/shops`, {
-      method: 'POST',
-      headers: adminHeaders,
-      body: JSON.stringify({
+    // 2. shops 테이블 INSERT → 코코알바 광고 목록 노출
+    const { data: shopData, error: shopError } = await supabase
+      .from('shops')
+      .insert({
         user_id: owner_id || null,
         name,
         title: `[야사장] ${name} 광고 신청`,
@@ -147,37 +138,31 @@ export async function POST(req: NextRequest) {
           menu_liquor: menu_liquor || null,
           menu_snack: menu_snack || null,
         },
-      }),
-    });
+      })
+      .select('id')
+      .single();
 
-    let shopId: number | null = null;
-    let shopError: string | null = null;
-    if (shopsRes.ok) {
-      const shopData = await shopsRes.json();
-      shopId = Array.isArray(shopData) ? shopData[0]?.id : shopData?.id;
-    } else {
-      const err = await shopsRes.json().catch(() => ({}));
-      shopError = (err as any)?.message || (err as any)?.error || shopsRes.statusText;
-      console.error('shops insert error:', err);
+    if (shopError) {
+      console.error('shops insert error:', shopError);
     }
+
+    const shopId = shopData?.id ?? null;
 
     // 3. subscriptions 테이블 INSERT
     if (businessId) {
-      const subRes = await fetch(`${SB_URL}/rest/v1/subscriptions`, {
-        method: 'POST',
-        headers: { ...adminHeaders, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
+      const { error: subError } = await supabase
+        .from('subscriptions')
+        .insert({
           business_id: businessId,
           plan: plan || 'basic',
           status: 'trial',
           platform_choice: plan === 'basic' ? null : (platform_choice || null),
           trial_starts_at: new Date().toISOString(),
           trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        }),
-      });
-      if (!subRes.ok) {
-        const err = await subRes.json().catch(() => ({}));
-        console.error('subscriptions insert error:', err);
+        });
+
+      if (subError) {
+        console.error('subscriptions insert error:', subError);
       }
     }
 
