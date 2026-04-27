@@ -62,7 +62,7 @@ const steps = [
 ];
 
 export default function RegisterForm() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -76,7 +76,8 @@ export default function RegisterForm() {
   const [hasAnthropicKey, setHasAnthropicKey] = useState(true); // SSR에서는 true로 가정하고 클라이언트에서 확인, 다만 클라이언트 환경변수가 아니면 API 호출 시 알 수 있음. (API에서 에러로 반환되면 숨김)
 
   const searchParams = useSearchParams();
-  const selectedPlan = searchParams.get('plan') || 'basic';
+  const urlPlan = searchParams.get('plan') || 'basic';
+  const [localSelectedPlan, setLocalSelectedPlan] = useState(urlPlan);
 
   const [regionSido, setRegionSido] = useState('서울');
   const [regionSigungu, setRegionSigungu] = useState('강남구');
@@ -193,7 +194,7 @@ export default function RegisterForm() {
     }
     setCurrentStep(prev => Math.min(prev + 1, 3));
   };
-  const prevStep = () => { setError(null); setCurrentStep(prev => Math.max(prev - 1, 1)); };
+  const prevStep = () => { setError(null); setCurrentStep(prev => Math.max(prev - 1, 0)); };
 
   const handleOcr = async () => {
     if (!files.license) return;
@@ -297,7 +298,7 @@ export default function RegisterForm() {
           owner_id: user.id,
           license_path: licenseUrl,
           permit_path: permitUrl,
-          plan: selectedPlan,
+          plan: localSelectedPlan,
         }),
       });
       const result = await res.json();
@@ -310,11 +311,11 @@ export default function RegisterForm() {
         body: JSON.stringify({
           message: `<b>[신규 업소 입점 신청]</b>\n` +
                    `🏪 업소명: ${formData.name}\n` +
-                   `📦 신청플랜: ${selectedPlan}\n` +
+                   `📦 신청플랜: ${localSelectedPlan}\n` +
                    `📍 지역: ${formData.region}\n` +
                    `📞 연락처: ${formData.phone}\n` +
-                   `${selectedPlan !== 'basic' && selectedPlan !== 'free' ? `🔗 선택플랫폼: ${formData.platform_choice}\n` : ''}` +
-                   `${selectedPlan === 'free' ? `🆓 플랜: 밤길 3개월 무료\n` : ''}` +
+                   `${localSelectedPlan !== 'basic' && localSelectedPlan !== 'free' ? `🔗 선택플랫폼: ${formData.platform_choice}\n` : ''}` +
+                   `${localSelectedPlan === 'free' ? `🆓 플랜: 밤길 3개월 무료\n` : ''}` +
                    `\n심사 대기 상태로 등록되었습니다.`
         })
       });
@@ -361,6 +362,136 @@ export default function RegisterForm() {
             코코알바 구인 광고 등록하기 →
           </a>
         </div>
+      </div>
+    );
+  }
+
+  // ── Step 0: 플랜 선택 ──
+  if (currentStep === 0) {
+    const PLANS = [
+      {
+        id: 'free',
+        name: '무료 체험',
+        price: '₩0',
+        period: '3개월',
+        badge: null,
+        color: 'border-zinc-700',
+        highlight: 'text-zinc-300',
+        platforms: ['밤길 기본 노출'],
+        desc: '3개월 무료로 밤길에 업소를 등록해보세요.',
+      },
+      {
+        id: 'basic',
+        name: '베이직',
+        price: '₩22,000',
+        period: '/월',
+        badge: null,
+        color: 'border-zinc-700',
+        highlight: 'text-zinc-100',
+        platforms: ['밤길', '웨이터존'],
+        desc: '기본 지도 핀 + 웨이터존 구인 광고.',
+      },
+      {
+        id: 'standard',
+        name: '스탠다드',
+        price: '₩66,000',
+        period: '/월',
+        badge: '인기',
+        color: 'border-blue-500',
+        highlight: 'text-blue-300',
+        platforms: ['밤길', '코코알바 or 선수존'],
+        desc: '밤길 노출 + 코코알바 또는 선수존 구인 광고.',
+      },
+      {
+        id: 'special',
+        name: '스페셜',
+        price: '₩88,000',
+        period: '/월',
+        badge: null,
+        color: 'border-zinc-600',
+        highlight: 'text-zinc-100',
+        platforms: ['밤길', '웨이터존', '코코알바 or 선수존'],
+        desc: '3개 플랫폼 동시 노출.',
+      },
+      {
+        id: 'deluxe',
+        name: '디럭스',
+        price: '₩199,000',
+        period: '/월',
+        badge: '추천',
+        color: 'border-amber-500',
+        highlight: 'text-amber-400',
+        platforms: ['밤길 강조 핀', '웨이터존', '코코알바 or 선수존', 'PC 사이드바'],
+        desc: '강조 효과 + PC 노출 추가. 경쟁사 대비 압도적.',
+      },
+      {
+        id: 'premium',
+        name: '프리미엄',
+        price: '₩399,000',
+        period: '/월',
+        badge: '최상위',
+        color: 'border-rose-500',
+        highlight: 'text-rose-400',
+        platforms: ['밤길 최상단 고정', '웨이터존', '코코알바 or 선수존', 'PC/모바일 최상단'],
+        desc: '모든 플랫폼 최상단 고정 노출.',
+      },
+    ];
+
+    return (
+      <div className="max-w-4xl mx-auto animate-fade-in">
+        <div className="text-center mb-10">
+          <p className="text-zinc-400 text-sm">원하시는 플랜을 선택하고 입점신청을 시작하세요.<br/>언제든지 플랜을 업그레이드할 수 있습니다.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {PLANS.map((plan) => {
+            const isSelected = localSelectedPlan === plan.id;
+            return (
+              <button
+                key={plan.id}
+                onClick={() => setLocalSelectedPlan(plan.id)}
+                className={`relative text-left p-5 rounded-2xl border-2 transition-all ${
+                  isSelected
+                    ? `${plan.color} bg-zinc-900 shadow-lg`
+                    : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
+                }`}
+              >
+                {plan.badge && (
+                  <span className={`absolute top-3 right-3 text-[10px] font-black px-2 py-0.5 rounded-full ${
+                    plan.id === 'standard' ? 'bg-blue-500/20 text-blue-400' :
+                    plan.id === 'deluxe' ? 'bg-amber-500/20 text-amber-400' :
+                    'bg-rose-500/20 text-rose-400'
+                  }`}>{plan.badge}</span>
+                )}
+                {isSelected && (
+                  <div className={`absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center ${plan.badge ? 'hidden' : 'flex'} bg-amber-500`}>
+                    <CheckCircle2 size={14} className="text-black" />
+                  </div>
+                )}
+                <p className={`font-black text-lg mb-1 ${isSelected ? plan.highlight : 'text-zinc-300'}`}>{plan.name}</p>
+                <p className="mb-3">
+                  <span className={`font-black text-2xl ${isSelected ? plan.highlight : 'text-zinc-400'}`}>{plan.price}</span>
+                  <span className="text-zinc-600 text-xs">{plan.period}</span>
+                </p>
+                <p className="text-zinc-500 text-xs mb-3 leading-relaxed">{plan.desc}</p>
+                <div className="flex flex-wrap gap-1">
+                  {plan.platforms.map((p) => (
+                    <span key={p} className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-bold">{p}</span>
+                  ))}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="text-center text-xs text-zinc-600 mb-6">
+          * 모든 플랜은 VAT 별도 / 3·6·12개월 장기 결제 시 최대 17% 할인 적용
+        </div>
+        <button
+          onClick={() => setCurrentStep(1)}
+          className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-black text-lg rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
+        >
+          {PLANS.find(p => p.id === localSelectedPlan)?.name ?? '베이직'} 플랜으로 입점신청 시작하기
+          <ChevronRight size={20} />
+        </button>
       </div>
     );
   }
@@ -520,7 +651,7 @@ export default function RegisterForm() {
             </div>
 
             {/* 무료 플랜 안내 배너 */}
-            {selectedPlan === 'free' && (
+            {localSelectedPlan === 'free' && (
               <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-start gap-3">
                 <span className="text-amber-400 text-xl shrink-0">📍</span>
                 <div>
@@ -534,7 +665,7 @@ export default function RegisterForm() {
             )}
 
             {/* 플랫폼 선택 (스탠다드 이상일 경우) */}
-            {selectedPlan !== 'basic' && selectedPlan !== 'free' && (
+            {localSelectedPlan !== 'basic' && localSelectedPlan !== 'free' && (
               <div className="space-y-4 p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
                 <label className="text-sm font-bold text-amber-500 flex items-center">
                   <Shield size={16} className="mr-2" /> 연동 플랫폼 선택 (코코알바 또는 선수존)

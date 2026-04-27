@@ -48,9 +48,12 @@ export default async function DashboardPage() {
     .select('id, category')
     .eq('user_id', user.id);
 
-  const cocoalbaCategories = ['룸알바', '노래주점', '텐프로/쩜오', '요정', '바(Bar)', '엔터', '다방', '카페', '마사지', '기타'];
-  const cocoShopCount = shops?.filter(s => cocoalbaCategories.includes(s.category)).length || 0;
-  const waiterShopCount = shops?.filter(s => s.category === '웨이터' || s.category === '웨이터존').length || 0;
+  // [야사장] 입점신청 샵은 제외, 웨이터 키워드만 웨이터존으로 분류, 나머지 전체는 코코알바
+  const WAITER_KW = ['웨이터', '서빙', '바텐더', 'waiter'];
+  const isWaiter = (cat: string) => WAITER_KW.some(k => (cat || '').toLowerCase().includes(k));
+  const allShops = shops?.filter(s => !s.category?.includes('[야사장]')) ?? [];
+  const waiterShopCount = allShops.filter(s => isWaiter(s.category)).length;
+  const cocoShopCount = allShops.filter(s => !isWaiter(s.category)).length;
 
   return (
     <div className="min-h-screen bg-zinc-950 py-12 px-4">
