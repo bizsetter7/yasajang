@@ -26,6 +26,16 @@ export default async function AdminDashboard() {
     inactive: 'text-zinc-500 bg-zinc-800',
   };
 
+  const REGION_LABEL: Record<string, string> = {
+    seoul: '서울', gyeonggi: '경기', incheon: '인천', busan: '부산',
+    daegu: '대구', daejeon: '대전', gwangju: '광주', ulsan: '울산',
+    sejong: '세종', gangwon: '강원', chungbuk: '충북', chungnam: '충남',
+    jeonbuk: '전북', jeonnam: '전남', gyeongbuk: '경북', gyeongnam: '경남', jeju: '제주',
+  };
+  const CATEGORY_LABEL: Record<string, string> = {
+    room_salon: '룸살롱', karaoke_bar: '노래주점', bar: '바(Bar)', other: '기타',
+  };
+
   return (
     <div className="space-y-8 max-w-5xl">
       <div>
@@ -102,7 +112,7 @@ export default async function AdminDashboard() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white truncate">{b.name}</p>
-                <p className="text-[11px] text-zinc-500">{b.region_code} · {b.category}</p>
+                <p className="text-[11px] text-zinc-500">{REGION_LABEL[b.region_code] ?? b.region_code} · {CATEGORY_LABEL[b.category] ?? b.category}</p>
               </div>
               <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${statusColor[b.status] || ''}`}>
                 {b.status}

@@ -35,6 +35,16 @@ interface Business {
   address_detail?: string;
 }
 
+const REGION_LABEL: Record<string, string> = {
+  seoul: '서울', gyeonggi: '경기', incheon: '인천', busan: '부산',
+  daegu: '대구', daejeon: '대전', gwangju: '광주', ulsan: '울산',
+  sejong: '세종', gangwon: '강원', chungbuk: '충북', chungnam: '충남',
+  jeonbuk: '전북', jeonnam: '전남', gyeongbuk: '경북', gyeongnam: '경남', jeju: '제주',
+};
+const CATEGORY_LABEL: Record<string, string> = {
+  room_salon: '룸살롱', karaoke_bar: '노래주점', bar: '바(Bar)', other: '기타',
+};
+
 export default function RegisterAuditPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +149,7 @@ export default function RegisterAuditPage() {
                 <div>
                   <h3 className="text-lg font-bold text-white mb-1">{shop.name}</h3>
                   <div className="flex items-center space-x-4 text-xs text-zinc-500">
-                    <span className="flex items-center"><MapPin size={12} className="mr-1" /> {shop.region_code}</span>
+                    <span className="flex items-center"><MapPin size={12} className="mr-1" /> {REGION_LABEL[shop.region_code] ?? shop.region_code}</span>
                     <span className="flex items-center"><Clock size={12} className="mr-1" /> {new Date(shop.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -147,7 +157,7 @@ export default function RegisterAuditPage() {
 
               <div className="flex items-center space-x-6">
                 <div className="text-right">
-                  <div className="text-xs font-bold text-zinc-400 mb-1">{shop.category}</div>
+                  <div className="text-xs font-bold text-zinc-400 mb-1">{CATEGORY_LABEL[shop.category] ?? shop.category}</div>
                   <div className="text-[10px] text-zinc-600 font-medium">신청번호: P5R-{shop.id.toString().substring(0, 8)}</div>
                 </div>
                 <div className="bg-amber-500/10 text-amber-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">

@@ -76,7 +76,8 @@ export async function POST(req: NextRequest) {
     }
 
     const tier = PLAN_TO_TIER[plan] || 'p7';
-    const adPrice = PLAN_TO_PRICE[plan] || 22000;
+    // trial 상태로 신청 — 실제 결제 전까지 코코알바에 금액 0 표시
+    const adPrice = 0;
     const regionCode = toRegionCode(region);
     const categoryCode = toCategoryCode(category);
 
