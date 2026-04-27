@@ -200,30 +200,24 @@ export default function RegisterForm() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('로그인이 필요합니다.');
 
-      // 1. Upload files to Storage
+      // 1. Upload files via server API (service_role bypasses Storage RLS)
+      const uploadFile = async (file: File, suffix: string): Promise<string> => {
+        const fileExt = file.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}_${suffix}.${fileExt}`;
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('path', path);
+        const r = await fetch('/api/storage/upload', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || '파일 업로드 실패');
+        return j.path as string;
+      };
+
       let licenseUrl = '';
-      if (files.license) {
-        const fileExt = files.license.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}_license.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('businesses-docs')
-          .upload(fileName, files.license);
-        
-        if (uploadError) throw uploadError;
-        licenseUrl = uploadData.path;
-      }
+      if (files.license) licenseUrl = await uploadFile(files.license, 'license');
 
       let permitUrl = '';
-      if (files.permit) {
-        const fileExt = files.permit.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}_permit.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('businesses-docs')
-          .upload(fileName, files.permit);
-        
-        if (uploadError) throw uploadError;
-        permitUrl = uploadData.path;
-      }
+      if (files.permit) permitUrl = await uploadFile(files.permit, 'permit');
 
       // 2. Insert via API route (service_role bypasses RLS)
       const res = await fetch('/api/register', {
@@ -683,7 +677,7 @@ export default function RegisterForm() {
               <div className="flex items-start">
                 <Shield className="text-amber-500 mr-4 mt-1 shrink-0" size={20} />
                 <p className="text-zinc-400 text-xs leading-relaxed">
-                  위 입력 정보 및 문서가 허위로 판명될 경우, 입점 거절 및 이용 제한을 받을 수 있음에 동의합니다. 
+                  위 입력 정보 및 문서가 허위로 판명될 경우, 입점 거절 및 이용 제한을 받을 수 있음에 동의합니다.<br />
                   야사장은 운영 정책에 따라 등록된 개인정보를 보호하며, 심사 목적 외에 사용하지 않습니다.
                 </p>
               </div>
