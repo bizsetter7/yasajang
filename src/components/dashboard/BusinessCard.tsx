@@ -3,6 +3,27 @@
 import { Building2, Phone, CheckCircle2, Clock, Edit2, Zap } from 'lucide-react';
 import Link from 'next/link';
 
+const CATEGORY_LABELS: Record<string, string> = {
+  room_salon: '룸살롱', karaoke_bar: '노래주점', bar: '유흥주점',
+  night_club: '나이트', hostbar: '호스트바', general: '일반', other: '기타',
+};
+
+const REGION_LABELS: Record<string, string> = {
+  seoul: '서울', gyeonggi: '경기', incheon: '인천', busan: '부산',
+  daegu: '대구', daejeon: '대전', gwangju: '광주', ulsan: '울산',
+  chungnam: '충청남도', chungbuk: '충청북도', jeonnam: '전라남도',
+  jeonbuk: '전라북도', gangwon: '강원도', gyeongnam: '경상남도',
+  gyeongbuk: '경상북도', jeju: '제주도', other: '기타',
+};
+
+const formatPhone = (phone: string | null | undefined): string => {
+  if (!phone) return '';
+  const d = phone.replace(/\D/g, '');
+  if (d.length === 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  return phone;
+};
+
 interface BusinessCardProps {
   business: {
     id: string;
@@ -53,7 +74,9 @@ export default function BusinessCard({ business, subscription }: BusinessCardPro
                 </Link>
               </div>
               <p className="text-gray-500 text-sm flex items-center gap-1.5">
-                {business.category} <span className="w-1 h-1 rounded-full bg-gray-300" /> {business.region_code}
+                {CATEGORY_LABELS[business.category] ?? business.category}
+                <span className="w-1 h-1 rounded-full bg-gray-300" />
+                {REGION_LABELS[business.region_code] ?? business.region_code}
               </p>
             </div>
           </div>
@@ -61,7 +84,7 @@ export default function BusinessCard({ business, subscription }: BusinessCardPro
           <div className="flex flex-wrap gap-4 pt-2">
             <div className="flex items-center gap-2 text-gray-600 text-sm">
               <Phone size={16} className="text-gray-400" />
-              <span>{business.phone}</span>
+              <span>{formatPhone(business.phone)}</span>
             </div>
             <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border ${exposure.color}`}>
               <Zap size={10} fill="currentColor" />

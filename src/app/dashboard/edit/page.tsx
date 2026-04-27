@@ -55,9 +55,9 @@ const DEFAULT_EXTRA_FEES: ExtraFee[] = [
   { label: '웨이터 팁', value: '', amount: '0' },
 ];
 
-const inputCls = 'w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-3.5 text-white focus:border-amber-500 outline-none transition-all font-medium text-sm placeholder-zinc-600';
-const labelCls = 'text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-1.5';
-const sectionCls = 'space-y-5 p-6 bg-zinc-900/30 border border-zinc-800 rounded-3xl';
+const inputCls = 'w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-gray-900 focus:border-amber-500 outline-none transition-all font-medium text-sm placeholder-gray-400';
+const labelCls = 'text-[11px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 mb-1.5';
+const sectionCls = 'space-y-5 p-6 bg-white border border-gray-200 rounded-3xl shadow-sm';
 
 export default function BusinessEditPage() {
   const router = useRouter();
@@ -193,25 +193,25 @@ export default function BusinessEditPage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-black pb-24">
+    <div className="min-h-screen bg-gray-50 pb-24">
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-8">
         {/* 헤더 */}
         <header className="flex items-center justify-between">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-zinc-500 hover:text-white text-sm font-bold group">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 text-sm font-bold group">
             <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 대시보드
           </Link>
-          <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-black rounded-full uppercase tracking-widest">Edit Mode</span>
+          <span className="px-3 py-1 bg-amber-500/10 text-amber-600 text-[10px] font-black rounded-full uppercase tracking-widest">Edit Mode</span>
         </header>
 
         <div>
-          <h1 className="text-4xl font-black text-white tracking-tight">업소 정보 수정</h1>
-          <p className="text-zinc-500 text-sm mt-2">기본 정보 변경 시 재심사가 진행됩니다. 홍보 정보는 즉시 반영됩니다.</p>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">업소 정보 수정</h1>
+          <p className="text-gray-500 text-sm mt-2">기본 정보 변경 시 재심사가 진행됩니다. 홍보 정보는 즉시 반영됩니다.</p>
         </div>
 
         <form onSubmit={handleSave} className="space-y-8">
@@ -220,8 +220,8 @@ export default function BusinessEditPage() {
           <div className={sectionCls}>
             <div className="flex items-center gap-2 mb-2">
               <Building size={15} className="text-amber-500" />
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">기본 정보</h2>
-              <span className="ml-auto text-[10px] text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full font-bold">변경 시 재심사</span>
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">기본 정보</h2>
+              <span className="ml-auto text-[10px] text-orange-500 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-bold">변경 시 재심사</span>
             </div>
             <div>
               <label className={labelCls}><Building size={13} /> 업소명</label>
@@ -258,8 +258,8 @@ export default function BusinessEditPage() {
               <input type="url" placeholder="https://open.kakao.com/..." className={inputCls} value={basic.openChatUrl} onChange={e => setBasic({...basic, openChatUrl: e.target.value})} />
             </div>
             
-            <div className="pt-4 border-t border-zinc-800">
-              <h3 className="text-sm font-bold text-white mb-4">간편 메뉴 (필수)</h3>
+            <div className="pt-4 border-t border-gray-200">
+              <h3 className="text-sm font-bold text-gray-900 mb-4">간편 메뉴 (필수)</h3>
               <div className="space-y-4">
                 <div>
                   <label className={labelCls}>대표 메뉴</label>
@@ -283,15 +283,15 @@ export default function BusinessEditPage() {
           <div className={sectionCls}>
             <div className="flex items-center gap-2 mb-2">
               <Info size={15} className="text-emerald-400" />
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">홍보 정보</h2>
-              <span className="ml-auto text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full font-bold">즉시 반영</span>
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">홍보 정보</h2>
+              <span className="ml-auto text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">즉시 반영</span>
             </div>
 
             {/* 대표 이미지 URL */}
             <div>
               <label className={labelCls}>대표 사진 URL (커버)</label>
               <input type="url" placeholder="https://..." className={inputCls} value={promo.coverImageUrl} onChange={e => setPromo({...promo, coverImageUrl: e.target.value})} />
-              <p className="text-[10px] text-zinc-600 mt-1">이미지 직접 업로드는 추후 지원 예정. 현재는 URL 입력.</p>
+              <p className="text-[10px] text-gray-400 mt-1">이미지 직접 업로드는 추후 지원 예정. 현재는 URL 입력.</p>
             </div>
 
             {/* 영업시간 */}
@@ -300,7 +300,7 @@ export default function BusinessEditPage() {
               <div className="space-y-2">
                 {DAYS.map(day => (
                   <div key={day} className="flex items-center gap-2">
-                    <span className="w-6 text-xs font-black text-zinc-400 shrink-0">{day}</span>
+                    <span className="w-6 text-xs font-black text-gray-600 shrink-0">{day}</span>
                     <button
                       type="button"
                       onClick={() => setDayHours(h => ({
@@ -308,8 +308,8 @@ export default function BusinessEditPage() {
                       }))}
                       className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all shrink-0 ${
                         dayHours[day].isClosed
-                          ? 'bg-zinc-800 border-zinc-700 text-zinc-500'
-                          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                          ? 'bg-gray-100 border-gray-200 text-gray-400'
+                          : 'bg-emerald-50 border-emerald-200 text-emerald-600'
                       }`}
                     >
                       {dayHours[day].isClosed ? '휴무' : '영업'}
@@ -321,23 +321,23 @@ export default function BusinessEditPage() {
                           value={dayHours[day].open}
                           onChange={e => setDayHours(h => ({ ...h, [day]: { ...h[day], open: e.target.value } }))}
                           disabled={dayHours[day].is24h}
-                          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-500 outline-none disabled:opacity-40"
+                          className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 text-sm focus:border-amber-500 outline-none disabled:opacity-40"
                         />
-                        <span className="text-zinc-600 text-xs shrink-0">~</span>
+                        <span className="text-gray-400 text-xs shrink-0">~</span>
                         <input
                           type="time"
                           value={dayHours[day].close}
                           onChange={e => setDayHours(h => ({ ...h, [day]: { ...h[day], close: e.target.value } }))}
                           disabled={dayHours[day].is24h}
-                          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-500 outline-none disabled:opacity-40"
+                          className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 text-sm focus:border-amber-500 outline-none disabled:opacity-40"
                         />
                         <button
                           type="button"
                           onClick={() => setDayHours(h => ({ ...h, [day]: { ...h[day], is24h: !h[day].is24h } }))}
                           className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all shrink-0 ${
                             dayHours[day].is24h
-                              ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                              : 'bg-zinc-800 border-zinc-700 text-zinc-500'
+                              ? 'bg-amber-50 border-amber-200 text-amber-600'
+                              : 'bg-gray-100 border-gray-200 text-gray-400'
                           }`}
                         >
                           24h
@@ -388,8 +388,8 @@ export default function BusinessEditPage() {
                     onClick={() => setPromo(p => ({ ...p, [key]: !p[key as keyof typeof p] }))}
                     className={`flex flex-col items-center gap-1.5 py-4 rounded-2xl border font-bold text-sm transition-all ${
                       promo[key as keyof typeof promo]
-                        ? 'bg-amber-500/15 border-amber-500 text-amber-500'
-                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-600'
+                        ? 'bg-amber-50 border-amber-400 text-amber-600'
+                        : 'bg-gray-50 border-gray-200 text-gray-400 hover:border-gray-300'
                     }`}
                   >
                     <Icon size={20} />
@@ -432,7 +432,7 @@ export default function BusinessEditPage() {
               return (
                 <div key={cat} className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-black text-white uppercase tracking-widest">{labels[cat]}</h2>
+                    <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">{labels[cat]}</h2>
                     <button
                       type="button"
                       onClick={() => setMenuCategories(mc => ({ ...mc, [cat]: [...mc[cat], { name: '', price: '', note: '' }] }))}
@@ -442,26 +442,26 @@ export default function BusinessEditPage() {
                     </button>
                   </div>
                   {items.length === 0 && (
-                    <p className="text-zinc-600 text-sm text-center py-2">항목을 추가해주세요</p>
+                    <p className="text-gray-400 text-sm text-center py-2">항목을 추가해주세요</p>
                   )}
                   <div className="space-y-3">
                     {items.map((item, i) => (
-                      <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
+                      <div key={i} className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
                         <div className="flex justify-end">
                           <button type="button"
                             onClick={() => setMenuCategories(mc => ({ ...mc, [cat]: mc[cat].filter((_, j) => j !== i) }))}
-                            className="text-zinc-600 hover:text-red-400">
+                            className="text-gray-400 hover:text-red-500">
                             <Trash2 size={14} />
                           </button>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-[10px] text-zinc-600 font-bold block mb-1">메뉴명</label>
+                            <label className="text-[10px] text-gray-500 font-bold block mb-1">메뉴명</label>
                             <input placeholder="예: 양주 1병" className={inputCls} value={item.name}
                               onChange={e => setMenuCategories(mc => ({ ...mc, [cat]: mc[cat].map((x, j) => j === i ? { ...x, name: e.target.value } : x) }))} />
                           </div>
                           <div>
-                            <label className="text-[10px] text-zinc-600 font-bold block mb-1">가격 (원)</label>
+                            <label className="text-[10px] text-gray-500 font-bold block mb-1">가격 (원)</label>
                             <input type="number" placeholder="150000" className={inputCls} value={item.price}
                               onChange={e => setMenuCategories(mc => ({ ...mc, [cat]: mc[cat].map((x, j) => j === i ? { ...x, price: e.target.value } : x) }))} />
                           </div>
@@ -474,7 +474,7 @@ export default function BusinessEditPage() {
                       </div>
                     ))}
                   </div>
-                  {cat !== 'snacks' && <hr className="border-zinc-800 mt-4" />}
+                  {cat !== 'snacks' && <hr className="border-gray-200 mt-4" />}
                 </div>
               );
             })}
@@ -483,7 +483,7 @@ export default function BusinessEditPage() {
           {/* ─ 별도 요금 ─ */}
           <div className={sectionCls}>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">별도 요금</h2>
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">별도 요금</h2>
               <button
                 type="button"
                 onClick={() => setExtraFees(f => [...f, { label: '', value: '', amount: '' }])}
@@ -492,26 +492,26 @@ export default function BusinessEditPage() {
                 <Plus size={14} /> 항목 추가
               </button>
             </div>
-            <p className="text-[11px] text-zinc-600 mb-3">모든 금액은 VAT 포함으로 입력하세요. 없는 항목은 0으로 입력.</p>
+            <p className="text-[11px] text-gray-500 mb-3">모든 금액은 VAT 포함으로 입력하세요. 없는 항목은 0으로 입력.</p>
             <div className="space-y-3">
               {extraFees.map((fee, i) => (
                 <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
                   <div>
-                    {i === 0 && <label className="text-[10px] text-zinc-600 font-bold block mb-1">항목명</label>}
+                    {i === 0 && <label className="text-[10px] text-gray-500 font-bold block mb-1">항목명</label>}
                     <input placeholder="접객원 이용료" className={inputCls} value={fee.label}
                       onChange={e => setExtraFees(f => f.map((x, j) => j === i ? {...x, label: e.target.value} : x))} />
                   </div>
                   <div>
-                    {i === 0 && <label className="text-[10px] text-zinc-600 font-bold block mb-1">기준</label>}
+                    {i === 0 && <label className="text-[10px] text-gray-500 font-bold block mb-1">기준</label>}
                     <input placeholder="1시간 20분" className={inputCls} value={fee.value}
                       onChange={e => setExtraFees(f => f.map((x, j) => j === i ? {...x, value: e.target.value} : x))} />
                   </div>
                   <div>
-                    {i === 0 && <label className="text-[10px] text-zinc-600 font-bold block mb-1">금액 (원)</label>}
+                    {i === 0 && <label className="text-[10px] text-gray-500 font-bold block mb-1">금액 (원)</label>}
                     <input type="number" placeholder="200000" className={inputCls} value={fee.amount}
                       onChange={e => setExtraFees(f => f.map((x, j) => j === i ? {...x, amount: e.target.value} : x))} />
                   </div>
-                  <button type="button" onClick={() => setExtraFees(f => f.filter((_, j) => j !== i))} className="text-zinc-600 hover:text-red-400 pb-3.5">
+                  <button type="button" onClick={() => setExtraFees(f => f.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-500 pb-3.5">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -523,14 +523,14 @@ export default function BusinessEditPage() {
           <button
             type="button"
             onClick={() => setShowPreview(true)}
-            className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold py-4 rounded-[2rem] transition-all flex items-center justify-center gap-2 text-sm mb-3"
+            className="w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-600 font-bold py-4 rounded-[2rem] transition-all flex items-center justify-center gap-2 text-sm mb-3"
           >
             출력 예시 보기
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-500 text-black font-black py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-amber-500/10"
+            className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-gray-200 disabled:text-gray-400 text-black font-black py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-lg shadow-amber-500/10"
           >
             {saving ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <><Save size={20} /> 저장하기</>}
           </button>
