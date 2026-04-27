@@ -35,6 +35,7 @@ function toCategoryCode(category: string): string {
 }
 
 const PLAN_TO_TIER: Record<string, string> = {
+  free:     'p7',
   basic:    'p7',
   standard: 'p5',
   special:  'p4',
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
     }
 
     const tier = PLAN_TO_TIER[plan] || 'p7';
+    const isFree = plan === 'free';
     // trial 상태로 신청 — 실제 결제 전까지 코코알바에 금액 0 표시
     const adPrice = 0;
     const regionCode = toRegionCode(region);
@@ -113,53 +115,58 @@ export async function POST(req: NextRequest) {
 
     const businessId = bizData?.id ?? null;
 
-    // 2. shops 테이블 INSERT → 코코알바 광고 목록 노출
-    const { data: shopData, error: shopError } = await supabase
-      .from('shops')
-      .insert({
-        user_id: owner_id || null,
-        name,
-        title: `[야사장] ${name} 광고 신청`,
-        content: description || null,
-        category,
-        region,
-        phone,
-        tier,
-        product_type: tier,
-        ad_price: adPrice,
-        status: 'PENDING_REVIEW',
-        is_closed: false,
-        options: {
-          yasajang_plan: plan,
-          platform_choice: platform_choice || null,
-          business_number: business_number || null,
-          address: address || null,
-          yasajang_business_id: businessId || null,
-          menu_main: menu_main || null,
-          menu_liquor: menu_liquor || null,
-          menu_snack: menu_snack || null,
-        },
-      })
-      .select('id')
-      .single();
+    // 2. shops 테이블 INSERT → 코코알바 광고 목록 노출 (free 플랜은 스킵)
+    let shopId: string | null = null;
 
-    if (shopError) {
-      console.error('shops insert error:', shopError);
+    if (!isFree) {
+      const { data: shopData, error: shopError } = await supabase
+        .from('shops')
+        .insert({
+          user_id: owner_id || null,
+          name,
+          title: `[야사장] ${name} 광고 신청`,
+          content: description || null,
+          category,
+          region,
+          phone,
+          tier,
+          product_type: tier,
+          ad_price: adPrice,
+          status: 'PENDING_REVIEW',
+          is_closed: false,
+          options: {
+            yasajang_plan: plan,
+            platform_choice: platform_choice || null,
+            business_number: business_number || null,
+            address: address || null,
+            yasajang_business_id: businessId || null,
+            menu_main: menu_main || null,
+            menu_liquor: menu_liquor || null,
+            menu_snack: menu_snack || null,
+          },
+        })
+        .select('id')
+        .single();
+
+      if (shopError) {
+        console.error('shops insert error:', shopError);
+      }
+      shopId = shopData?.id ?? null;
     }
 
-    const shopId = shopData?.id ?? null;
-
     // 3. subscriptions 테이블 INSERT
+    // free 플랜 = 밤길 3개월 무료, 그 외 = 7일 trial
     if (businessId) {
+      const trialDays = isFree ? 90 : 7;
       const { error: subError } = await supabase
         .from('subscriptions')
         .insert({
           business_id: businessId,
           plan: plan || 'basic',
           status: 'trial',
-          platform_choice: plan === 'basic' ? null : (platform_choice || null),
+          platform_choice: (plan === 'basic' || isFree) ? null : (platform_choice || null),
           trial_starts_at: new Date().toISOString(),
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_ends_at: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString(),
         });
 
       if (subError) {

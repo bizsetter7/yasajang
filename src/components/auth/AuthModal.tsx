@@ -39,6 +39,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         onClose();
+        window.location.href = '/dashboard';
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;

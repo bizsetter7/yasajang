@@ -66,11 +66,14 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrFilledSet, setOcrFilledSet] = useState<Set<string>>(new Set());
+  const [hasAnthropicKey, setHasAnthropicKey] = useState(true); // SSR에서는 true로 가정하고 클라이언트에서 확인, 다만 클라이언트 환경변수가 아니면 API 호출 시 알 수 있음. (API에서 에러로 반환되면 숨김)
 
   const searchParams = useSearchParams();
   const selectedPlan = searchParams.get('plan') || 'basic';
@@ -192,6 +195,61 @@ export default function RegisterForm() {
   };
   const prevStep = () => { setError(null); setCurrentStep(prev => Math.max(prev - 1, 1)); };
 
+  const handleOcr = async () => {
+    if (!files.license) return;
+    setOcrLoading(true);
+    setError(null);
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(files.license);
+      reader.onload = async () => {
+        try {
+          const res = await fetch('/api/ocr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: reader.result })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+             if (res.status === 500 && data.error === 'OCR service is not configured') {
+                 setHasAnthropicKey(false);
+                 throw new Error('AI 자동입력 기능이 비활성화되었습니다.');
+             }
+             throw new Error(data.error || 'OCR 처리 실패');
+          }
+          
+          if (data.success && data.data) {
+             const updates: Partial<typeof formData> = {};
+             const filled = new Set(ocrFilledSet);
+
+             if (data.data.name) { updates.name = data.data.name; filled.add('name'); }
+             if (data.data.representative) { updates.representative = data.data.representative; filled.add('representative'); }
+             if (data.data.business_number) { updates.business_number = data.data.business_number; filled.add('business_number'); }
+
+             if (Object.keys(updates).length > 0) {
+                 setFormData(prev => ({ ...prev, ...updates }));
+                 setOcrFilledSet(filled);
+                 alert('AI가 사업자등록증 정보를 성공적으로 읽어왔습니다.');
+             } else {
+                 alert('인식된 정보가 없습니다. 수동으로 입력해주세요.');
+             }
+          }
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setOcrLoading(false);
+        }
+      };
+      reader.onerror = () => {
+         throw new Error('파일 읽기 실패');
+      };
+    } catch (err: any) {
+      setError(err.message);
+      setOcrLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
@@ -255,7 +313,8 @@ export default function RegisterForm() {
                    `📦 신청플랜: ${selectedPlan}\n` +
                    `📍 지역: ${formData.region}\n` +
                    `📞 연락처: ${formData.phone}\n` +
-                   `${selectedPlan !== 'basic' ? `🔗 선택플랫폼: ${formData.platform_choice}\n` : ''}` +
+                   `${selectedPlan !== 'basic' && selectedPlan !== 'free' ? `🔗 선택플랫폼: ${formData.platform_choice}\n` : ''}` +
+                   `${selectedPlan === 'free' ? `🆓 플랜: 밤길 3개월 무료\n` : ''}` +
                    `\n심사 대기 상태로 등록되었습니다.`
         })
       });
@@ -352,15 +411,47 @@ export default function RegisterForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-zinc-400 flex items-center">
-                  <Building2 size={14} className="mr-2" /> 업소명
+                  <Building2 size={14} className="mr-2" /> 상호명 (업소명)
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
-                  onChange={handleInputChange}
+                  onChange={(e) => { handleInputChange(e); setOcrFilledSet(prev => { const n = new Set(prev); n.delete('name'); return n; }); }}
                   placeholder="사업자 상호명을 입력하세요"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all"
+                  className={`w-full border rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all ${
+                    ocrFilledSet.has('name') ? 'bg-amber-500/10 border-amber-500/50' : 'bg-zinc-950 border-zinc-800'
+                  }`}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-400 flex items-center">
+                  <Shield size={14} className="mr-2" /> 대표자명
+                </label>
+                <input
+                  type="text"
+                  name="representative"
+                  value={formData.representative}
+                  onChange={(e) => { handleInputChange(e); setOcrFilledSet(prev => { const n = new Set(prev); n.delete('representative'); return n; }); }}
+                  placeholder="사업자 대표자명"
+                  className={`w-full border rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all ${
+                    ocrFilledSet.has('representative') ? 'bg-amber-500/10 border-amber-500/50' : 'bg-zinc-950 border-zinc-800'
+                  }`}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-400 flex items-center">
+                  <Hash size={14} className="mr-2" /> 사업자등록번호
+                </label>
+                <input
+                  type="text"
+                  name="business_number"
+                  value={formData.business_number}
+                  onChange={(e) => { handleInputChange(e); setOcrFilledSet(prev => { const n = new Set(prev); n.delete('business_number'); return n; }); }}
+                  placeholder="000-00-00000"
+                  className={`w-full border rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all ${
+                    ocrFilledSet.has('business_number') ? 'bg-amber-500/10 border-amber-500/50' : 'bg-zinc-950 border-zinc-800'
+                  }`}
                 />
               </div>
               <div className="space-y-2">
@@ -407,7 +498,7 @@ export default function RegisterForm() {
                     onChange={e => setRegionSigungu(e.target.value)}
                     className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all appearance-none"
                   >
-                    {(REGIONS[regionSido] ?? []).map(sg => (
+                    {(REGIONS[regionSido] ?? []).slice().sort((a, b) => a.localeCompare(b, 'ko')).map(sg => (
                       <option key={sg}>{sg}</option>
                     ))}
                   </select>
@@ -428,8 +519,22 @@ export default function RegisterForm() {
               </div>
             </div>
 
+            {/* 무료 플랜 안내 배너 */}
+            {selectedPlan === 'free' && (
+              <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-start gap-3">
+                <span className="text-amber-400 text-xl shrink-0">📍</span>
+                <div>
+                  <p className="text-amber-400 font-black text-sm mb-1">밤길 3개월 무료 등록</p>
+                  <p className="text-zinc-400 text-xs leading-relaxed">
+                    무료 플랜은 <strong className="text-white">밤길 지도에만</strong> 3개월간 업소 핀이 노출됩니다.<br />
+                    코코알바·웨이터존·선수존 구인 플랫폼 노출은 유료 플랜(스탠다드 이상)에서 이용 가능합니다.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* 플랫폼 선택 (스탠다드 이상일 경우) */}
-            {selectedPlan !== 'basic' && (
+            {selectedPlan !== 'basic' && selectedPlan !== 'free' && (
               <div className="space-y-4 p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
                 <label className="text-sm font-bold text-amber-500 flex items-center">
                   <Shield size={16} className="mr-2" /> 연동 플랫폼 선택 (코코알바 또는 선수존)
@@ -517,8 +622,20 @@ export default function RegisterForm() {
                 <h4 className="text-base font-bold text-white mb-1">사업자등록증</h4>
                 <p className="text-zinc-500 text-xs mb-3">JPG, PNG, PDF (최대 10MB)</p>
                 {files.license ? (
-                  <div className="text-amber-500 font-bold text-xs bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block truncate max-w-full">
-                    {files.license.name}
+                  <div className="mt-1">
+                    <div className="text-amber-500 font-bold text-xs bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block truncate max-w-full">
+                      {files.license.name}
+                    </div>
+                    {hasAnthropicKey && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleOcr(); }}
+                        disabled={ocrLoading}
+                        className="mt-3 w-full py-2 bg-amber-500 text-black font-bold text-xs rounded-xl flex items-center justify-center hover:bg-amber-400 transition-colors disabled:opacity-50"
+                      >
+                        {ocrLoading ? <><Loader2 size={14} className="mr-1 animate-spin" /> 자동입력 중...</> : '🤖 AI 자동입력'}
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-zinc-600 font-medium text-xs">클릭하여 업로드</div>

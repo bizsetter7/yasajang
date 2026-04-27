@@ -49,10 +49,10 @@ export default function Hero() {
 
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <Link
-              href="/register"
+              href="/register?plan=free"
               className="w-full sm:w-auto px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl flex items-center justify-center transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transform hover:-translate-y-1 text-lg"
             >
-              무료로 입점 신청 <ChevronRight className="ml-2" size={20} />
+              밤길 3개월 무료 등록 <ChevronRight className="ml-2" size={20} />
             </Link>
             <Link
               href="#pricing"
@@ -74,8 +74,8 @@ export default function Hero() {
             </div>
             <div className="h-8 w-px bg-zinc-800" />
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-white">무료</span>
-              <span className="text-[10px] uppercase tracking-tighter text-zinc-500 font-bold">기본 등록</span>
+              <span className="text-2xl font-bold text-white">3개월</span>
+              <span className="text-[10px] uppercase tracking-tighter text-zinc-500 font-bold">밤길 무료 등록</span>
             </div>
           </div>
         </div>
