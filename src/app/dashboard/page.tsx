@@ -56,44 +56,41 @@ export default async function DashboardPage() {
   const cocoShopCount = allShops.filter(s => !isWaiter(s.category)).length;
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto space-y-10">
         <header className="space-y-2">
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">사장님 대시보드</h1>
-          <p className="text-zinc-500 font-medium">업소 관리와 구독 현황을 한눈에 확인하세요.</p>
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">사장님 대시보드</h1>
+          <p className="text-gray-500 font-medium">업소 관리와 구독 현황을 한눈에 확인하세요.</p>
         </header>
 
         {business ? (
           <>
-            <section className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">내 업소 정보</h2>
-              </div>
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">내 업소 정보</h2>
               <BusinessCard business={business} subscription={subscription} />
             </section>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <section className="space-y-6">
-                <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">멤버십 상태</h2>
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">멤버십 상태</h2>
                 <SubscriptionCard subscription={subscription} businessId={business.id} />
               </section>
 
-              <section className="space-y-6">
-                <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">마케팅 성과</h2>
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 성과</h2>
                 <BamgilStatsCard count={bamgilCount} />
               </section>
             </div>
           </>
         ) : (
-          <section className="bg-zinc-900 border border-amber-500/20 rounded-2xl p-8 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500/0 via-amber-500 to-amber-500/0 opacity-50" />
-            <h2 className="text-xl font-black text-amber-500 mb-3">⚠️ 아직 입점신청을 하지 않으셨어요</h2>
-            <p className="text-zinc-400 mb-6 max-w-lg mx-auto">
+          <section className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
+            <h2 className="text-xl font-black text-amber-600 mb-3">아직 입점신청을 하지 않으셨어요</h2>
+            <p className="text-gray-600 mb-6 max-w-lg mx-auto">
               밤길/코코알바에 업소를 등록하고 새로운 고객을 만나보세요.<br/>
               간단한 입점신청을 통해 다양한 플랫폼에서 내 업소를 홍보할 수 있습니다.
             </p>
-            <a 
-              href="/register" 
+            <a
+              href="/register"
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-colors"
             >
               지금 입점신청하기 →
@@ -101,22 +98,21 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        <section className="space-y-6 pt-6 border-t border-zinc-900">
-          <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">플랫폼 현황</h2>
+        <section className="space-y-4 pt-6 border-t border-gray-200">
+          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">플랫폼 현황</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <a
               href="https://cocoalba.kr/my-shop"
               target="_blank"
               rel="noopener noreferrer"
-              className="block p-6 bg-gradient-to-br from-rose-500/10 to-transparent border border-rose-500/20 rounded-2xl hover:bg-rose-500/10 transition-all group relative overflow-hidden"
+              className="block p-6 bg-white border border-gray-200 rounded-2xl hover:border-rose-300 hover:shadow-md transition-all group"
             >
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all" />
-              <h3 className="text-lg font-bold text-rose-500 mb-2">코코알바 공고 현황</h3>
+              <h3 className="text-sm font-bold text-rose-500 mb-3">코코알바 공고 현황</h3>
               <div className="flex items-end gap-2 mb-4">
-                <span className="text-3xl font-black text-white">{cocoShopCount}</span>
-                <span className="text-zinc-400 mb-1">개 공고</span>
+                <span className="text-4xl font-black text-gray-900">{cocoShopCount}</span>
+                <span className="text-gray-500 mb-1 font-medium">개 공고</span>
               </div>
-              <span className="text-xs font-bold text-rose-400 flex items-center gap-1 group-hover:gap-2 transition-all border-t border-rose-500/20 pt-4">
+              <span className="text-xs font-bold text-rose-500 flex items-center gap-1 group-hover:gap-2 transition-all border-t border-gray-100 pt-4">
                 코코알바 마이샵 바로가기 →
               </span>
             </a>
@@ -125,23 +121,22 @@ export default async function DashboardPage() {
               href="https://waiterzone.kr/my"
               target="_blank"
               rel="noopener noreferrer"
-              className="block p-6 bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20 rounded-2xl hover:bg-blue-500/10 transition-all group relative overflow-hidden"
+              className="block p-6 bg-white border border-gray-200 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all group"
             >
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all" />
-              <h3 className="text-lg font-bold text-blue-500 mb-2">웨이터존 공고 현황</h3>
+              <h3 className="text-sm font-bold text-blue-500 mb-3">웨이터존 공고 현황</h3>
               <div className="flex items-end gap-2 mb-4">
-                <span className="text-3xl font-black text-white">{waiterShopCount}</span>
-                <span className="text-zinc-400 mb-1">개 공고</span>
+                <span className="text-4xl font-black text-gray-900">{waiterShopCount}</span>
+                <span className="text-gray-500 mb-1 font-medium">개 공고</span>
               </div>
-              <span className="text-xs font-bold text-blue-400 flex items-center gap-1 group-hover:gap-2 transition-all border-t border-blue-500/20 pt-4">
+              <span className="text-xs font-bold text-blue-500 flex items-center gap-1 group-hover:gap-2 transition-all border-t border-gray-100 pt-4">
                 웨이터존 마이샵 바로가기 →
               </span>
             </a>
           </div>
         </section>
 
-        <footer className="pt-12 text-center border-t border-zinc-900">
-          <p className="text-zinc-600 text-xs">
+        <footer className="pt-12 text-center border-t border-gray-200">
+          <p className="text-gray-400 text-xs">
             &copy; 2026 Yasajang. All rights reserved.
           </p>
         </footer>
