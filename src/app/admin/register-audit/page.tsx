@@ -15,7 +15,6 @@ import {
   MapPin,
   Clock,
   Building,
-  Hash,
   Phone,
   ShieldCheck
 } from 'lucide-react';
@@ -27,10 +26,10 @@ interface Business {
   category: string;
   region_code: string;
   created_at: string;
-  representative?: string;
-  business_number?: string;
+  manager_name?: string;       // 대표자명 (register API → manager_name)
   phone: string;
-  license_path: string;
+  business_reg_url?: string;   // 사업자등록증 (register API → business_reg_url)
+  permit_path?: string;        // 영업허가증
   status: string;
   address_detail?: string;
 }
@@ -201,12 +200,8 @@ export default function RegisterAuditPage() {
                     <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-600 mb-4">기본 비즈니스 정보</h4>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
-                        <span className="text-zinc-500 text-sm flex items-center"><User size={14} className="mr-2" /> 대표자명</span>
-                        <span className="text-white font-bold">{selectedShop.representative || '미입력'}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
-                        <span className="text-zinc-500 text-sm flex items-center"><Hash size={14} className="mr-2" /> 사업자번호</span>
-                        <span className="text-white font-bold">{selectedShop.business_number || '미입력'}</span>
+                        <span className="text-zinc-500 text-sm flex items-center"><User size={14} className="mr-2" /> 대표자(실장)명</span>
+                        <span className="text-white font-bold">{selectedShop.manager_name || '미입력'}</span>
                       </div>
                       <div className="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
                         <span className="text-zinc-500 text-sm flex items-center"><Phone size={14} className="mr-2" /> 연락처</span>
@@ -217,29 +212,72 @@ export default function RegisterAuditPage() {
 
                   <section>
                     <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-600 mb-4">인증 서류 검토</h4>
-                    <div 
-                      className="group p-6 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex items-center justify-between hover:border-amber-500/50 transition-all cursor-pointer"
-                      onClick={async () => {
-                        const res = await fetch('/api/storage/signed-url', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ path: selectedShop.license_path }),
-                        });
-                        const { url, error } = await res.json();
-                        if (error) { alert('서류 조회 실패: ' + error); return; }
-                        window.open(url, '_blank');
-                      }}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 group-hover:text-amber-500">
-                          <FileText size={20} />
+                    <div className="space-y-3">
+                      {/* 사업자등록증 */}
+                      {selectedShop.business_reg_url ? (
+                        <div
+                          className="group p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex items-center justify-between hover:border-amber-500/50 transition-all cursor-pointer"
+                          onClick={async () => {
+                            const res = await fetch('/api/storage/signed-url', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ path: selectedShop.business_reg_url }),
+                            });
+                            const { url, error } = await res.json();
+                            if (error) { alert('서류 조회 실패: ' + error); return; }
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-9 h-9 bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 group-hover:text-amber-500">
+                              <FileText size={18} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-white">사업자등록증</p>
+                              <p className="text-[10px] text-zinc-600">클릭하여 원본 보기</p>
+                            </div>
+                          </div>
+                          <ExternalLink size={14} className="text-zinc-700 group-hover:text-white shrink-0" />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-white">사업자등록증.pdf</p>
-                          <p className="text-[10px] text-zinc-600">클릭하여 원본 보기</p>
+                      ) : (
+                        <div className="p-4 bg-zinc-900/30 border border-zinc-800 border-dashed rounded-2xl flex items-center gap-3">
+                          <FileText size={16} className="text-zinc-700 shrink-0" />
+                          <p className="text-sm text-zinc-600">사업자등록증 — 미제출</p>
                         </div>
-                      </div>
-                      <ExternalLink size={16} className="text-zinc-700 group-hover:text-white" />
+                      )}
+
+                      {/* 영업허가증 */}
+                      {selectedShop.permit_path ? (
+                        <div
+                          className="group p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex items-center justify-between hover:border-emerald-500/50 transition-all cursor-pointer"
+                          onClick={async () => {
+                            const res = await fetch('/api/storage/signed-url', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ path: selectedShop.permit_path }),
+                            });
+                            const { url, error } = await res.json();
+                            if (error) { alert('서류 조회 실패: ' + error); return; }
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-9 h-9 bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 group-hover:text-emerald-400">
+                              <FileText size={18} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-white">영업허가증</p>
+                              <p className="text-[10px] text-zinc-600">클릭하여 원본 보기</p>
+                            </div>
+                          </div>
+                          <ExternalLink size={14} className="text-zinc-700 group-hover:text-white shrink-0" />
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-zinc-900/30 border border-zinc-800 border-dashed rounded-2xl flex items-center gap-3">
+                          <FileText size={16} className="text-zinc-700 shrink-0" />
+                          <p className="text-sm text-zinc-600">영업허가증 — 미제출</p>
+                        </div>
+                      )}
                     </div>
                   </section>
                 </div>
@@ -275,9 +313,8 @@ export default function RegisterAuditPage() {
                       <span className="text-[10px] font-bold uppercase tracking-tight">Timeline</span>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex items-start">
-                        <div className="w-[2px] h-full bg-zinc-800 absolute" />
-                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 mt-1 mr-4 shrink-0" />
+                      <div className="flex items-start relative">
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 mt-1 mr-4 shrink-0" />
                         <div className="text-[10px]">
                           <span className="text-zinc-400">신청 접수됨</span> · <span className="text-zinc-600">{new Date(selectedShop.created_at).toLocaleString()}</span>
                         </div>
