@@ -16,22 +16,23 @@ function toRegionCode(region: string): string {
   return SIDO_TO_CODE[sido] || 'gyeonggi';
 }
 
-const CATEGORY_TO_CODE: Record<string, string> = {
-  '룸알바': 'room_salon',
-  '노래주점': 'karaoke_bar',
-  '텐프로/쩜오': 'room_salon',
-  '요정': 'room_salon',
-  '바(Bar)': 'bar',
-  '엔터': 'other',
-  '다방': 'other',
-  '카페': 'other',
-  '마사지': 'other',
-  '기타': 'other',
+// businesses.category 컬럼은 한글값으로 저장 (businesses_category_check 제약조건 기준)
+const CATEGORY_TO_KO: Record<string, string> = {
+  '룸알바': '룸살롱',
+  '노래주점': '노래주점',
+  '텐프로/쩜오': '룸살롱',
+  '요정': '룸살롱',
+  '바(Bar)': '유흥주점',
+  '엔터': '기타',
+  '다방': '기타',
+  '카페': '기타',
+  '마사지': '기타',
+  '기타': '기타',
 };
 
-function toCategoryCode(category: string): string {
+function toCategoryKo(category: string): string {
   const main = (category || '').split('>')[0].trim();
-  return CATEGORY_TO_CODE[main] || 'other';
+  return CATEGORY_TO_KO[main] || '기타';
 }
 
 const PLAN_TO_TIER: Record<string, string> = {
@@ -81,14 +82,14 @@ export async function POST(req: NextRequest) {
     // trial 상태로 신청 — 실제 결제 전까지 코코알바에 금액 0 표시
     const adPrice = 0;
     const regionCode = toRegionCode(region);
-    const categoryCode = toCategoryCode(category);
+    const categoryKo = toCategoryKo(category);
 
     // 1. businesses 테이블 INSERT
     const { data: bizData, error: bizError } = await supabase
       .from('businesses')
       .insert({
         name,
-        category: categoryCode,
+        category: categoryKo,
         region_code: regionCode,
         address: address || null,
         phone,

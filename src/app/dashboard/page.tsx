@@ -98,6 +98,25 @@ export default async function DashboardPage() {
           <p className="text-gray-500 font-medium">업소 관리와 구독 현황을 한눈에 확인하세요.</p>
         </header>
 
+        {/* ── 상세 정보 미입력 안내 배너 ── */}
+        {business && !business.description && !business.business_hours && !business.cover_image_url && (
+          <section className="p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-4">
+            <span className="text-2xl shrink-0">✏️</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-amber-700 text-sm mb-0.5">업소 상세 정보를 아직 입력하지 않으셨어요!</p>
+              <p className="text-amber-600/80 text-xs leading-relaxed">
+                영업시간 · 메뉴 · 소개글 · 사진을 입력하면 밤길에서 훨씬 많은 고객이 찾아옵니다.
+              </p>
+            </div>
+            <a
+              href="/dashboard/edit"
+              className="shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs rounded-xl transition-colors whitespace-nowrap"
+            >
+              지금 입력하기 →
+            </a>
+          </section>
+        )}
+
         {business ? (
           /* ── PC: 좌측 메인 + 우측 사이드바 ── */
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">

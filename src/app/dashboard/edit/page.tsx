@@ -23,10 +23,10 @@ const REGIONS = [
 ];
 
 const CATEGORIES = [
-  { value: 'room_salon', label: '룸살롱' }, { value: 'karaoke_bar', label: '노래주점' },
-  { value: 'bar', label: '유흥주점' }, { value: 'night_club', label: '나이트/클럽' },
-  { value: 'hostbar', label: '호스트바' }, { value: 'general', label: '일반' },
-  { value: 'other', label: '기타' },
+  { value: '룸살롱', label: '룸살롱' }, { value: '노래주점', label: '노래주점' },
+  { value: '유흥주점', label: '유흥주점' }, { value: '나이트', label: '나이트/클럽' },
+  { value: '호스트바', label: '호스트바' }, { value: '일반', label: '일반' },
+  { value: '기타', label: '기타' },
 ];
 
 interface MenuItem { name: string; price: string; note: string; }

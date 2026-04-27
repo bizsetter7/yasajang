@@ -333,31 +333,55 @@ export default function RegisterForm() {
 
   if (success) {
     return (
-      <div className="text-center py-20 animate-fade-in">
-        <div className="w-20 h-20 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-8">
-          <CheckCircle2 size={40} />
-        </div>
-        <h2 className="text-3xl font-bold text-white mb-4">입점 신청 완료</h2>
-        <p className="text-zinc-500 mb-10 max-w-md mx-auto leading-relaxed">
-          성공적으로 입점 신청이 접수되었습니다.<br />
-          문서 심사는 영업일 기준 1~2일이 소요되며,<br />
-          결과는 등록된 이메일로 안내해 드립니다.
-        </p>
-        <button 
-          onClick={() => window.location.href = '/dashboard'}
-          className="px-8 py-4 bg-amber-500 text-black font-bold rounded-xl hover:bg-amber-400 transition-all"
-        >
-          대시보드로 이동
-        </button>
-        <div className="mt-4 p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
-          <p className="text-zinc-400 text-sm mb-3">
-            🎉 입점 신청 완료! 이제 코코알바에 구인 광고도 등록하세요.
+      <div className="py-16 animate-fade-in max-w-lg mx-auto">
+        {/* 완료 헤더 */}
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 size={40} />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-3">입점 신청 완료!</h2>
+          <p className="text-zinc-400 leading-relaxed text-sm">
+            신청이 접수되었습니다. 영업일 기준 1~2일 내 심사 후<br />
+            결과를 이메일로 안내드립니다.
           </p>
+        </div>
+
+        {/* ★ 상세 정보 입력 안내 (중요) */}
+        <div className="mb-4 p-5 bg-amber-500/10 border border-amber-500/40 rounded-2xl">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">✏️</span>
+            <div>
+              <p className="text-amber-400 font-black text-sm mb-1">지금 바로 업소 상세 정보를 입력하세요!</p>
+              <p className="text-zinc-400 text-xs leading-relaxed mb-3">
+                영업시간, 메뉴, 소개글, 사진 등을 입력하면<br />
+                밤길 노출 시 훨씬 더 많은 고객이 유입됩니다.
+              </p>
+              <button
+                onClick={() => window.location.href = '/dashboard/edit'}
+                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all text-sm"
+              >
+                업소 상세 정보 입력하기 →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 대시보드 이동 */}
+        <button
+          onClick={() => window.location.href = '/dashboard'}
+          className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold rounded-xl transition-all text-sm mb-4"
+        >
+          나중에 입력하기 (대시보드로 이동)
+        </button>
+
+        {/* 코코알바 광고 */}
+        <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
+          <p className="text-zinc-500 text-xs mb-2">💼 구인도 함께 등록하세요</p>
           <a
-            href="https://coco-universe.vercel.app/my-shop"
+            href="https://cocoalba.kr/my-shop"
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full px-6 py-3 bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold rounded-xl hover:bg-rose-500/30 transition-all text-sm text-center"
+            className="block w-full px-4 py-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 font-bold rounded-xl hover:bg-rose-500/20 transition-all text-xs text-center"
           >
             코코알바 구인 광고 등록하기 →
           </a>
