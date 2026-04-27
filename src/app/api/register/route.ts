@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
       name, category, region, representative, business_number,
       phone, address, description, menu_main, menu_liquor, menu_snack,
       platform_choice, owner_id, license_path, permit_path, plan,
+      license_number, floor_area,
     } = body;
 
     if (!name || !phone) {
@@ -100,6 +101,9 @@ export async function POST(req: NextRequest) {
         menu_snack: menu_snack || null,
         business_reg_url: license_path || null,
         permit_path: permit_path || null,
+        business_reg_number: business_number || null,
+        license_number: license_number || null,
+        floor_area: floor_area || null,
         owner_id: owner_id || null,
         status: 'pending',
         cocoalba_tier: plan || 'basic',

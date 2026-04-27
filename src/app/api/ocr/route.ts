@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     try {
-        const { imageUrl } = await req.json();
+        const { imageUrl, docType } = await req.json();
 
         if (!imageUrl) {
             return NextResponse.json({ error: 'Image URL is required' }, { status: 400 });
@@ -60,7 +60,9 @@ export async function POST(req: Request) {
                             },
                             {
                                 type: 'text',
-                                text: "이 이미지는 한국 사업자등록증 또는 영업허가증입니다.\n다음 항목을 JSON으로만 응답하세요 (설명 없이):\n{\n  \"business_number\": \"사업자등록번호 (000-00-00000 형식)\",\n  \"name\": \"상호명\",\n  \"representative\": \"대표자명\",\n  \"open_date\": \"개업일 (YYYY-MM-DD)\",\n  \"business_type\": \"업태\"\n}\n항목을 찾을 수 없으면 해당 필드를 null로 반환."
+                                text: docType === 'permit'
+                                    ? "이 이미지는 한국 식품위생법상 영업허가증(또는 영업신고증)입니다.\n다음 항목을 JSON으로만 응답하세요 (설명 없이):\n{\n  \"license_number\": \"영업허가번호 또는 신고번호 (예: 제2023-서울강남-01234호)\",\n  \"floor_area\": \"영업장 면적 (예: 165.28㎡)\",\n  \"name\": \"업소명\",\n  \"representative\": \"대표자명\"\n}\n항목을 찾을 수 없으면 해당 필드를 null로 반환."
+                                    : "이 이미지는 한국 사업자등록증입니다.\n다음 항목을 JSON으로만 응답하세요 (설명 없이):\n{\n  \"business_number\": \"사업자등록번호 (000-00-00000 형식)\",\n  \"name\": \"상호명\",\n  \"representative\": \"대표자명\",\n  \"open_date\": \"개업일 (YYYY-MM-DD)\",\n  \"business_type\": \"업태\"\n}\n항목을 찾을 수 없으면 해당 필드를 null로 반환."
                             }
                         ]
                     }

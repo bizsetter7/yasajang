@@ -72,6 +72,7 @@ export default function RegisterForm() {
   );
 
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrPermitLoading, setOcrPermitLoading] = useState(false);
   const [ocrFilledSet, setOcrFilledSet] = useState<Set<string>>(new Set());
   const [hasAnthropicKey, setHasAnthropicKey] = useState(true); // SSR에서는 true로 가정하고 클라이언트에서 확인, 다만 클라이언트 환경변수가 아니면 API 호출 시 알 수 있음. (API에서 에러로 반환되면 숨김)
 
@@ -100,6 +101,8 @@ export default function RegisterForm() {
     menu_main: '',
     menu_liquor: '',
     menu_snack: '',
+    license_number: '',
+    floor_area: '',
   });
 
   // 업종 연동: 대분류 변경 시 subCategory 초기화 + formData.category 업데이트
@@ -251,6 +254,52 @@ export default function RegisterForm() {
     }
   };
 
+  const handlePermitOcr = async () => {
+    if (!files.permit) return;
+    setOcrPermitLoading(true);
+    setError(null);
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(files.permit);
+      reader.onload = async () => {
+        try {
+          const res = await fetch('/api/ocr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: reader.result, docType: 'permit' }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'OCR 처리 실패');
+
+          if (data.success && data.data) {
+            const updates: Partial<typeof formData> = {};
+            const filled = new Set(ocrFilledSet);
+
+            if (data.data.license_number) { updates.license_number = data.data.license_number; filled.add('license_number'); }
+            if (data.data.floor_area) { updates.floor_area = data.data.floor_area; filled.add('floor_area'); }
+
+            if (Object.keys(updates).length > 0) {
+              setFormData(prev => ({ ...prev, ...updates }));
+              setOcrFilledSet(filled);
+              alert('AI가 영업허가증에서 규모(면적)와 영업허가번호를 읽어왔습니다.');
+            } else {
+              alert('인식된 정보가 없습니다. 수동으로 입력해주세요.');
+            }
+          }
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setOcrPermitLoading(false);
+        }
+      };
+      reader.onerror = () => { throw new Error('파일 읽기 실패'); };
+    } catch (err: any) {
+      setError(err.message);
+      setOcrPermitLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
@@ -299,6 +348,8 @@ export default function RegisterForm() {
           license_path: licenseUrl,
           permit_path: permitUrl,
           plan: localSelectedPlan,
+          license_number: formData.license_number || null,
+          floor_area: formData.floor_area || null,
         }),
       });
       const result = await res.json();
@@ -815,8 +866,20 @@ export default function RegisterForm() {
                 <h4 className="text-base font-bold text-white mb-1">영업허가증</h4>
                 <p className="text-zinc-500 text-xs mb-3">JPG, PNG, PDF (최대 10MB)</p>
                 {files.permit ? (
-                  <div className="text-amber-500 font-bold text-xs bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block truncate max-w-full">
-                    {files.permit.name}
+                  <div className="mt-1">
+                    <div className="text-amber-500 font-bold text-xs bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block truncate max-w-full">
+                      {files.permit.name}
+                    </div>
+                    {hasAnthropicKey && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handlePermitOcr(); }}
+                        disabled={ocrPermitLoading}
+                        className="mt-3 w-full py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl flex items-center justify-center hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                      >
+                        {ocrPermitLoading ? <><Loader2 size={14} className="mr-1 animate-spin" /> 자동입력 중...</> : '🤖 AI 자동입력 (허가번호·면적)'}
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-zinc-600 font-medium text-xs">클릭하여 업로드</div>
