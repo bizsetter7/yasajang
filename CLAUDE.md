@@ -209,6 +209,7 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 | Dashboard | 04-27 | 대시보드 전면개편 — 코코알바 기존회원 진입, 조건부 CTA |
 | 11 | 04-28 | RegisterForm OCR 개업일 자동반영, 파일업로드 OCR 자동트리거, platform_choice 플랜별 자동선택, register API 타이틀 수정, edit UX (룸수/연령대 단위, 금액 콤마, 업소 소개 자동생성, 상세지역 select, 영업시간 드롭다운), 대시보드 플랫폼 빠른 등록 4개 버튼 |
 | 12 | 04-28 | P2 Step 4(추가 옵션) 야사장 회원 숨김, 대시보드 '플랫폼 구인 조건' 내부 폼 3종 (코코알바/웨이터존/선수존), POST /api/platform-ads/update (shops.options 병합 저장) |
+| 13 | 04-28 | BusinessCard 상세지역 표시 (extractSubRegion: "경기"→"경기 평택시"), 플랫폼 구인폼 드롭다운 Chrome/Windows 텍스트 누락 버그 수정 (appearance-none + 커스텀▼), 금액 입력 커서점프 수정 (blur 포맷 패턴) |
 
 ---
 
@@ -230,3 +231,5 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 - OCR API: Anthropic Claude Haiku 사용 → ANTHROPIC_API_KEY 필요
 - `cookies()` 반드시 `await` (Next.js 15)
 - SSG 페이지에서 `createClient()` 대신 직접 Supabase URL fetch 사용
+- **`<select>` 스타일링 주의**: `rounded-xl`+`focus:ring`+`bg-white` 조합 시 Chrome/Windows에서 옵션 텍스트 미표시 버그 발생 → 반드시 `appearance-none` + 래퍼 div + 커스텀 `▼` 화살표 패턴 사용 (`selectCls` 변수 참조)
+- **금액 input 포맷 패턴**: onChange에서 comma 포맷 금지(커서 점프) → `[field]Focused` state + onFocus(raw)/onBlur(format) 패턴 사용
