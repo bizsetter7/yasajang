@@ -131,6 +131,53 @@ export default async function DashboardPage() {
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">플랫폼 현황</h2>
                 {platformCards}
               </section>
+
+              {/* ── 플랫폼 빠른 등록 ── */}
+              <section className="space-y-3">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">플랫폼 빠른 등록</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <a href="https://bamgil.kr/my-shop"
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-purple-300 hover:shadow-md transition-all group">
+                    <span className="text-2xl shrink-0">🌙</span>
+                    <div>
+                      <p className="text-xs font-black text-gray-900">밤길</p>
+                      <p className="text-[11px] text-gray-400">업체정보 등록·수정</p>
+                    </div>
+                    <span className="ml-auto text-gray-300 group-hover:text-purple-400 text-lg">→</span>
+                  </a>
+                  <a href="https://cocoalba.kr/my-shop"
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-rose-300 hover:shadow-md transition-all group">
+                    <span className="text-2xl shrink-0">🍫</span>
+                    <div>
+                      <p className="text-xs font-black text-gray-900">코코알바</p>
+                      <p className="text-[11px] text-gray-400">아가씨 구인 등록</p>
+                    </div>
+                    <span className="ml-auto text-gray-300 group-hover:text-rose-400 text-lg">→</span>
+                  </a>
+                  <a href="https://waiterzone.kr/my-shop"
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all group">
+                    <span className="text-2xl shrink-0">🤵</span>
+                    <div>
+                      <p className="text-xs font-black text-gray-900">웨이터존</p>
+                      <p className="text-[11px] text-gray-400">웨이터 구인 등록</p>
+                    </div>
+                    <span className="ml-auto text-gray-300 group-hover:text-blue-400 text-lg">→</span>
+                  </a>
+                  <a href="https://sunsuzone.kr/my-shop"
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-yellow-300 hover:shadow-md transition-all group">
+                    <span className="text-2xl shrink-0">👑</span>
+                    <div>
+                      <p className="text-xs font-black text-gray-900">선수존</p>
+                      <p className="text-[11px] text-gray-400">선수 구인 등록</p>
+                    </div>
+                    <span className="ml-auto text-gray-300 group-hover:text-yellow-500 text-lg">→</span>
+                  </a>
+                </div>
+              </section>
             </div>
 
             {/* 우측 사이드바 */}

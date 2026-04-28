@@ -103,6 +103,7 @@ export default function RegisterForm() {
     menu_snack: '',
     license_number: '',
     floor_area: '',
+    opened_at: '',
   });
 
   // 업종 연동: 대분류 변경 시 subCategory 초기화 + formData.category 업데이트
@@ -240,6 +241,7 @@ export default function RegisterForm() {
              if (data.data.name) { updates.name = data.data.name; filled.add('name'); }
              if (data.data.representative) { updates.representative = data.data.representative; filled.add('representative'); }
              if (data.data.business_number) { updates.business_number = data.data.business_number; filled.add('business_number'); }
+             if (data.data.open_date) { updates.opened_at = data.data.open_date; filled.add('opened_at'); }
 
              if (Object.keys(updates).length > 0) {
                  setFormData(prev => ({ ...prev, ...updates }));
@@ -362,6 +364,7 @@ export default function RegisterForm() {
           plan: localSelectedPlan,
           license_number: formData.license_number || null,
           floor_area: formData.floor_area || null,
+          opened_at: formData.opened_at || null,
         }),
       });
       const result = await res.json();

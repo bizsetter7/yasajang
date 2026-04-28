@@ -475,11 +475,20 @@ export default function BusinessEditPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}><Building size={13} /> 룸 수</label>
-                <input type="number" min="0" placeholder="예: 8" className={inputCls} value={promo.roomCount} onChange={e => setPromo({...promo, roomCount: e.target.value})} />
+                <div className="relative">
+                  <input type="number" min="0" placeholder="8" className={inputCls + ' pr-12'}
+                    value={promo.roomCount} onChange={e => setPromo({...promo, roomCount: e.target.value})} />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">개</span>
+                </div>
               </div>
               <div>
                 <label className={labelCls}><Users size={13} /> 연령대</label>
-                <input placeholder="예: 20~26세" className={inputCls} value={promo.ageRange} onChange={e => setPromo({...promo, ageRange: e.target.value})} />
+                <div className="relative">
+                  <input placeholder="20~26" className={inputCls + ' pr-12'}
+                    value={promo.ageRange.replace(/세/g, '')}
+                    onChange={e => setPromo({...promo, ageRange: e.target.value.replace(/세/g, '') + (e.target.value ? '세' : '')})} />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">세</span>
+                </div>
               </div>
             </div>
 
@@ -627,8 +636,17 @@ export default function BusinessEditPage() {
                   </div>
                   <div>
                     {i === 0 && <label className="text-[10px] text-gray-500 font-bold block mb-1">금액 (원)</label>}
-                    <input type="number" placeholder="200000" className={inputCls} value={fee.amount}
-                      onChange={e => setExtraFees(f => f.map((x, j) => j === i ? {...x, amount: e.target.value} : x))} />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="200,000"
+                      className={inputCls}
+                      value={fee.amount !== '' ? Number(fee.amount).toLocaleString('ko-KR') : ''}
+                      onChange={e => {
+                        const raw = e.target.value.replace(/,/g, '');
+                        if (/^\d*$/.test(raw)) setExtraFees(f => f.map((x, j) => j === i ? {...x, amount: raw} : x));
+                      }}
+                    />
                   </div>
                   <button type="button" onClick={() => setExtraFees(f => f.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-500 pb-3.5">
                     <Trash2 size={14} />
