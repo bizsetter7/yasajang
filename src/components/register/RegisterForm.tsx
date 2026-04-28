@@ -97,7 +97,7 @@ export default function RegisterForm() {
     phone: '',
     address: '',
     description: '',
-    platform_choice: 'cocoalba' as 'cocoalba' | 'sunsujone',
+    platform_choice: 'cocoalba' as 'cocoalba' | 'waiterzone' | 'sunsujone',
     menu_main: '',
     menu_liquor: '',
     menu_snack: '',
@@ -743,34 +743,48 @@ export default function RegisterForm() {
             {localSelectedPlan !== 'basic' && localSelectedPlan !== 'free' && (
               <div className="space-y-4 p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
                 <label className="text-sm font-bold text-amber-500 flex items-center">
-                  <Shield size={16} className="mr-2" /> 연동 플랫폼 선택 (코코알바 또는 선수존)
+                  <Shield size={16} className="mr-2" /> 구인 플랫폼 선택 (1개 — 밤길 기본 포함)
                 </label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'cocoalba' }))}
-                    className={`p-4 rounded-xl border-2 font-bold transition-all text-sm ${
+                    className={`p-4 rounded-xl border-2 font-bold transition-all flex flex-col items-center gap-1 ${
                       formData.platform_choice === 'cocoalba'
                         ? 'bg-rose-500/10 border-rose-500 text-rose-500'
                         : 'bg-zinc-950 border-zinc-800 text-zinc-500'
                     }`}
                   >
-                    코코알바 (여성 구인)
+                    <span className="text-sm">코코알바</span>
+                    <span className="text-[11px] font-normal opacity-70">여성 구인</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'sunsujone' }))}
-                    className={`p-4 rounded-xl border-2 font-bold transition-all text-sm ${
-                      formData.platform_choice === 'sunsujone'
+                    onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'waiterzone' }))}
+                    className={`p-4 rounded-xl border-2 font-bold transition-all flex flex-col items-center gap-1 ${
+                      formData.platform_choice === 'waiterzone'
                         ? 'bg-blue-500/10 border-blue-500 text-blue-500'
                         : 'bg-zinc-950 border-zinc-800 text-zinc-500'
                     }`}
                   >
-                    선수존 (남성 구인)
+                    <span className="text-sm">웨이터존</span>
+                    <span className="text-[11px] font-normal opacity-70">남성 웨이터</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'sunsujone' }))}
+                    className={`p-4 rounded-xl border-2 font-bold transition-all flex flex-col items-center gap-1 ${
+                      formData.platform_choice === 'sunsujone'
+                        ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-500'
+                    }`}
+                  >
+                    <span className="text-sm">선수존</span>
+                    <span className="text-[11px] font-normal opacity-70">남성 선수</span>
                   </button>
                 </div>
                 <p className="text-xs text-zinc-600 font-medium italic">
-                  * 스탠다드 이상 플랜은 밤길 외에 구인 플랫폼 1곳을 추가로 선택하여 동시 노출할 수 있습니다.
+                  * 밤길 지도 핀은 모든 유료 플랜에 기본 포함. 선택 플랫폼에 구인 광고가 추가 노출됩니다.
                 </p>
               </div>
             )}

@@ -23,7 +23,7 @@ export default function PaymentModal({ isOpen, onClose, businessId, plan }: Paym
   const [selectedPlan, setSelectedPlan] = useState(plan);
   const [payerName, setPayerName] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
-  const [platformChoice, setPlatformChoice] = useState<'cocoalba' | 'sunsujone'>('cocoalba');
+  const [platformChoice, setPlatformChoice] = useState<'cocoalba' | 'waiterzone' | 'sunsujone'>('cocoalba');
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -156,34 +156,48 @@ export default function PaymentModal({ isOpen, onClose, businessId, plan }: Paym
             {selectedPlan !== 'basic' && (
               <div className="space-y-3 p-4 bg-zinc-950/50 rounded-2xl border border-zinc-800">
                 <label className="text-xs font-bold text-zinc-500 block">
-                  구인 플랫폼 선택 (코코알바 또는 선수존)
+                  구인 플랫폼 선택 (1개 — 밤길 기본 포함)
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setPlatformChoice('cocoalba')}
-                    className={`px-4 py-3 rounded-xl border font-bold text-xs transition-all ${
+                    className={`px-3 py-3 rounded-xl border font-bold text-[11px] transition-all flex flex-col items-center gap-1 ${
                       platformChoice === 'cocoalba'
                         ? 'bg-rose-500/10 border-rose-500 text-rose-500'
                         : 'bg-zinc-800 border-zinc-700 text-zinc-500'
                     }`}
                   >
-                    코코알바 (여성)
+                    <span>코코알바</span>
+                    <span className="text-[9px] font-normal opacity-70">여성 구인</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPlatformChoice('sunsujone')}
-                    className={`px-4 py-3 rounded-xl border font-bold text-xs transition-all ${
-                      platformChoice === 'sunsujone'
+                    onClick={() => setPlatformChoice('waiterzone')}
+                    className={`px-3 py-3 rounded-xl border font-bold text-[11px] transition-all flex flex-col items-center gap-1 ${
+                      platformChoice === 'waiterzone'
                         ? 'bg-blue-500/10 border-blue-500 text-blue-500'
                         : 'bg-zinc-800 border-zinc-700 text-zinc-500'
                     }`}
                   >
-                    선수존 (남성)
+                    <span>웨이터존</span>
+                    <span className="text-[9px] font-normal opacity-70">남성 웨이터</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPlatformChoice('sunsujone')}
+                    className={`px-3 py-3 rounded-xl border font-bold text-[11px] transition-all flex flex-col items-center gap-1 ${
+                      platformChoice === 'sunsujone'
+                        ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500'
+                        : 'bg-zinc-800 border-zinc-700 text-zinc-500'
+                    }`}
+                  >
+                    <span>선수존</span>
+                    <span className="text-[9px] font-normal opacity-70">남성 선수</span>
                   </button>
                 </div>
                 <p className="text-[10px] text-zinc-600">
-                  선택하신 플랫폼에 야사장 연동 광고가 노출됩니다.
+                  밤길 지도 핀은 모든 유료 플랜에 기본 포함. 선택 플랫폼에 구인 광고가 추가 노출됩니다.
                 </p>
               </div>
             )}
