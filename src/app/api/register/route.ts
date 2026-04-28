@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
         .insert({
           user_id: owner_id || null,
           name,
-          title: `[야사장] ${name} 광고 신청`,
+          title: name,
           content: description || null,
           category,
           region,

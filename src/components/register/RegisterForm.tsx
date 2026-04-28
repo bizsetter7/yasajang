@@ -137,6 +137,15 @@ export default function RegisterForm() {
     setFormData(prev => ({ ...prev, address: [addressMain, addressDetail].filter(Boolean).join(' ') }));
   }, [addressMain, addressDetail]);
 
+  // 플랜 변경 시 platform_choice 자동 선택 (스페셜/디럭스/프리미엄 → 웨이터존 기본)
+  useEffect(() => {
+    if (['special', 'deluxe', 'premium'].includes(localSelectedPlan)) {
+      setFormData(prev => ({ ...prev, platform_choice: 'waiterzone' }));
+    } else if (['basic', 'standard'].includes(localSelectedPlan)) {
+      setFormData(prev => ({ ...prev, platform_choice: 'cocoalba' }));
+    }
+  }, [localSelectedPlan]);
+
   const openAddressSearch = () => {
     if (typeof window === 'undefined') return;
     const load = () => {
@@ -199,14 +208,15 @@ export default function RegisterForm() {
   };
   const prevStep = () => { setError(null); setCurrentStep(prev => Math.max(prev - 1, 0)); };
 
-  const handleOcr = async () => {
-    if (!files.license) return;
+  const handleOcr = async (fileOverride?: File) => {
+    const fileToUse = fileOverride ?? files.license;
+    if (!fileToUse) return;
     setOcrLoading(true);
     setError(null);
 
     try {
       const reader = new FileReader();
-      reader.readAsDataURL(files.license);
+      reader.readAsDataURL(fileToUse);
       reader.onload = async () => {
         try {
           const res = await fetch('/api/ocr', {
@@ -254,14 +264,15 @@ export default function RegisterForm() {
     }
   };
 
-  const handlePermitOcr = async () => {
-    if (!files.permit) return;
+  const handlePermitOcr = async (fileOverride?: File) => {
+    const fileToUse = fileOverride ?? files.permit;
+    if (!fileToUse) return;
     setOcrPermitLoading(true);
     setError(null);
 
     try {
       const reader = new FileReader();
-      reader.readAsDataURL(files.permit);
+      reader.readAsDataURL(fileToUse);
       reader.onload = async () => {
         try {
           const res = await fetch('/api/ocr', {
@@ -384,21 +395,20 @@ export default function RegisterForm() {
 
   if (success) {
     return (
-      <div className="py-16 animate-fade-in max-w-lg mx-auto">
+      <div className="py-16 animate-fade-in max-w-lg mx-auto flex flex-col items-center justify-center min-h-[70vh]">
         {/* 완료 헤더 */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 w-full">
           <div className="w-20 h-20 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 size={40} />
           </div>
           <h2 className="text-3xl font-bold text-white mb-3">입점 신청 완료!</h2>
           <p className="text-zinc-400 leading-relaxed text-sm">
-            신청이 접수되었습니다. 영업일 기준 1~2일 내 심사 후<br />
-            결과를 이메일로 안내드립니다.
+            신청이 접수되었습니다.
           </p>
         </div>
 
         {/* ★ 상세 정보 입력 안내 (중요) */}
-        <div className="mb-4 p-5 bg-amber-500/10 border border-amber-500/40 rounded-2xl">
+        <div className="mb-4 p-5 bg-amber-500/10 border border-amber-500/40 rounded-2xl w-full">
           <div className="flex items-start gap-3">
             <span className="text-2xl shrink-0">✏️</span>
             <div>
@@ -417,12 +427,12 @@ export default function RegisterForm() {
           </div>
         </div>
 
-        {/* 대시보드 이동 */}
+        {/* 메인 이동 */}
         <button
-          onClick={() => window.location.href = '/dashboard'}
+          onClick={() => window.location.href = '/'}
           className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold rounded-xl transition-all text-sm mb-4"
         >
-          나중에 입력하기 (대시보드로 이동)
+          나중에 입력하기
         </button>
 
         {/* 코코알바 광고 */}
@@ -833,7 +843,13 @@ export default function RegisterForm() {
                   type="file"
                   hidden
                   ref={licenseInputRef}
-                  onChange={(e) => handleFileChange(e, 'license')}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFiles(prev => ({ ...prev, license: file }));
+                      handleOcr(file);
+                    }
+                  }}
                   accept="image/*,.pdf"
                 />
                 <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-amber-500 group-hover:text-black transition-all">
@@ -870,7 +886,11 @@ export default function RegisterForm() {
                   hidden
                   ref={permitInputRef}
                   onChange={(e) => {
-                    if (e.target.files) setFiles(prev => ({ ...prev, permit: e.target.files![0] }));
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFiles(prev => ({ ...prev, permit: file }));
+                      handlePermitOcr(file);
+                    }
                   }}
                   accept="image/*,.pdf"
                 />

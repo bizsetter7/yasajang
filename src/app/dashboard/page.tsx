@@ -119,7 +119,7 @@ export default async function DashboardPage() {
 
         {business ? (
           /* ── PC: 좌측 메인 + 우측 사이드바 ── */
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start mt-6">
             {/* 좌측 */}
             <div className="space-y-6">
               <section className="space-y-3">
