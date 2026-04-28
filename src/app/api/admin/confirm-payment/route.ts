@@ -35,8 +35,18 @@ export async function PATCH(request: Request) {
   try {
     if (action === 'confirm') {
       const now = new Date().toISOString();
+
+      // [Bug Fix] period_months 먼저 조회 → next_billing_at 정확히 계산
+      const { data: periodData, error: periodError } = await supabaseAdmin
+        .from('subscriptions')
+        .select('period_months')
+        .eq('id', subscriptionId)
+        .single();
+      if (periodError) throw periodError;
+      const periodMonths: number = (periodData as any)?.period_months || 1;
+
       const nextBilling = new Date();
-      nextBilling.setMonth(nextBilling.getMonth() + 1);
+      nextBilling.setMonth(nextBilling.getMonth() + periodMonths);
 
       interface SubscriptionWithBusiness {
         id: string;
@@ -44,6 +54,7 @@ export async function PATCH(request: Request) {
         plan?: string;
         platform_choice: string;
         business_id: string;
+        period_months: number;
         businesses: {
           name: string;
           owner_id: string;
@@ -67,10 +78,11 @@ export async function PATCH(request: Request) {
       if (error) throw error;
       const sub = data as SubscriptionWithBusiness;
 
-      // [P2 연동] 플랜 및 플랫폼 선택에 따른 코코알바 티어 동기화
+      const planName = sub.plan_name || sub.plan || '';
+
+      // [P2 연동] 코코알바 플랫폼 선택 시 cocoalba_tier 동기화
       if (sub.platform_choice === 'cocoalba') {
-        let tier = null;
-        const planName = sub.plan_name || sub.plan || '';
+        let tier: string | null = null;
         if (planName === 'premium') tier = 'premium';
         else if (['standard', 'special', 'deluxe'].includes(planName)) tier = 'standard';
 
@@ -79,17 +91,23 @@ export async function PATCH(request: Request) {
             .from('businesses')
             .update({ cocoalba_tier: tier })
             .eq('id', sub.business_id);
-          
-          if (bizError) console.error('Business tier sync error:', bizError);
+
+          if (bizError) console.error('[confirm-payment] cocoalba_tier sync error:', bizError);
+          else console.log(`[confirm-payment] cocoalba_tier synced: ${tier} (business_id: ${sub.business_id})`);
         }
+      } else if (sub.platform_choice === 'waiterzone' || sub.platform_choice === 'sunsuzone') {
+        // waiterzone/sunsuzone: subscriptions.status='active'만으로 P9/P10 접근 게이트 동작
+        // cocoalba_tier 동기화 불필요 — 플랫폼별 구독 체크 API(/api/subscription/check)가 처리
+        console.log(`[confirm-payment] ${sub.platform_choice} 구독 활성화 완료 (period: ${periodMonths}개월, business_id: ${sub.business_id})`);
       }
 
       // 성공 알림 (텔레그램)
       await sendTelegramAlert(
         `✅ <b>구독 활성화 완료</b>\n\n` +
         `🏪 업소명: <b>${sub.businesses?.name}</b>\n` +
-        `📦 플랜: ${sub.plan_name || sub.plan}\n` +
+        `📦 플랜: ${planName} (${periodMonths}개월)\n` +
         `🔗 플랫폼: ${sub.platform_choice || '없음'}\n` +
+        `📅 만료: ${nextBilling.toLocaleDateString('ko-KR')}\n` +
         `💳 확인자: ${user.email}`
       );
     } else if (action === 'reject') {
