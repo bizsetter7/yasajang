@@ -97,7 +97,7 @@ export default function RegisterForm() {
     phone: '',
     address: '',
     description: '',
-    platform_choice: 'cocoalba' as 'cocoalba' | 'waiterzone' | 'sunsujone',
+    platform_choice: 'cocoalba' as 'cocoalba' | 'waiterzone' | 'sunsuzone',
     menu_main: '',
     menu_liquor: '',
     menu_snack: '',
@@ -772,9 +772,9 @@ export default function RegisterForm() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'sunsujone' }))}
+                    onClick={() => setFormData(prev => ({ ...prev, platform_choice: 'sunsuzone' }))}
                     className={`p-4 rounded-xl border-2 font-bold transition-all flex flex-col items-center gap-1 ${
-                      formData.platform_choice === 'sunsujone'
+                      formData.platform_choice === 'sunsuzone'
                         ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500'
                         : 'bg-zinc-950 border-zinc-800 text-zinc-500'
                     }`}
