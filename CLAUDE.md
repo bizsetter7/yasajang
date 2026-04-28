@@ -207,6 +207,8 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 | 9 | 04-26 | OCR API (Claude Haiku), AI 자동입력 버튼 |
 | 10 | 04-26 | 지역 SEO 랜딩 17개, sitemap/robots, 코코알바 위젯, 메뉴 필수필드 |
 | Dashboard | 04-27 | 대시보드 전면개편 — 코코알바 기존회원 진입, 조건부 CTA |
+| 11 | 04-28 | RegisterForm OCR 개업일 자동반영, 파일업로드 OCR 자동트리거, platform_choice 플랜별 자동선택, register API 타이틀 수정, edit UX (룸수/연령대 단위, 금액 콤마, 업소 소개 자동생성, 상세지역 select, 영업시간 드롭다운), 대시보드 플랫폼 빠른 등록 4개 버튼 |
+| 12 | 04-28 | P2 Step 4(추가 옵션) 야사장 회원 숨김, 대시보드 '플랫폼 구인 조건' 내부 폼 3종 (코코알바/웨이터존/선수존), POST /api/platform-ads/update (shops.options 병합 저장) |
 
 ---
 

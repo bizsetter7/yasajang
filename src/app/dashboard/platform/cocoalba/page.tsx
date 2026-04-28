@@ -27,7 +27,8 @@ export default function CocoalbaHiringPage() {
   const [error, setError] = useState('');
 
   // 폼 상태
-  const [tc, setTc] = useState('');
+  const [tc, setTc] = useState('');        // raw digits only (no commas)
+  const [tcFocused, setTcFocused] = useState(false);
   const [ageMin, setAgeMin] = useState('20');
   const [ageMax, setAgeMax] = useState('40');
   const [workStartH, setWorkStartH] = useState('20');
@@ -67,7 +68,7 @@ export default function CocoalbaHiringPage() {
           const hiringInfo = (opts.hiring_info as Record<string, unknown> | undefined);
           const saved = hiringInfo?.cocoalba as Record<string, unknown> | undefined;
           if (saved) {
-            if (saved.tc) setTc(String(saved.tc));
+            if (saved.tc) setTc(String(Number(saved.tc))); // raw digits
             if (saved.age_min) setAgeMin(String(saved.age_min));
             if (saved.age_max) setAgeMax(String(saved.age_max));
             if (saved.work_start) {
@@ -108,7 +109,7 @@ export default function CocoalbaHiringPage() {
     setError('');
 
     const hiringInfo = {
-      tc: tc ? Number(tc.replace(/,/g, '')) : null,
+      tc: tc ? Number(tc) : null,
       age_min: Number(ageMin),
       age_max: Number(ageMax),
       work_start: `${workStartH}:${workStartM}`,
@@ -140,11 +141,6 @@ export default function CocoalbaHiringPage() {
     }
   };
 
-  const formatTc = (val: string) => {
-    const num = val.replace(/[^0-9]/g, '');
-    return num ? Number(num).toLocaleString() : '';
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -154,6 +150,8 @@ export default function CocoalbaHiringPage() {
   }
 
   const inputCls = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white';
+  // select는 appearance-none + 커스텀 화살표 (Chrome/Windows native dropdown 텍스트 누락 버그 방지)
+  const selectCls = 'w-full px-3 py-2.5 pr-8 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white cursor-pointer appearance-none';
   const labelCls = 'block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5';
   const sectionCls = 'bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4';
 
@@ -190,8 +188,10 @@ export default function CocoalbaHiringPage() {
               <input
                 type="text"
                 inputMode="numeric"
-                value={tc}
-                onChange={e => setTc(formatTc(e.target.value))}
+                value={tcFocused ? tc : (tc ? Number(tc).toLocaleString() : '')}
+                onFocus={() => setTcFocused(true)}
+                onChange={e => setTc(e.target.value.replace(/[^0-9]/g, ''))}
+                onBlur={() => setTcFocused(false)}
                 placeholder="예: 200,000"
                 className={inputCls}
               />
@@ -247,23 +247,35 @@ export default function CocoalbaHiringPage() {
             <div>
               <label className={labelCls}>출근 시간</label>
               <div className="flex gap-1.5">
-                <select value={workStartH} onChange={e => setWorkStartH(e.target.value)} className={`flex-1 ${inputCls}`}>
-                  {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
-                </select>
-                <select value={workStartM} onChange={e => setWorkStartM(e.target.value)} className={`w-20 ${inputCls}`}>
-                  {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
-                </select>
+                <div className="relative flex-1">
+                  <select value={workStartH} onChange={e => setWorkStartH(e.target.value)} className={selectCls}>
+                    {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
+                <div className="relative w-20">
+                  <select value={workStartM} onChange={e => setWorkStartM(e.target.value)} className={selectCls}>
+                    {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
               </div>
             </div>
             <div>
               <label className={labelCls}>퇴근 시간</label>
               <div className="flex gap-1.5">
-                <select value={workEndH} onChange={e => setWorkEndH(e.target.value)} className={`flex-1 ${inputCls}`}>
-                  {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
-                </select>
-                <select value={workEndM} onChange={e => setWorkEndM(e.target.value)} className={`w-20 ${inputCls}`}>
-                  {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
-                </select>
+                <div className="relative flex-1">
+                  <select value={workEndH} onChange={e => setWorkEndH(e.target.value)} className={selectCls}>
+                    {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
+                <div className="relative w-20">
+                  <select value={workEndM} onChange={e => setWorkEndM(e.target.value)} className={selectCls}>
+                    {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
               </div>
             </div>
           </div>

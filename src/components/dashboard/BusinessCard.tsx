@@ -24,12 +24,20 @@ const formatPhone = (phone: string | null | undefined): string => {
   return phone;
 };
 
+/** address = "경기 평택시 특구로5번길 9" → "평택시" */
+function extractSubRegion(address?: string | null): string {
+  if (!address) return '';
+  const parts = address.trim().split(/\s+/);
+  return parts.length >= 2 ? parts[1] : '';
+}
+
 interface BusinessCardProps {
   business: {
     id: string;
     name: string;
     category: string;
     region_code: string;
+    address?: string | null;
     phone: string;
     is_verified: boolean;
   };
@@ -76,7 +84,11 @@ export default function BusinessCard({ business, subscription }: BusinessCardPro
               <p className="text-gray-500 text-sm flex items-center gap-1.5">
                 {CATEGORY_LABELS[business.category] ?? business.category}
                 <span className="w-1 h-1 rounded-full bg-gray-300" />
-                {REGION_LABELS[business.region_code] ?? business.region_code}
+                {(() => {
+                  const sido = REGION_LABELS[business.region_code] ?? business.region_code;
+                  const sub = extractSubRegion(business.address);
+                  return sub ? `${sido} ${sub}` : sido;
+                })()}
               </p>
             </div>
           </div>

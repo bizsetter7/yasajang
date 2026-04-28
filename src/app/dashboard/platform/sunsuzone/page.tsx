@@ -26,8 +26,10 @@ export default function SunsuzoneHiringPage() {
   const [error, setError] = useState('');
 
   const [jobType, setJobType] = useState<string[]>([]);
-  const [salary, setSalary] = useState('');
-  const [bonus, setBonus] = useState('');
+  const [salary, setSalary] = useState('');       // raw digits
+  const [salaryFocused, setSalaryFocused] = useState(false);
+  const [bonus, setBonus] = useState('');         // raw digits
+  const [bonusFocused, setBonusFocused] = useState(false);
   const [ageMin, setAgeMin] = useState('20');
   const [ageMax, setAgeMax] = useState('40');
   const [workStartH, setWorkStartH] = useState('20');
@@ -66,8 +68,8 @@ export default function SunsuzoneHiringPage() {
           const savedInfo = hiringInfo?.sunsuzone as Record<string, unknown> | undefined;
           if (savedInfo) {
             if (Array.isArray(savedInfo.job_type)) setJobType(savedInfo.job_type as string[]);
-            if (savedInfo.salary) setSalary(String(savedInfo.salary));
-            if (savedInfo.bonus) setBonus(String(savedInfo.bonus));
+            if (savedInfo.salary) setSalary(String(Number(savedInfo.salary)));
+            if (savedInfo.bonus) setBonus(String(Number(savedInfo.bonus)));
             if (savedInfo.age_min) setAgeMin(String(savedInfo.age_min));
             if (savedInfo.age_max) setAgeMax(String(savedInfo.age_max));
             if (savedInfo.work_start) {
@@ -100,11 +102,6 @@ export default function SunsuzoneHiringPage() {
   const toggleDay = (day: string) => {
     setDaysOff(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
   };
-  const formatNum = (val: string) => {
-    const num = val.replace(/[^0-9]/g, '');
-    return num ? Number(num).toLocaleString() : '';
-  };
-
   const handleSave = async () => {
     if (!businessId) return;
     setSaving(true);
@@ -112,8 +109,8 @@ export default function SunsuzoneHiringPage() {
 
     const hiringInfo = {
       job_type: jobType,
-      salary: salary ? Number(salary.replace(/,/g, '')) : null,
-      bonus: bonus ? Number(bonus.replace(/,/g, '')) : null,
+      salary: salary ? Number(salary) : null,
+      bonus: bonus ? Number(bonus) : null,
       age_min: Number(ageMin),
       age_max: Number(ageMax),
       work_start: `${workStartH}:${workStartM}`,
@@ -154,6 +151,7 @@ export default function SunsuzoneHiringPage() {
   }
 
   const inputCls = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white';
+  const selectCls = 'w-full px-3 py-2.5 pr-8 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white cursor-pointer appearance-none';
   const labelCls = 'block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5';
   const sectionCls = 'bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4';
 
@@ -215,8 +213,10 @@ export default function SunsuzoneHiringPage() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={salary}
-                  onChange={e => setSalary(formatNum(e.target.value))}
+                  value={salaryFocused ? salary : (salary ? Number(salary).toLocaleString() : '')}
+                  onFocus={() => setSalaryFocused(true)}
+                  onChange={e => setSalary(e.target.value.replace(/[^0-9]/g, ''))}
+                  onBlur={() => setSalaryFocused(false)}
                   placeholder="예: 200,000"
                   className={inputCls}
                 />
@@ -229,8 +229,10 @@ export default function SunsuzoneHiringPage() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={bonus}
-                  onChange={e => setBonus(formatNum(e.target.value))}
+                  value={bonusFocused ? bonus : (bonus ? Number(bonus).toLocaleString() : '')}
+                  onFocus={() => setBonusFocused(true)}
+                  onChange={e => setBonus(e.target.value.replace(/[^0-9]/g, ''))}
+                  onBlur={() => setBonusFocused(false)}
                   placeholder="예: 50,000"
                   className={inputCls}
                 />
@@ -272,23 +274,35 @@ export default function SunsuzoneHiringPage() {
             <div>
               <label className={labelCls}>출근 시간</label>
               <div className="flex gap-1.5">
-                <select value={workStartH} onChange={e => setWorkStartH(e.target.value)} className={`flex-1 ${inputCls}`}>
-                  {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
-                </select>
-                <select value={workStartM} onChange={e => setWorkStartM(e.target.value)} className={`w-20 ${inputCls}`}>
-                  {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
-                </select>
+                <div className="relative flex-1">
+                  <select value={workStartH} onChange={e => setWorkStartH(e.target.value)} className={selectCls}>
+                    {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
+                <div className="relative w-20">
+                  <select value={workStartM} onChange={e => setWorkStartM(e.target.value)} className={selectCls}>
+                    {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
               </div>
             </div>
             <div>
               <label className={labelCls}>퇴근 시간</label>
               <div className="flex gap-1.5">
-                <select value={workEndH} onChange={e => setWorkEndH(e.target.value)} className={`flex-1 ${inputCls}`}>
-                  {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
-                </select>
-                <select value={workEndM} onChange={e => setWorkEndM(e.target.value)} className={`w-20 ${inputCls}`}>
-                  {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
-                </select>
+                <div className="relative flex-1">
+                  <select value={workEndH} onChange={e => setWorkEndH(e.target.value)} className={selectCls}>
+                    {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
+                <div className="relative w-20">
+                  <select value={workEndM} onChange={e => setWorkEndM(e.target.value)} className={selectCls}>
+                    {MINS.map(m => <option key={m} value={m}>{m}분</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+                </div>
               </div>
             </div>
           </div>
