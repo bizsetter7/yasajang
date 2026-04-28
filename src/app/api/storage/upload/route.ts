@@ -17,8 +17,10 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // service_role로 storage 업로드 (RLS 우회)
+    // 경로 구분자 '/'는 인코딩하지 않고 각 세그먼트만 인코딩 (encodeURIComponent 전체 금지 — %2F 이슈)
+    const encodedPath = path.split('/').map((seg: string) => encodeURIComponent(seg)).join('/');
     const uploadRes = await fetch(
-      `${SB_URL}/storage/v1/object/businesses-docs/${encodeURIComponent(path)}`,
+      `${SB_URL}/storage/v1/object/businesses-docs/${encodedPath}`,
       {
         method: 'POST',
         headers: {

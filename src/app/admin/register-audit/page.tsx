@@ -42,6 +42,22 @@ const REGION_LABEL: Record<string, string> = {
   sejong: '세종', gangwon: '강원', chungbuk: '충북', chungnam: '충남',
   jeonbuk: '전북', jeonnam: '전남', gyeongbuk: '경북', gyeongnam: '경남', jeju: '제주',
 };
+
+/** "경기 평택시 특구로5번길 9" → "평택시" */
+function extractSubRegion(address?: string | null): string {
+  if (!address) return '';
+  const parts = address.trim().split(/\s+/);
+  return parts.length >= 2 ? parts[1] : '';
+}
+
+/** "01038384335" → "010-3838-4335" */
+function formatPhone(phone?: string | null): string {
+  if (!phone) return '미입력';
+  const d = phone.replace(/\D/g, '');
+  if (d.length === 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  return phone;
+}
 const CATEGORY_LABEL: Record<string, string> = {
   room_salon: '룸살롱', karaoke_bar: '노래주점', bar: '바(Bar)', other: '기타',
 };
@@ -54,13 +70,14 @@ const STATUS_TABS = [
 ] as const;
 
 const STATUS_BADGE: Record<string, string> = {
-  active: 'text-green-400 bg-green-400/10 border border-green-400/20',
-  pending: 'text-amber-400 bg-amber-400/10 border border-amber-400/20',
+  active:   'text-green-400 bg-green-400/10 border border-green-400/20',
+  approved: 'text-green-400 bg-green-400/10 border border-green-400/20', // alias
+  pending:  'text-amber-400 bg-amber-400/10 border border-amber-400/20',
   rejected: 'text-red-400 bg-red-400/10 border border-red-400/20',
   inactive: 'text-zinc-500 bg-zinc-800',
 };
 const STATUS_KR: Record<string, string> = {
-  active: '활성', pending: '대기', rejected: '거절', inactive: '비활성',
+  active: '활성', approved: '활성', pending: '대기', rejected: '거절', inactive: '비활성',
 };
 
 export default function RegisterAuditPage() {
@@ -223,7 +240,11 @@ export default function RegisterAuditPage() {
                 <div className="min-w-0">
                   <h3 className="text-base font-bold text-white truncate">{biz.name}</h3>
                   <div className="flex items-center gap-3 text-xs text-zinc-500 mt-0.5">
-                    <span className="flex items-center gap-1"><MapPin size={11} /> {REGION_LABEL[biz.region_code] ?? biz.region_code}</span>
+                    <span className="flex items-center gap-1">
+                      <MapPin size={11} />
+                      {REGION_LABEL[biz.region_code] ?? biz.region_code}
+                      {extractSubRegion(biz.address) && ` ${extractSubRegion(biz.address)}`}
+                    </span>
                     <span className="flex items-center gap-1"><Clock size={11} /> {new Date(biz.created_at).toLocaleDateString('ko-KR')}</span>
                     <span>{CATEGORY_LABEL[biz.category] ?? biz.category}</span>
                   </div>
@@ -269,7 +290,11 @@ export default function RegisterAuditPage() {
                     <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${STATUS_BADGE[selectedShop.status] || ''}`}>
                       {STATUS_KR[selectedShop.status] ?? selectedShop.status}
                     </span>
-                    <span className="text-zinc-600 text-xs">{REGION_LABEL[selectedShop.region_code] ?? selectedShop.region_code} · {CATEGORY_LABEL[selectedShop.category] ?? selectedShop.category}</span>
+                    <span className="text-zinc-600 text-xs">
+                      {REGION_LABEL[selectedShop.region_code] ?? selectedShop.region_code}
+                      {extractSubRegion(selectedShop.address) && ` ${extractSubRegion(selectedShop.address)}`}
+                      {' · '}{CATEGORY_LABEL[selectedShop.category] ?? selectedShop.category}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -300,7 +325,7 @@ export default function RegisterAuditPage() {
                     <div className="space-y-2">
                       {[
                         { icon: User, label: '대표자(실장)명', value: selectedShop.manager_name || '미입력' },
-                        { icon: Phone, label: '연락처', value: selectedShop.phone || '미입력' },
+                        { icon: Phone, label: '연락처', value: formatPhone(selectedShop.phone) },
                         { icon: MapPin, label: '주소', value: selectedShop.address || '미입력' },
                       ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
