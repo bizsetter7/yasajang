@@ -24,6 +24,7 @@ interface Business {
   category: string;
   region_code: string;
   address?: string;
+  address_detail?: string;
   created_at: string;
   manager_name?: string;
   phone: string;
@@ -326,7 +327,7 @@ export default function RegisterAuditPage() {
                       {[
                         { icon: User, label: '대표자(실장)명', value: selectedShop.manager_name || '미입력' },
                         { icon: Phone, label: '연락처', value: formatPhone(selectedShop.phone) },
-                        { icon: MapPin, label: '주소', value: selectedShop.address || '미입력' },
+                        { icon: MapPin, label: '주소', value: [selectedShop.address, selectedShop.address_detail].filter(Boolean).join(' ') || '미입력' },
                       ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
                           <span className="text-zinc-500 text-sm flex items-center gap-2"><Icon size={13} /> {label}</span>

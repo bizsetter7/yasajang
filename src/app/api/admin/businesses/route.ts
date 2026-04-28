@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabaseAdmin
     .from('businesses')
-    .select('id, name, category, region_code, address, phone, manager_name, status, created_at, is_verified, is_active, business_reg_url, permit_path, owner_id, audit_note, audited_at, cocoalba_tier')
+    .select('id, name, category, region_code, address, address_detail, phone, manager_name, status, created_at, is_verified, is_active, business_reg_url, permit_path, owner_id, audit_note, audited_at, cocoalba_tier')
     .order('created_at', { ascending: false });
 
   if (status !== 'all') {
