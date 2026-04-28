@@ -44,37 +44,49 @@ export default function SunsuzoneHiringPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/'); return; }
 
-      const { data: biz } = await supabase
+      const { data: biz, error: bizErr } = await supabase
         .from('businesses')
-        .select('id, options')
+        .select('id')
         .eq('owner_id', user.id)
         .single();
 
-      if (!biz) { router.push('/dashboard'); return; }
+      if (bizErr || !biz) { router.push('/dashboard'); return; }
       setBusinessId(biz.id);
 
-      const existingOptions = (biz.options as Record<string, unknown>) || {};
-      const savedInfo = existingOptions.hiring_sunsuzone as Record<string, unknown> | undefined;
-      if (savedInfo) {
-        if (Array.isArray(savedInfo.job_type)) setJobType(savedInfo.job_type as string[]);
-        if (savedInfo.salary) setSalary(String(savedInfo.salary));
-        if (savedInfo.bonus) setBonus(String(savedInfo.bonus));
-        if (savedInfo.age_min) setAgeMin(String(savedInfo.age_min));
-        if (savedInfo.age_max) setAgeMax(String(savedInfo.age_max));
-        if (savedInfo.work_start) {
-          const [h, m] = String(savedInfo.work_start).split(':');
-          if (h) setWorkStartH(h);
-          if (m) setWorkStartM(m);
+      const { data: shops } = await supabase
+        .from('shops')
+        .select('options')
+        .eq('user_id', user.id)
+        .limit(10);
+
+      if (shops && shops.length > 0) {
+        for (const shop of shops) {
+          const opts = (shop.options || {}) as Record<string, unknown>;
+          const hiringInfo = (opts.hiring_info as Record<string, unknown> | undefined);
+          const savedInfo = hiringInfo?.sunsuzone as Record<string, unknown> | undefined;
+          if (savedInfo) {
+            if (Array.isArray(savedInfo.job_type)) setJobType(savedInfo.job_type as string[]);
+            if (savedInfo.salary) setSalary(String(savedInfo.salary));
+            if (savedInfo.bonus) setBonus(String(savedInfo.bonus));
+            if (savedInfo.age_min) setAgeMin(String(savedInfo.age_min));
+            if (savedInfo.age_max) setAgeMax(String(savedInfo.age_max));
+            if (savedInfo.work_start) {
+              const [h, m] = String(savedInfo.work_start).split(':');
+              if (h) setWorkStartH(h);
+              if (m) setWorkStartM(m);
+            }
+            if (savedInfo.work_end) {
+              const [h, m] = String(savedInfo.work_end).split(':');
+              if (h) setWorkEndH(h);
+              if (m) setWorkEndM(m);
+            }
+            if (Array.isArray(savedInfo.days_off)) setDaysOff(savedInfo.days_off as string[]);
+            if (savedInfo.career) setCareer(String(savedInfo.career));
+            if (typeof savedInfo.driving_required === 'boolean') setDrivingRequired(savedInfo.driving_required);
+            if (typeof savedInfo.accommodation === 'boolean') setAccommodation(savedInfo.accommodation);
+            break;
+          }
         }
-        if (savedInfo.work_end) {
-          const [h, m] = String(savedInfo.work_end).split(':');
-          if (h) setWorkEndH(h);
-          if (m) setWorkEndM(m);
-        }
-        if (Array.isArray(savedInfo.days_off)) setDaysOff(savedInfo.days_off as string[]);
-        if (savedInfo.career) setCareer(String(savedInfo.career));
-        if (typeof savedInfo.driving_required === 'boolean') setDrivingRequired(savedInfo.driving_required);
-        if (typeof savedInfo.accommodation === 'boolean') setAccommodation(savedInfo.accommodation);
       }
 
       setLoading(false);

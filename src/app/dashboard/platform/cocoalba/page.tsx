@@ -44,36 +44,49 @@ export default function CocoalbaHiringPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/'); return; }
 
-      const { data: biz } = await supabase
+      // options 컬럼 없을 수 있으므로 id만 조회
+      const { data: biz, error: bizErr } = await supabase
         .from('businesses')
-        .select('id, options')
+        .select('id')
         .eq('owner_id', user.id)
         .single();
 
-      if (!biz) { router.push('/dashboard'); return; }
+      if (bizErr || !biz) { router.push('/dashboard'); return; }
       setBusinessId(biz.id);
 
-      // 기존 저장된 값 불러오기
-      const existingOptions = (biz.options as Record<string, unknown>) || {};
-      const saved = existingOptions.hiring_cocoalba as Record<string, unknown> | undefined;
-      if (saved) {
-        if (saved.tc) setTc(String(saved.tc));
-        if (saved.age_min) setAgeMin(String(saved.age_min));
-        if (saved.age_max) setAgeMax(String(saved.age_max));
-        if (saved.work_start) {
-          const [h, m] = String(saved.work_start).split(':');
-          if (h) setWorkStartH(h);
-          if (m) setWorkStartM(m);
+      // 기존 저장된 구인 조건 불러오기 (shops.options.hiring_info.cocoalba)
+      const { data: shops } = await supabase
+        .from('shops')
+        .select('options')
+        .eq('user_id', user.id)
+        .limit(10);
+
+      if (shops && shops.length > 0) {
+        for (const shop of shops) {
+          const opts = (shop.options || {}) as Record<string, unknown>;
+          const hiringInfo = (opts.hiring_info as Record<string, unknown> | undefined);
+          const saved = hiringInfo?.cocoalba as Record<string, unknown> | undefined;
+          if (saved) {
+            if (saved.tc) setTc(String(saved.tc));
+            if (saved.age_min) setAgeMin(String(saved.age_min));
+            if (saved.age_max) setAgeMax(String(saved.age_max));
+            if (saved.work_start) {
+              const [h, m] = String(saved.work_start).split(':');
+              if (h) setWorkStartH(h);
+              if (m) setWorkStartM(m);
+            }
+            if (saved.work_end) {
+              const [h, m] = String(saved.work_end).split(':');
+              if (h) setWorkEndH(h);
+              if (m) setWorkEndM(m);
+            }
+            if (Array.isArray(saved.days_off)) setDaysOff(saved.days_off as string[]);
+            if (Array.isArray(saved.clothes)) setClothes(saved.clothes as string[]);
+            if (typeof saved.weekend_only === 'boolean') setWeekendOnly(saved.weekend_only);
+            if (saved.career) setCareer(String(saved.career));
+            break;
+          }
         }
-        if (saved.work_end) {
-          const [h, m] = String(saved.work_end).split(':');
-          if (h) setWorkEndH(h);
-          if (m) setWorkEndM(m);
-        }
-        if (Array.isArray(saved.days_off)) setDaysOff(saved.days_off as string[]);
-        if (Array.isArray(saved.clothes)) setClothes(saved.clothes as string[]);
-        if (typeof saved.weekend_only === 'boolean') setWeekendOnly(saved.weekend_only);
-        if (saved.career) setCareer(String(saved.career));
       }
 
       setLoading(false);
