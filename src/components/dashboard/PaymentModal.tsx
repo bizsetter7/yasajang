@@ -23,7 +23,7 @@ export default function PaymentModal({ isOpen, onClose, businessId, plan }: Paym
   const [selectedPlan, setSelectedPlan] = useState(plan);
   const [payerName, setPayerName] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
-  const [platformChoice, setPlatformChoice] = useState<'cocoalba' | 'seonsuzone'>('cocoalba');
+  const [platformChoice, setPlatformChoice] = useState<'cocoalba' | 'sunsujone'>('cocoalba');
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -172,9 +172,9 @@ export default function PaymentModal({ isOpen, onClose, businessId, plan }: Paym
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPlatformChoice('seonsuzone')}
+                    onClick={() => setPlatformChoice('sunsujone')}
                     className={`px-4 py-3 rounded-xl border font-bold text-xs transition-all ${
-                      platformChoice === 'seonsuzone'
+                      platformChoice === 'sunsujone'
                         ? 'bg-blue-500/10 border-blue-500 text-blue-500'
                         : 'bg-zinc-800 border-zinc-700 text-zinc-500'
                     }`}
