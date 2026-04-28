@@ -52,10 +52,39 @@ export async function PATCH(request: Request) {
       .from('businesses')
       .update(updateData)
       .eq('id', businessId)
-      .select('name')
+      .select('name, owner_id')
       .single();
 
     if (error) throw error;
+
+    // [연동] 야사장 승인 시 P2 shops 도 동시 활성화
+    if (status === 'active' && business?.owner_id) {
+      const { error: shopErr } = await supabaseAdmin
+        .from('shops')
+        .update({
+          status: 'active',
+          approved_at: new Date().toISOString(),
+        })
+        .eq('user_id', business.owner_id)
+        .eq('status', 'PENDING_REVIEW');
+
+      if (shopErr) {
+        console.error('[business-audit] shops activate error:', shopErr.message);
+        // shops 업데이트 실패해도 businesses 승인은 이미 완료 — 무시하고 진행
+      }
+    }
+
+    // [연동] 야사장 거절 시 P2 shops 도 rejected 처리
+    if (status === 'rejected' && business?.owner_id) {
+      await supabaseAdmin
+        .from('shops')
+        .update({
+          status: 'rejected',
+          rejection_reason: auditNote || '야사장 심사 거절',
+        })
+        .eq('user_id', business.owner_id)
+        .eq('status', 'PENDING_REVIEW');
+    }
 
     // 텔레그램 알림 발송
     const msg = `<b>[업소 심사 완료]</b>\n` +
@@ -63,7 +92,7 @@ export async function PATCH(request: Request) {
                 `📊 결과: ${status === 'active' ? '✅ 승인' : '❌ 거절'}\n` +
                 `📝 사유: ${auditNote || '없음'}\n\n` +
                 `👉 야사장 플랫폼에서 확인 가능합니다.`;
-    
+
     await sendTelegramAlert(msg);
 
     return NextResponse.json({ ok: true });

@@ -126,6 +126,15 @@ export async function POST(req: NextRequest) {
     let shopId: string | null = null;
 
     if (!isFree) {
+      // platform_choice → shops.platform 컬럼 매핑
+      // HomePortalClient는 .eq('platform', 'cocoalba') 로 필터 → 반드시 설정 필요
+      const platformMap: Record<string, string> = {
+        cocoalba: 'cocoalba',
+        waiterzone: 'waiterzone',
+        sunsuzone: 'sunsuzone',
+      };
+      const shopPlatform = platformMap[platform_choice || ''] || 'cocoalba';
+
       const { data: shopData, error: shopError } = await supabase
         .from('shops')
         .insert({
@@ -135,12 +144,14 @@ export async function POST(req: NextRequest) {
           content: description || null,
           category,
           region,
+          work_region_sub: region?.split(' ')[1] || null,
           phone,
           tier,
           product_type: tier,
           ad_price: adPrice,
           status: 'PENDING_REVIEW',
           is_closed: false,
+          platform: shopPlatform,
           options: {
             yasajang_plan: plan,
             platform_choice: platform_choice || null,
@@ -150,6 +161,9 @@ export async function POST(req: NextRequest) {
             menu_main: menu_main || null,
             menu_liquor: menu_liquor || null,
             menu_snack: menu_snack || null,
+            opened_at: opened_at || null,
+            floor_area: floor_area || null,
+            license_number: license_number || null,
           },
         })
         .select('id')
