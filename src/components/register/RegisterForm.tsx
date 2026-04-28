@@ -433,7 +433,7 @@ export default function RegisterForm() {
 
         {/* 메인 이동 */}
         <button
-          onClick={() => window.location.href = '/'}
+          onClick={() => window.location.href = '/dashboard'}
           className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold rounded-xl transition-all text-sm mb-4"
         >
           나중에 입력하기
