@@ -1,9 +1,14 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { Building2, CreditCard, Clock, CheckCircle2, TrendingUp, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminDashboard() {
-  const supabase = await createClient();
+  // service_role — RLS 우회하여 전체 데이터 조회
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 
   const [
     { count: totalBiz },
@@ -16,7 +21,7 @@ export default async function AdminDashboard() {
     supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('businesses').select('id, name, category, region_code, status, created_at').order('created_at', { ascending: false }).limit(6),
+    supabase.from('businesses').select('id, name, category, region_code, status, created_at').order('created_at', { ascending: false }).limit(8),
   ]);
 
   const statusColor: Record<string, string> = {
@@ -48,7 +53,7 @@ export default async function AdminDashboard() {
         {[
           { label: '전체 업소', value: totalBiz ?? 0, icon: Building2, color: 'text-zinc-400' },
           { label: '심사 대기', value: pendingBiz ?? 0, icon: Clock, color: 'text-amber-400', href: '/admin/register-audit' },
-          { label: '활성 업소', value: activeBiz ?? 0, icon: CheckCircle2, color: 'text-green-400' },
+          { label: '활성 업소', value: activeBiz ?? 0, icon: CheckCircle2, color: 'text-green-400', href: '/admin/register-audit?status=active' },
           { label: '입금 확인 대기', value: pendingPay ?? 0, icon: CreditCard, color: 'text-blue-400', href: '/admin/payments' },
         ].map(({ label, value, icon: Icon, color, href }) => (
           <div key={label} className={`bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 ${href ? 'hover:border-amber-500/30 transition-all' : ''}`}>
@@ -75,7 +80,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* 바로가기 */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Link href="/admin/register-audit"
           className="flex items-center gap-4 p-5 bg-zinc-900/50 border border-zinc-800 rounded-2xl hover:border-amber-500/30 transition-all group">
           <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center group-hover:bg-amber-500 transition-all">
@@ -84,6 +89,16 @@ export default async function AdminDashboard() {
           <div>
             <p className="text-white font-black text-sm">업소 입점 심사</p>
             <p className="text-zinc-500 text-xs mt-0.5">서류 검토 및 승인/거절</p>
+          </div>
+        </Link>
+        <Link href="/admin/settings"
+          className="flex items-center gap-4 p-5 bg-zinc-900/50 border border-zinc-800 rounded-2xl hover:border-green-500/30 transition-all group">
+          <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center group-hover:bg-green-500 transition-all">
+            <Users size={22} className="text-green-400 group-hover:text-white transition-colors" />
+          </div>
+          <div>
+            <p className="text-white font-black text-sm">회원 관리</p>
+            <p className="text-zinc-500 text-xs mt-0.5">가입 회원 목록 및 역할</p>
           </div>
         </Link>
         <Link href="/admin/payments"

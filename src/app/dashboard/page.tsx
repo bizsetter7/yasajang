@@ -12,6 +12,10 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/');
 
+  // 어드민 계정은 어드민 대시보드로 리다이렉트
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bizsetter7@gmail.com';
+  if (user.email === adminEmail) redirect('/admin');
+
   // 내 업소 조회
   const { data: business } = await supabase
     .from('businesses')
