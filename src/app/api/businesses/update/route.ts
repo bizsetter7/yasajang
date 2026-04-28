@@ -43,6 +43,7 @@ export async function PATCH(request: Request) {
       roomCount, ageRange,
       hasParking, hasValet, hasPickup,
       description, openedAt, floorArea, coverImageUrl,
+      images,
       menuItems, extraFees,
     } = body;
 
@@ -88,6 +89,7 @@ export async function PATCH(request: Request) {
       opened_at: openedAt || null,
       floor_area: floorArea || null,
       cover_image_url: coverImageUrl || null,
+      images: Array.isArray(images) ? images : [],
       menu_items: menuItems || null,
       extra_fees: Array.isArray(extraFees) ? extraFees : [],
       updated_at: new Date().toISOString(),

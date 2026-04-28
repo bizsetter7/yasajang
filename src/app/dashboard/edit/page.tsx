@@ -6,7 +6,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import {
   ChevronLeft, Save, Building, Phone, MapPin, MessageSquare,
   Tag, Globe, Clock, Users, ParkingCircle, Car, Navigation,
-  Plus, Trash2, Info, CalendarDays, Ruler,
+  Plus, Trash2, Info, CalendarDays, Ruler, Camera, X as XIcon, Star,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -180,7 +180,11 @@ export default function BusinessEditPage() {
     featured: [], drinks: [], snacks: [],
   });
   const [extraFees, setExtraFees] = useState<ExtraFee[]>(DEFAULT_EXTRA_FEES);
-  
+
+  // 업소 사진 (여러 장) — 첫 번째가 커버(대표) 이미지
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
   const [showPreview, setShowPreview] = useState(false);
 
   const supabase = createBrowserClient(
@@ -218,6 +222,12 @@ export default function BusinessEditPage() {
         description: data.description || '', openedAt: data.opened_at || '',
         floorArea: data.floor_area || '', coverImageUrl: data.cover_image_url || '',
       });
+      // 업로드된 사진 로드 (images 배열 우선, 없으면 cover_image_url fallback)
+      if (Array.isArray(data.images) && data.images.length > 0) {
+        setPhotoUrls(data.images);
+      } else if (data.cover_image_url) {
+        setPhotoUrls([data.cover_image_url]);
+      }
       
       // business_hours가 JSON이면 파싱, 텍스트면 무시 (기존 데이터 하위호환)
       if (data.business_hours) {
@@ -258,6 +268,56 @@ export default function BusinessEditPage() {
     fetch();
   }, [router, supabase]);
 
+  // ── 사진 업로드 핸들러 ──
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    if (photoUrls.length + files.length > 10) {
+      alert('사진은 최대 10장까지 업로드할 수 있습니다.');
+      return;
+    }
+    setUploading(true);
+    const newUrls: string[] = [];
+    for (const file of Array.from(files)) {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('businessId', businessId);
+      try {
+        const res = await fetch('/api/storage/upload-image', { method: 'POST', body: form });
+        const data = await res.json();
+        if (res.ok && data.url) newUrls.push(data.url);
+        else alert(`업로드 실패: ${data.error || '알 수 없는 오류'}`);
+      } catch {
+        alert('업로드 중 오류가 발생했습니다.');
+      }
+    }
+    setPhotoUrls(prev => [...prev, ...newUrls]);
+    // 첫 장이 없으면 첫 번째 업로드 사진을 커버로 자동 세팅
+    if (photoUrls.length === 0 && newUrls.length > 0) {
+      setPromo(p => ({ ...p, coverImageUrl: newUrls[0] }));
+    }
+    setUploading(false);
+    // input 초기화
+    e.target.value = '';
+  };
+
+  const handlePhotoDelete = (url: string) => {
+    setPhotoUrls(prev => {
+      const next = prev.filter(u => u !== url);
+      // 삭제된 게 커버면 새 첫 번째로 교체
+      if (promo.coverImageUrl === url) {
+        setPromo(p => ({ ...p, coverImageUrl: next[0] || '' }));
+      }
+      return next;
+    });
+  };
+
+  const handleSetCover = (url: string) => {
+    // 선택한 사진을 맨 앞으로 (대표 사진)
+    setPhotoUrls(prev => [url, ...prev.filter(u => u !== url)]);
+    setPromo(p => ({ ...p, coverImageUrl: url }));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -272,6 +332,8 @@ export default function BusinessEditPage() {
           businessId,
           ...basic,
           ...promo,
+          coverImageUrl: photoUrls[0] || promo.coverImageUrl || '',
+          images: photoUrls,
           description: finalDescription,
           businessHours: JSON.stringify(dayHours),
           menuItems: {
@@ -401,11 +463,80 @@ export default function BusinessEditPage() {
               <span className="ml-auto text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">즉시 반영</span>
             </div>
 
-            {/* 대표 이미지 URL */}
+            {/* 업소 사진 업로드 */}
             <div>
-              <label className={labelCls}>대표 사진 URL (커버)</label>
-              <input type="url" placeholder="https://..." className={inputCls} value={promo.coverImageUrl} onChange={e => setPromo({...promo, coverImageUrl: e.target.value})} />
-              <p className="text-[10px] text-gray-400 mt-1">이미지 직접 업로드는 추후 지원 예정. 현재는 URL 입력.</p>
+              <div className="flex items-center justify-between mb-2">
+                <label className={labelCls + ' mb-0'}><Camera size={13} /> 업소 사진 (최대 10장)</label>
+                <span className="text-[10px] text-gray-400 font-medium">{photoUrls.length}/10장 · 첫 번째 = 대표 사진</span>
+              </div>
+
+              {/* 업로드된 사진 그리드 */}
+              {photoUrls.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  {photoUrls.map((url, i) => (
+                    <div key={url} className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-gray-200 bg-gray-50">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={`사진 ${i + 1}`} className="w-full h-full object-cover" />
+                      {/* 대표 배지 */}
+                      {i === 0 && (
+                        <div className="absolute top-1.5 left-1.5 bg-amber-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                          <Star size={8} fill="currentColor" /> 대표
+                        </div>
+                      )}
+                      {/* 호버 오버레이 */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                        {i !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetCover(url)}
+                            className="bg-amber-500 text-black text-[9px] font-black px-2 py-1 rounded-lg flex items-center gap-0.5"
+                          >
+                            <Star size={9} /> 대표
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handlePhotoDelete(url)}
+                          className="bg-red-500 text-white p-1.5 rounded-lg"
+                        >
+                          <XIcon size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 업로드 버튼 */}
+              {photoUrls.length < 10 && (
+                <label className={`
+                  flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border-2 border-dashed cursor-pointer transition-all
+                  ${uploading
+                    ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                    : 'border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:border-amber-400'}
+                `}>
+                  {uploading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm font-bold">업로드 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={16} />
+                      <span className="text-sm font-bold">사진 추가 ({10 - photoUrls.length}장 더 가능)</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={uploading}
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
+              <p className="text-[10px] text-gray-400 mt-1.5">JPG/PNG/WEBP · 파일당 최대 10MB · 첫 번째 사진이 대표(커버) 이미지입니다</p>
             </div>
 
             {/* 영업시간 */}
