@@ -4,6 +4,7 @@ export const BUSINESS_CATEGORIES = [
   { id: 'bar', label: '바/토킹바' },
   { id: 'night_club', label: '나이트클럽' },
   { id: 'hostbar', label: '호스트바' },
+  { id: 'holdem', label: '홀덤펍' },
   { id: 'general', label: '일반주점' },
   { id: 'other', label: '기타' },
 ] as const;

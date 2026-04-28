@@ -72,6 +72,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 대시보드 보호 (로그인 필수)
+  if (path.startsWith('/dashboard')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/?auth=login', request.url));
+    }
+  }
+
   // 업소 등록 페이지 보호
   if (path.startsWith('/register')) {
     if (!user) {
