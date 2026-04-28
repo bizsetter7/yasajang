@@ -14,7 +14,18 @@ export async function PATCH(request: Request) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: (cookiesToSet) => {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch { /* Route Handler에서는 정상 동작 */ }
+        },
+      },
+    }
   );
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -26,6 +37,7 @@ export async function PATCH(request: Request) {
       businessId,
       // 기본 정보 (재심사)
       name, phone, address, addressDetail, openChatUrl, category, regionCode,
+      menu_main, menu_liquor, menu_snack,
       // 홍보 정보 (즉시 반영)
       businessHours, managerName, managerPhone,
       roomCount, ageRange,
@@ -60,6 +72,9 @@ export async function PATCH(request: Request) {
       address, address_detail: addressDetail,
       open_chat_url: openChatUrl,
       category, region_code: regionCode,
+      menu_main: menu_main || null,
+      menu_liquor: menu_liquor || null,
+      menu_snack: menu_snack || null,
       // 홍보 정보
       business_hours: businessHours || null,
       manager_name: managerName || null,
@@ -73,7 +88,7 @@ export async function PATCH(request: Request) {
       opened_at: openedAt || null,
       floor_area: floorArea || null,
       cover_image_url: coverImageUrl || null,
-      menu_items: Array.isArray(menuItems) ? menuItems : [],
+      menu_items: menuItems || null,
       extra_fees: Array.isArray(extraFees) ? extraFees : [],
       updated_at: new Date().toISOString(),
     };

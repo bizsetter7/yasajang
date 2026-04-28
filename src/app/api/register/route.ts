@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       name, category, region, representative, business_number,
-      phone, address, description, menu_main, menu_liquor, menu_snack,
+      phone, address, address_detail, description, menu_main, menu_liquor, menu_snack,
       platform_choice, owner_id, license_path, permit_path, plan,
       license_number, floor_area,
     } = body;
@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
         category: categoryKo,
         region_code: regionCode,
         address: address || null,
+        address_detail: address_detail || null,
         phone,
         manager_name: representative || null,
         description: description || null,
