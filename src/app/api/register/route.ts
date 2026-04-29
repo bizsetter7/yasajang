@@ -128,6 +128,20 @@ export async function POST(req: NextRequest) {
 
     const businessId = bizData?.id ?? null;
 
+    // 1-1. profiles UPSERT — 야사장 회원은 무조건 corporate
+    // (callback에서 이미 처리되지만 안전망: 이메일/비밀번호 가입, 트리거 누락 등 대비)
+    if (owner_id) {
+      try {
+        await supabase.from('profiles').upsert({
+          id: owner_id,
+          role: 'corporate',
+          user_type: 'corporate',
+        }, { onConflict: 'id' });
+      } catch (e) {
+        console.warn('profiles upsert 실패 (무시하고 계속):', e);
+      }
+    }
+
     // 2. shops 테이블 INSERT → 코코알바 광고 목록 노출 (free 플랜은 스킵)
     let shopId: string | null = null;
 
