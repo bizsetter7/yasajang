@@ -101,6 +101,52 @@ export async function PATCH(request: Request) {
         console.log(`[confirm-payment] ${sub.platform_choice} 구독 활성화 완료 (period: ${periodMonths}개월, business_id: ${sub.business_id})`);
       }
 
+      // [점프 시스템 연동 — Migration 10, 2026-04-30]
+      // 구독 승인 즉시 무료 점프 지급 (스페셜 10 / 디럭스 30 / 프리미엄 30)
+      // 30일 후 reset (구독 승인 일시 + 30일)
+      const ownerId = sub.businesses?.owner_id;
+      const PLAN_INITIAL_JUMPS: Record<string, number> = {
+        special:  10,
+        deluxe:   30,
+        premium:  30,
+      };
+      const initialJumps = PLAN_INITIAL_JUMPS[planName] ?? 0;
+      if (ownerId && initialJumps > 0) {
+        try {
+          const next30Days = new Date();
+          next30Days.setDate(next30Days.getDate() + 30);
+
+          const { data: existing } = await supabaseAdmin
+            .from('user_jumps')
+            .select('user_id')
+            .eq('user_id', ownerId)
+            .maybeSingle();
+
+          if (existing) {
+            await supabaseAdmin
+              .from('user_jumps')
+              .update({
+                subscription_balance: initialJumps,
+                next_reset_at: next30Days.toISOString(),
+                updated_at: now,
+              })
+              .eq('user_id', ownerId);
+          } else {
+            await supabaseAdmin
+              .from('user_jumps')
+              .insert({
+                user_id: ownerId,
+                subscription_balance: initialJumps,
+                next_reset_at: next30Days.toISOString(),
+              });
+          }
+          console.log(`[confirm-payment] 무료 점프 ${initialJumps}회 지급 완료 (plan: ${planName}, user: ${ownerId})`);
+        } catch (jumpErr) {
+          console.error('[confirm-payment] user_jumps 적립 실패 (구독은 활성화 유지):', jumpErr);
+          // 점프 적립 실패해도 구독 활성화는 그대로 진행 (별도 운영 보정 가능)
+        }
+      }
+
       // 성공 알림 (텔레그램)
       await sendTelegramAlert(
         `✅ <b>구독 활성화 완료</b>\n\n` +
