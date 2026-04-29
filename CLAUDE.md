@@ -210,6 +210,8 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 | 11 | 04-28 | RegisterForm OCR 개업일 자동반영, 파일업로드 OCR 자동트리거, platform_choice 플랜별 자동선택, register API 타이틀 수정, edit UX (룸수/연령대 단위, 금액 콤마, 업소 소개 자동생성, 상세지역 select, 영업시간 드롭다운), 대시보드 플랫폼 빠른 등록 4개 버튼 |
 | 12 | 04-28 | P2 Step 4(추가 옵션) 야사장 회원 숨김, 대시보드 '플랫폼 구인 조건' 내부 폼 3종 (코코알바/웨이터존/선수존), POST /api/platform-ads/update (shops.options 병합 저장) |
 | 13 | 04-28 | BusinessCard 상세지역 표시 (extractSubRegion: "경기"→"경기 평택시"), 플랫폼 구인폼 드롭다운 Chrome/Windows 텍스트 누락 버그 수정 (appearance-none + 커스텀▼), 금액 입력 커서점프 수정 (blur 포맷 패턴) |
+| 14 | 04-29 | 어드민 대시보드 전면 재구현: service_role 통계(RLS 우회), AdminSidebar 클라이언트 분리(usePathname), register-audit 상태탭+삭제+검색, 회원관리(/admin/settings), platform-settings 리다이렉트, API(businesses+members) 신규. 서류조회 Object not found 수정(upload encodeURIComponent 버그), 어드민 상세지역+연락처하이픈 표시, approved status alias |
+| 15 | 04-29 | **영업진 시스템 도입** — RegisterForm Step 1: 담당자명(`manager_name`) 별도 입력 + 직책 드롭다운(사장/실장/팀장/부장/매니저) 추가. Step 2: 영업허가증 필수 검증(`!files.permit` 차단), 두 문서 모두 `*필수` 라벨. Step 3: 최종확인에 두 문서·직책·사업자번호 노출. /api/register: `manager_name`+`manager_role` 수신 → businesses 저장(fallback: representative → '실장'). DB SQL: `ALTER TABLE businesses ADD COLUMN manager_role TEXT`. P6에서 `business_reg_number`(OCR 자동추출)로 같은 사업자 영업진 그룹핑(Phase B) — 같은 사업자에 여러 영업진 별도 계정 등록 가능, 화면에서 자동 합쳐 표시. |
 
 ---
 
@@ -233,3 +235,7 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 - SSG 페이지에서 `createClient()` 대신 직접 Supabase URL fetch 사용
 - **`<select>` 스타일링 주의**: `rounded-xl`+`focus:ring`+`bg-white` 조합 시 Chrome/Windows에서 옵션 텍스트 미표시 버그 발생 → 반드시 `appearance-none` + 래퍼 div + 커스텀 `▼` 화살표 패턴 사용 (`selectCls` 변수 참조)
 - **금액 input 포맷 패턴**: onChange에서 comma 포맷 금지(커서 점프) → `[field]Focused` state + onFocus(raw)/onBlur(format) 패턴 사용
+- **사업자등록증 + 영업허가증 둘 다 필수** (2026-04-29 확정) — Step 2 nextStep 검증에서 둘 다 체크. 둘 다 OCR 자동 트리거(파일 선택 즉시 + 수동 재실행 버튼). `business_reg_number`는 OCR로 자동 추출되어 P6 그룹핑 키로 사용
+- **manager_role 컬럼 + 직책 5종 고정** — 사장/실장/팀장/부장/매니저 (직원·기타 제외). 신규 등록 시 RegisterForm Step 1에서 선택. 누락 시 register API에서 '실장' 기본값. P6에서 `${maskName(name)} ${role}` 형식 표시
+- **영업진 다중 등록 패턴** — 같은 사업자(business_reg_number 동일)에 여러 영업진이 각자 별도 auth 계정으로 입점 등록 가능. P6에서 자동 그룹핑되어 캡처5처럼 영업진 N명 카드로 표시. 영업진별 plan/구독 독립 (한 명은 premium, 다른 한 명은 basic 가능)
+- **OCR Claude 모델**: `claude-haiku-4-5-20251001` (사업자등록증 → business_number/name/representative/open_date / 영업허가증 → license_number/floor_area). docType 파라미터로 분기
