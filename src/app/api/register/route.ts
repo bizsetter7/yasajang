@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       phone, address, address_detail, description, menu_main, menu_liquor, menu_snack,
       platform_choice, owner_id, license_path, permit_path, plan,
       license_number, floor_area, opened_at,
+      manager_name, manager_role,
     } = body;
 
     if (!name || !phone) {
@@ -86,6 +87,10 @@ export async function POST(req: NextRequest) {
     const categoryKo = toCategoryKo(category);
 
     // 1. businesses 테이블 INSERT
+    // manager_name 우선순위: 영업진 본인(manager_name) → 대표자(representative)
+    const finalManagerName = (manager_name && manager_name.trim()) || representative || null;
+    const finalManagerRole = manager_role || '실장';
+
     const { data: bizData, error: bizError } = await supabase
       .from('businesses')
       .insert({
@@ -95,7 +100,8 @@ export async function POST(req: NextRequest) {
         address: address || null,
         address_detail: address_detail || null,
         phone,
-        manager_name: representative || null,
+        manager_name: finalManagerName,
+        manager_role: finalManagerRole,
         description: description || null,
         menu_main: menu_main || null,
         menu_liquor: menu_liquor || null,

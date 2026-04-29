@@ -93,6 +93,8 @@ export default function RegisterForm() {
     category: '룸알바 > 퍼블릭',
     region: '서울 강남구',
     representative: '',
+    manager_name: '',
+    manager_role: '실장' as '사장' | '실장' | '팀장' | '부장' | '매니저',
     business_number: '',
     phone: '',
     address: '',
@@ -105,6 +107,8 @@ export default function RegisterForm() {
     floor_area: '',
     opened_at: '',
   });
+
+  const MANAGER_ROLES = ['사장', '실장', '팀장', '부장', '매니저'] as const;
 
   // 업종 연동: 대분류 변경 시 subCategory 초기화 + formData.category 업데이트
   useEffect(() => {
@@ -199,11 +203,13 @@ export default function RegisterForm() {
     setError(null);
     if (currentStep === 1) {
       if (!formData.name.trim()) { setError('업소명을 입력해주세요.'); return; }
+      if (!formData.manager_name.trim()) { setError('담당자명을 입력해주세요.'); return; }
       if (!formData.phone.trim()) { setError('담당자 연락처를 입력해주세요.'); return; }
       if (!formData.address.trim()) { setError('업소 상세 주소를 검색해주세요.'); return; }
     }
     if (currentStep === 2) {
-      if (!files.license) { setError('사업자등록증을 업로드해주세요.'); return; }
+      if (!files.license) { setError('사업자등록증을 업로드해주세요. (필수)'); return; }
+      if (!files.permit) { setError('영업허가증을 업로드해주세요. (필수)'); return; }
     }
     setCurrentStep(prev => Math.min(prev + 1, 3));
   };
@@ -349,6 +355,8 @@ export default function RegisterForm() {
           category: formData.category,
           region: formData.region,
           representative: formData.representative,
+          manager_name: formData.manager_name,
+          manager_role: formData.manager_role,
           business_number: formData.business_number,
           phone: formData.phone,
           address: addressMain || formData.address,
@@ -737,6 +745,38 @@ export default function RegisterForm() {
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all"
                 />
               </div>
+
+              {/* 담당자 정보 (영업진 본인) — 사업자(대표자)와 다를 수 있음 */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-400 flex items-center">
+                  <Building2 size={14} className="mr-2" /> 담당자명 (영업진 본인)
+                </label>
+                <input
+                  type="text"
+                  name="manager_name"
+                  value={formData.manager_name}
+                  onChange={handleInputChange}
+                  placeholder="예: 김철민"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all"
+                />
+                <p className="text-[11px] text-zinc-500">손님에게 노출될 영업진 본인 이름. 같은 사업자에 여러 영업진이 등록 가능 (계정 별도).</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-400 flex items-center">
+                  <Shield size={14} className="mr-2" /> 직책
+                </label>
+                <select
+                  name="manager_role"
+                  value={formData.manager_role}
+                  onChange={handleInputChange}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white focus:border-amber-500 focus:outline-none transition-all appearance-none cursor-pointer"
+                >
+                  {MANAGER_ROLES.map(r => (
+                    <option key={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* 무료 플랜 안내 배너 */}
@@ -859,7 +899,9 @@ export default function RegisterForm() {
                 <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-amber-500 group-hover:text-black transition-all">
                   <FileCheck size={22} />
                 </div>
-                <h4 className="text-base font-bold text-white mb-1">사업자등록증</h4>
+                <h4 className="text-base font-bold text-white mb-1">
+                  사업자등록증 <span className="text-rose-400">*필수</span>
+                </h4>
                 <p className="text-zinc-500 text-xs mb-3">JPG, PNG, PDF (최대 10MB)</p>
                 {files.license ? (
                   <div className="mt-1">
@@ -901,7 +943,9 @@ export default function RegisterForm() {
                 <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-amber-500 group-hover:text-black transition-all">
                   <Shield size={22} />
                 </div>
-                <h4 className="text-base font-bold text-white mb-1">영업허가증</h4>
+                <h4 className="text-base font-bold text-white mb-1">
+                  영업허가증 <span className="text-rose-400">*필수</span>
+                </h4>
                 <p className="text-zinc-500 text-xs mb-3">JPG, PNG, PDF (최대 10MB)</p>
                 {files.permit ? (
                   <div className="mt-1">
@@ -1033,6 +1077,14 @@ export default function RegisterForm() {
                 <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">연락처</dt>
                 <dd className="text-white font-bold">{formData.phone}</dd>
               </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">담당자</dt>
+                <dd className="text-white font-bold">{formData.manager_name} {formData.manager_role}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">사업자등록번호</dt>
+                <dd className="text-white font-bold">{formData.business_number || '-'}</dd>
+              </div>
               <div className="col-span-1 md:col-span-2">
                 <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">주소</dt>
                 <dd className="text-white font-bold">{formData.address}</dd>
@@ -1040,7 +1092,8 @@ export default function RegisterForm() {
               <div className="col-span-1 md:col-span-2 pt-4 border-t border-zinc-900">
                 <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">업로드 문서 및 사진</dt>
                 <dd className="text-zinc-400 text-sm italic">
-                  - 사업자등록증: {files.license?.name || '없음'}<br />
+                  - 사업자등록증: {files.license?.name || '❌ 없음'}<br />
+                  - 영업허가증: {files.permit?.name || '❌ 없음'}<br />
                   - 업소 사진: {files.shop_images.length}장
                 </dd>
               </div>
