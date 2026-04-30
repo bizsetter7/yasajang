@@ -56,7 +56,7 @@ export default function AnnouncementModal() {
                             </li>
                             <li className="flex gap-2">
                                 <span className="font-black text-amber-500 shrink-0">2.</span>
-                                <span>야사장 대시보드 → <strong>플랫폼 구인 조건</strong> 섹션 → 내용 확인 후 각 플랫폼 옆 <strong>[📢 광고 게시하기]</strong> 버튼 클릭!</span>
+                                <span>야사장 대시보드 → <strong>플랫폼 구인 조건</strong> 섹션 →<br/>내용 확인 후 각 플랫폼 옆 <strong>[📢 광고 게시하기]</strong> 버튼 클릭!</span>
                             </li>
                             <li className="flex gap-2">
                                 <span className="font-black text-amber-500 shrink-0">3.</span>
@@ -64,7 +64,7 @@ export default function AnnouncementModal() {
                             </li>
                             <li className="flex gap-2">
                                 <span className="font-black text-amber-500 shrink-0">4.</span>
-                                <span>해당 플랫폼 로그인 후 마이샵 → 진행중인 채용공고에서 해당광고 <strong>&apos;수정&apos;</strong> 클릭후 <strong>채용 메시지·이미지·세부 콘텐츠 작성</strong></span>
+                                <span>해당 플랫폼 로그인 후 마이샵 → 진행중인 채용공고에서<br/>해당광고 <strong>&apos;수정&apos;</strong> 클릭후 <strong>채용 메시지·이미지·세부 콘텐츠 작성</strong></span>
                             </li>
                         </ol>
                     </div>
