@@ -42,12 +42,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 해당 유저의 shops 중 yasajang_business_id 일치하는 것 조회
+    // 해당 유저의 shops 조회 (user_id 기준 — JSONB 필터 불필요)
     const { data: shops, error: fetchError } = await supabaseAdmin
       .from('shops')
       .select('id, options')
-      .eq('user_id', user.id)
-      .or(`options->>yasajang_business_id.eq.${businessId},options->yasajang_business_id.eq."${businessId}"`);
+      .eq('user_id', user.id);
 
     if (fetchError) {
       console.error('[platform-ads/update] fetch error:', fetchError);
