@@ -133,7 +133,7 @@ export default function SunsuzoneHiringPage() {
         setError(data.error || '저장 실패');
       } else {
         setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        setTimeout(() => router.push('/dashboard'), 1000);
       }
     } catch {
       setError('네트워크 오류');
