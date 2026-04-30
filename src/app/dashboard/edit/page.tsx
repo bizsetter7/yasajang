@@ -721,8 +721,17 @@ export default function BusinessEditPage() {
                           </div>
                           <div>
                             <label className="text-[10px] text-gray-500 font-bold block mb-1">가격 (원)</label>
-                            <input type="number" placeholder="150000" className={inputCls} value={item.price}
-                              onChange={e => setMenuCategories(mc => ({ ...mc, [cat]: mc[cat].map((x, j) => j === i ? { ...x, price: e.target.value } : x) }))} />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="150,000"
+                              className={inputCls}
+                              value={item.price !== '' ? Number(item.price).toLocaleString('ko-KR') : ''}
+                              onChange={e => {
+                                const raw = e.target.value.replace(/,/g, '');
+                                if (/^\d*$/.test(raw)) setMenuCategories(mc => ({ ...mc, [cat]: mc[cat].map((x, j) => j === i ? { ...x, price: raw } : x) }));
+                              }}
+                            />
                           </div>
                         </div>
                         <div>

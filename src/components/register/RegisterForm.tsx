@@ -297,7 +297,19 @@ export default function RegisterForm() {
             const filled = new Set(ocrFilledSet);
 
             if (data.data.license_number) { updates.license_number = data.data.license_number; filled.add('license_number'); }
-            if (data.data.floor_area) { updates.floor_area = data.data.floor_area; filled.add('floor_area'); }
+            if (data.data.floor_area) {
+              // '165.28㎡' 등 → 숫자 파싱 후 '165.28m² / 50평' 형태로 변환
+              const rawArea = String(data.data.floor_area);
+              const numMatch = rawArea.match(/[\d.]+/);
+              if (numMatch) {
+                const sqm = parseFloat(numMatch[0]);
+                const pyeong = Math.round(sqm / 3.3058);
+                updates.floor_area = `${sqm}m² / ${pyeong}평`;
+              } else {
+                updates.floor_area = rawArea;
+              }
+              filled.add('floor_area');
+            }
 
             if (Object.keys(updates).length > 0) {
               setFormData(prev => ({ ...prev, ...updates }));
@@ -421,23 +433,19 @@ export default function RegisterForm() {
         </div>
 
         {/* ★ 상세 정보 입력 안내 (중요) */}
-        <div className="mb-4 p-5 bg-amber-500/10 border border-amber-500/40 rounded-2xl w-full">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl shrink-0">✏️</span>
-            <div>
-              <p className="text-amber-400 font-black text-sm mb-1">지금 바로 업소 상세 정보를 입력하세요!</p>
-              <p className="text-zinc-400 text-xs leading-relaxed mb-3">
-                영업시간, 메뉴, 소개글, 사진 등을 입력하면<br />
-                밤길 노출 시 훨씬 더 많은 고객이 유입됩니다.
-              </p>
-              <button
-                onClick={() => window.location.href = '/dashboard/edit'}
-                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all text-sm"
-              >
-                업소 상세 정보 입력하기 →
-              </button>
-            </div>
-          </div>
+        <div className="mb-4 p-5 bg-amber-500/10 border border-amber-500/40 rounded-2xl w-full text-center">
+          <p className="text-2xl mb-2">✏️</p>
+          <p className="text-amber-400 font-black text-sm mb-1">지금 바로 업소 상세 정보를 입력하세요!</p>
+          <p className="text-zinc-400 text-xs leading-relaxed mb-3">
+            영업시간, 메뉴, 소개글, 사진 등을 입력하면<br />
+            밤길 노출 시 훨씬 더 많은 고객이 유입됩니다.
+          </p>
+          <button
+            onClick={() => window.location.href = '/dashboard/edit'}
+            className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-all text-sm"
+          >
+            업소 상세 정보 입력하기 →
+          </button>
         </div>
 
         {/* 메인 이동 */}
@@ -970,6 +978,27 @@ export default function RegisterForm() {
               </div>
             </div>
 
+            {/* OCR 자동반영 결과 표시 */}
+            {(formData.floor_area || formData.license_number || formData.business_number) && (
+              <div className="flex flex-wrap gap-2">
+                {formData.business_number && (
+                  <span className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-400 font-bold">
+                    ✓ 사업자번호: {formData.business_number}
+                  </span>
+                )}
+                {formData.license_number && (
+                  <span className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-400 font-bold">
+                    ✓ 허가번호: {formData.license_number}
+                  </span>
+                )}
+                {formData.floor_area && (
+                  <span className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-400 font-bold">
+                    ✓ 매장규모: {formData.floor_area}
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="flex items-center text-zinc-100 font-bold">
                 <ImageIcon size={18} className="mr-2 text-amber-500" /> 업소 내부/외부 사진 (최대 5장)
@@ -1090,6 +1119,18 @@ export default function RegisterForm() {
                 <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">주소</dt>
                 <dd className="text-white font-bold">{formData.address}</dd>
               </div>
+              {formData.floor_area && (
+                <div>
+                  <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">매장 규모</dt>
+                  <dd className="text-emerald-400 font-bold">{formData.floor_area}</dd>
+                </div>
+              )}
+              {formData.license_number && (
+                <div>
+                  <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">영업허가번호</dt>
+                  <dd className="text-emerald-400 font-bold">{formData.license_number}</dd>
+                </div>
+              )}
               <div className="col-span-1 md:col-span-2 pt-4 border-t border-zinc-900">
                 <dt className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-1">업로드 문서 및 사진</dt>
                 <dd className="text-zinc-400 text-sm italic">
