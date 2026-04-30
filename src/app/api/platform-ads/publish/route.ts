@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
             .insert({
                 user_id: user.id,
                 name: business.name,
+                nickname: business.name, // P2/P9/P10 광고 목록 표시용 — null이면 상호명 폴백되지 않고 enrichAdData가 다른 폴백 사용
                 title: title || business.name,
                 content: content || business.description || null,
                 category: category || business.category,
