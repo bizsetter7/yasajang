@@ -212,6 +212,7 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 | 13 | 04-28 | BusinessCard 상세지역 표시 (extractSubRegion: "경기"→"경기 평택시"), 플랫폼 구인폼 드롭다운 Chrome/Windows 텍스트 누락 버그 수정 (appearance-none + 커스텀▼), 금액 입력 커서점프 수정 (blur 포맷 패턴) |
 | 14 | 04-29 | 어드민 대시보드 전면 재구현: service_role 통계(RLS 우회), AdminSidebar 클라이언트 분리(usePathname), register-audit 상태탭+삭제+검색, 회원관리(/admin/settings), platform-settings 리다이렉트, API(businesses+members) 신규. 서류조회 Object not found 수정(upload encodeURIComponent 버그), 어드민 상세지역+연락처하이픈 표시, approved status alias |
 | 15 | 04-29 | **영업진 시스템 도입** — RegisterForm Step 1: 담당자명(`manager_name`) 별도 입력 + 직책 드롭다운(사장/실장/팀장/부장/매니저) 추가. Step 2: 영업허가증 필수 검증(`!files.permit` 차단), 두 문서 모두 `*필수` 라벨. Step 3: 최종확인에 두 문서·직책·사업자번호 노출. /api/register: `manager_name`+`manager_role` 수신 → businesses 저장(fallback: representative → '실장'). DB SQL: `ALTER TABLE businesses ADD COLUMN manager_role TEXT`. P6에서 `business_reg_number`(OCR 자동추출)로 같은 사업자 영업진 그룹핑(Phase B) — 같은 사업자에 여러 영업진 별도 계정 등록 가능, 화면에서 자동 합쳐 표시. |
+| 16 | 04-30 | **5개 버그 수정 + 메신저 연락처 신설** (commit ba53256) — [A] M-051 region='gyeonggi' 근절: publish+update API에서 address(한국어)로 shops.region/regionGu 파싱 [B] 구인조건 P2 미반영: platform-ads/update에서 options.ageMin/ageMax + work_time 컬럼 동시 저장 [C] M-052 premium 사이드배너 자동게시: PLAN_TO_TIER premium='p2'→'p3' (publish/register 2곳) [D] 메신저 연락처 3종 신설: RegisterForm Step1+edit/page+register/update API에 kakao_id/line_id/telegram_id 추가 (⚠️ DB SQL 실행 필요: ALTER TABLE businesses ADD COLUMN IF NOT EXISTS kakao_id/line_id/telegram_id TEXT) |
 
 ---
 
@@ -239,3 +240,7 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 - **manager_role 컬럼 + 직책 5종 고정** — 사장/실장/팀장/부장/매니저 (직원·기타 제외). 신규 등록 시 RegisterForm Step 1에서 선택. 누락 시 register API에서 '실장' 기본값. P6에서 `${maskName(name)} ${role}` 형식 표시
 - **영업진 다중 등록 패턴** — 같은 사업자(business_reg_number 동일)에 여러 영업진이 각자 별도 auth 계정으로 입점 등록 가능. P6에서 자동 그룹핑되어 캡처5처럼 영업진 N명 카드로 표시. 영업진별 plan/구독 독립 (한 명은 premium, 다른 한 명은 basic 가능)
 - **OCR Claude 모델**: `claude-haiku-4-5-20251001` (사업자등록증 → business_number/name/representative/open_date / 영업허가증 → license_number/floor_area). docType 파라미터로 분기
+- **shops.region 저장 규칙** (M-051): `businesses.region_code`는 영문코드('gyeonggi') → **절대 shops.region에 사용 금지**. 반드시 `businesses.address.split(/\s+/)[0]`(한국어 '경기') 사용. P2 ShopDetailView는 `options.regionGu`도 읽음 — options 저장 시 포함 필수.
+- **PLAN_TO_TIER premium 규칙** (M-052): publish/register/confirm-payment 모두 `premium: 'p3'` (p2=GRAND 사이드배너는 별도 어드민 신청+심사 전용, 야사장 구독으로 자동 할당 금지)
+- **P2 ShopDetailView 호환 필드**: shops.options에 `ageMin/ageMax`(나이), shops.`work_time`(직접 컬럼, workTime으로 읽힘) 저장 필요. platform-ads/update에서 hiringInfo 저장 시 이 필드도 동시 저장.
+- **메신저 연락처 3종**: businesses 테이블에 `kakao_id/line_id/telegram_id TEXT` 컬럼 (2026-04-30 추가, DB SQL 실행 필요). RegisterForm Step1 + edit/page + register/update API 반영 완료.

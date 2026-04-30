@@ -76,6 +76,11 @@ export async function POST(request: Request) {
     let updatedCount = 0;
     for (const shop of shops) {
       const existingOptions = (shop.options || {}) as Record<string, unknown>;
+      // "19:00"~"06:00" → "19:00~06:00"
+      const workTimeStr = (hiringInfo.work_start && hiringInfo.work_end)
+        ? `${hiringInfo.work_start}~${hiringInfo.work_end}`
+        : null;
+
       const newOptions: Record<string, unknown> = {
         ...existingOptions,
         hiring_info: {
@@ -85,14 +90,12 @@ export async function POST(request: Request) {
         // P2 ShopDetailView 호환: options.ageMin/ageMax 직접 읽음
         ...(hiringInfo.age_min != null ? { ageMin: hiringInfo.age_min } : {}),
         ...(hiringInfo.age_max != null ? { ageMax: hiringInfo.age_max } : {}),
+        // P2 anyAdToShop: opt?.workTime 로 읽음
+        // ⚠️ work_time 직접 컬럼 업데이트 금지 — 컬럼 없으면 전체 update 실패(ageMin/ageMax까지 누락)
+        ...(workTimeStr ? { workTime: workTimeStr } : {}),
       };
 
-      // P2가 읽는 work_time 컬럼(직접 컬럼 → shop.workTime)도 업데이트
-      const workTimeStr = (hiringInfo.work_start && hiringInfo.work_end)
-        ? `${hiringInfo.work_start}~${hiringInfo.work_end}`
-        : null;
       const updatePayload: Record<string, unknown> = { options: newOptions };
-      if (workTimeStr) updatePayload.work_time = workTimeStr;
 
       const { error: updateError } = await supabaseAdmin
         .from('shops')
