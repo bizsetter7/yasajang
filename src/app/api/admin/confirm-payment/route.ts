@@ -58,6 +58,10 @@ export async function PATCH(request: Request) {
         businesses: {
           name: string;
           owner_id: string;
+          category: string | null;
+          address: string | null;
+          phone: string | null;
+          business_reg_number: string | null;
         } | null;
       }
 
@@ -72,11 +76,35 @@ export async function PATCH(request: Request) {
           updated_at: now,
         })
         .eq('id', subscriptionId)
-        .select('*, businesses(name, owner_id)')
+        .select('*, businesses(name, owner_id, category, address, phone, business_reg_number)')
         .single();
 
       if (error) throw error;
       const sub = data as SubscriptionWithBusiness;
+
+      // [profiles 동기화] P5 businesses → P2/P9/P10 profiles 공통 사업자 정보 반영
+      // businesses 데이터가 있고 owner_id가 있을 때만 실행
+      if (sub.businesses?.owner_id) {
+        const biz = sub.businesses;
+        const profilePatch: Record<string, string> = {};
+        if (biz.name)                 profilePatch.business_name    = biz.name;
+        if (biz.category)             profilePatch.business_type    = biz.category;
+        if (biz.address)              profilePatch.business_address = biz.address;
+        if (biz.phone)                profilePatch.manager_phone    = biz.phone;
+        if (biz.business_reg_number)  profilePatch.business_number  = biz.business_reg_number;
+        // business_verify_status: P2 BusinessVerifySection이 'approved' 값으로 체크
+        // business_verified: Step1BasicInfo가 boolean으로 체크
+        profilePatch.business_verify_status = 'approved';
+        (profilePatch as any).business_verified = true;
+
+        const { error: profileErr } = await supabaseAdmin
+          .from('profiles')
+          .update(profilePatch)
+          .eq('id', biz.owner_id);
+
+        if (profileErr) console.error('[confirm-payment] profiles 동기화 실패 (구독은 활성화 유지):', profileErr);
+        else console.log(`[confirm-payment] profiles 동기화 완료 (owner: ${biz.owner_id})`);
+      }
 
       const planName = sub.plan_name || sub.plan || '';
 
