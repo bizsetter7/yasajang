@@ -132,8 +132,10 @@ export async function POST(request: NextRequest) {
                 title: title || business.name,
                 content: content || business.description || null,
                 category: category || business.category,
-                region: region || business.address?.split(' ').slice(0, 2).join(' ') || '서울',
-                work_region_sub: business.address?.split(/\s+/)[1] || null,
+                // region_code = "경기 평택시" 형태 → [0]="경기", [1]="평택시"로 분리
+                // address를 쓰면 "경기 평택시 ..." → slice(0,2) = "경기 평택시" → work_region_sub와 중복됨
+                region: region || business.region_code?.split(' ')[0] || business.address?.split(/\s+/)[0] || '서울',
+                work_region_sub: business.region_code?.split(' ')[1] || business.address?.split(/\s+/)[1] || null,
                 phone: business.phone,
                 manager_name: business.manager_name,
                 manager_phone: business.phone,

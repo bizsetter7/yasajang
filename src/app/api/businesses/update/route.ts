@@ -107,16 +107,22 @@ export async function PATCH(request: Request) {
     if (updateErr) throw updateErr;
 
     // 업체명·카테고리·지역 변경 시 shops 테이블도 동기화 (코코알바/웨이터존 등 게시 광고 반영)
-    if (name || category) {
+    {
       const shopSync: Record<string, string> = {};
-      if (name) shopSync.name = name;
-      if (name) shopSync.title = name;
+      if (name) { shopSync.name = name; shopSync.title = name; }
       if (category) shopSync.category = category;
-
-      await supabaseAdmin
-        .from('shops')
-        .update(shopSync)
-        .eq('user_id', user.id);
+      // region_code = "경기 평택시" → region="경기", work_region_sub="평택시"
+      if (regionCode) {
+        const parts = regionCode.split(' ');
+        shopSync.region = parts[0] || regionCode;
+        if (parts[1]) shopSync.work_region_sub = parts[1];
+      }
+      if (Object.keys(shopSync).length > 0) {
+        await supabaseAdmin
+          .from('shops')
+          .update(shopSync)
+          .eq('user_id', user.id);
+      }
     }
 
     return NextResponse.json({ ok: true, reaudit: basicChanged });
