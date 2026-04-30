@@ -60,8 +60,12 @@ export async function PATCH(request: Request) {
           owner_id: string;
           category: string | null;
           address: string | null;
+          address_detail: string | null;
           phone: string | null;
           business_reg_number: string | null;
+          kakao_id: string | null;
+          line_id: string | null;
+          telegram_id: string | null;
         } | null;
       }
 
@@ -76,7 +80,7 @@ export async function PATCH(request: Request) {
           updated_at: now,
         })
         .eq('id', subscriptionId)
-        .select('*, businesses(name, owner_id, category, address, phone, business_reg_number)')
+        .select('*, businesses(name, owner_id, category, address, address_detail, phone, business_reg_number, kakao_id, line_id, telegram_id)')
         .single();
 
       if (error) throw error;
@@ -87,11 +91,15 @@ export async function PATCH(request: Request) {
       if (sub.businesses?.owner_id) {
         const biz = sub.businesses;
         const profilePatch: Record<string, string> = {};
-        if (biz.name)                 profilePatch.business_name    = biz.name;
-        if (biz.category)             profilePatch.business_type    = biz.category;
-        if (biz.address)              profilePatch.business_address = biz.address;
-        if (biz.phone)                profilePatch.manager_phone    = biz.phone;
-        if (biz.business_reg_number)  profilePatch.business_number  = biz.business_reg_number;
+        if (biz.name)                 profilePatch.business_name          = biz.name;
+        if (biz.category)             profilePatch.business_type          = biz.category;
+        if (biz.address)              profilePatch.business_address       = biz.address;
+        if (biz.address_detail)       profilePatch.business_address_detail = biz.address_detail;
+        if (biz.phone)                profilePatch.manager_phone          = biz.phone;
+        if (biz.business_reg_number)  profilePatch.business_number        = biz.business_reg_number;
+        if (biz.kakao_id)             profilePatch.manager_kakao          = biz.kakao_id;
+        if (biz.line_id)              profilePatch.manager_line           = biz.line_id;
+        if (biz.telegram_id)          profilePatch.manager_telegram       = biz.telegram_id;
         // business_verify_status: P2 BusinessVerifySection이 'approved' 값으로 체크
         // business_verified: Step1BasicInfo가 boolean으로 체크
         profilePatch.business_verify_status = 'approved';
