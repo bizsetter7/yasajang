@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { businessId, payerName, payDate, platform_choice, note } = await request.json();
+  const { businessId, plan, period_months, payerName, payDate, platform_choice, note } = await request.json();
   if (!payerName || !payDate) {
     return NextResponse.json({ error: '입금자명과 날짜는 필수입니다' }, { status: 400 });
   }
@@ -26,14 +26,20 @@ export async function POST(request: Request) {
   const reference = `${payerName}_${payDate}${note ? `_${note}` : ''}`;
 
   // subscriptions 업데이트
+  const updateData: Record<string, unknown> = {
+    payment_reference: reference,
+    payment_method: 'bank_transfer',
+    platform_choice: platform_choice,
+    updated_at: new Date().toISOString(),
+  };
+  if (plan) updateData.plan = plan;
+  if (period_months && Number.isInteger(Number(period_months))) {
+    updateData.period_months = Number(period_months);
+  }
+
   const { error } = await supabase
     .from('subscriptions')
-    .update({
-      payment_reference: reference,
-      payment_method: 'bank_transfer',
-      platform_choice: platform_choice, // 플랫폼 선택 저장
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq('business_id', businessId);
 
   if (error) {
@@ -45,6 +51,7 @@ export async function POST(request: Request) {
   await sendTelegramAlert(
     `💳 <b>무통장 입금 신청</b>\n\n` +
     `🏪 업소명: <b>${business.name}</b>\n` +
+    `📦 플랜: ${plan || '미선택'} (${period_months || 1}개월)\n` +
     `👤 입금자명: ${payerName}\n` +
     `📅 입금일: ${payDate}\n\n` +
     `👉 야사장 어드민 → 입금 확인 탭에서 처리해주세요.`

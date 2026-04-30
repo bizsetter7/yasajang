@@ -19,8 +19,16 @@ const PLANS = [
   { id: 'premium',  label: '프리미엄', price: '399,000', priceShort: '39.9만' },
 ];
 
+const PERIODS = [
+  { months: 1,  label: '1개월',  discount: 0,    badge: null },
+  { months: 3,  label: '3개월',  discount: 0.05, badge: '-5%' },
+  { months: 6,  label: '6개월',  discount: 0.10, badge: '-10%' },
+  { months: 12, label: '12개월', discount: 0.17, badge: '-17%' },
+];
+
 export default function PaymentModal({ isOpen, onClose, businessId, plan }: PaymentModalProps) {
   const [selectedPlan, setSelectedPlan] = useState(plan);
+  const [periodMonths, setPeriodMonths] = useState(1);
   const [payerName, setPayerName] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
   const [platformChoice, setPlatformChoice] = useState<'cocoalba' | 'waiterzone' | 'sunsuzone'>('cocoalba');
@@ -31,6 +39,10 @@ export default function PaymentModal({ isOpen, onClose, businessId, plan }: Paym
   if (!isOpen) return null;
 
   const selectedPlanInfo = PLANS.find(p => p.id === selectedPlan) ?? PLANS[0];
+  const selectedPeriodInfo = PERIODS.find(p => p.months === periodMonths) ?? PERIODS[0];
+  const monthlyPrice = parseInt(selectedPlanInfo.price.replace(/,/g, ''));
+  const totalPrice = Math.floor(monthlyPrice * periodMonths * (1 - selectedPeriodInfo.discount));
+  const totalPriceFormatted = totalPrice.toLocaleString('ko-KR');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +56,7 @@ export default function PaymentModal({ isOpen, onClose, businessId, plan }: Paym
         body: JSON.stringify({
           businessId,
           plan: selectedPlan,
+          period_months: periodMonths,
           payerName,
           payDate,
           platform_choice: selectedPlan === 'basic' ? null : platformChoice,
@@ -123,8 +136,42 @@ export default function PaymentModal({ isOpen, onClose, businessId, plan }: Paym
               </div>
             </div>
 
+            {/* 구독 기간 선택 */}
+            <div className="pt-2 space-y-2">
+              <p className="text-xs text-zinc-400 font-bold">구독 기간</p>
+              <div className="grid grid-cols-4 gap-2">
+                {PERIODS.map(({ months, label, discount, badge }) => (
+                  <button
+                    key={months}
+                    type="button"
+                    onClick={() => setPeriodMonths(months)}
+                    className={`relative flex flex-col items-center gap-0.5 px-2 py-2.5 rounded-xl border font-bold text-center transition-all ${
+                      periodMonths === months
+                        ? 'bg-amber-500/15 border-amber-500 text-white'
+                        : 'bg-zinc-950/50 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                    }`}
+                  >
+                    {badge && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[8px] px-1 py-0.5 rounded font-black whitespace-nowrap">
+                        {badge}
+                      </span>
+                    )}
+                    <span className="text-[11px] font-black">{label}</span>
+                    {discount > 0 && (
+                      <span className={`text-[9px] ${periodMonths === months ? 'text-green-400' : 'text-zinc-500'}`}>
+                        {Math.floor(monthlyPrice * (1 - discount)).toLocaleString()}원/월
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <p className="text-xs text-amber-500 font-bold mt-1">
-              선택: {selectedPlanInfo.label} — ₩{selectedPlanInfo.price}원/월
+              선택: {selectedPlanInfo.label} {periodMonths}개월 — 총 ₩{totalPriceFormatted}원
+              {selectedPeriodInfo.discount > 0 && (
+                <span className="ml-1 text-green-400">({selectedPeriodInfo.badge} 할인 적용)</span>
+              )}
             </p>
           </div>
 

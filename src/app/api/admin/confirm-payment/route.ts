@@ -183,6 +183,29 @@ export async function PATCH(request: Request) {
         }
       }
 
+      // [shop deadline 갱신] 구독 만료일 → 연동 광고의 마감일 업데이트
+      if (ownerId) {
+        try {
+          const deadlineStr = nextBilling.toISOString().split('T')[0];
+          const { data: linkedShops } = await supabaseAdmin
+            .from('shops')
+            .select('id')
+            .eq('user_id', ownerId)
+            .eq('is_closed', false);
+
+          if (linkedShops && linkedShops.length > 0) {
+            const shopIds = linkedShops.map((s: { id: number }) => s.id);
+            await supabaseAdmin
+              .from('shops')
+              .update({ deadline: deadlineStr })
+              .in('id', shopIds);
+            console.log(`[confirm-payment] shop deadline 갱신: ${deadlineStr} (${shopIds.length}개)`);
+          }
+        } catch (shopErr) {
+          console.error('[confirm-payment] shop deadline 갱신 실패 (구독은 활성화 유지):', shopErr);
+        }
+      }
+
       // 성공 알림 (텔레그램)
       await sendTelegramAlert(
         `✅ <b>구독 활성화 완료</b>\n\n` +
