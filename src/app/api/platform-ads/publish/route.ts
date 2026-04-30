@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
                     yasajang_business_id: business.id,
                     business_number: business.business_reg_number || null,
                     address: business.address || null,
+                    businessAddress: business.address || null, // P2 enrichAdData/anyAdToShop: options.businessAddress → 지도 표시
                     regionGu: business.address?.split(/\s+/)[1] || null, // P2 ShopDetailView: options.regionGu
                     menu_main: business.menu_main || null,
                     menu_liquor: business.menu_liquor || null,
