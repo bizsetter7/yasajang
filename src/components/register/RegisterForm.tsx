@@ -106,6 +106,9 @@ export default function RegisterForm() {
     license_number: '',
     floor_area: '',
     opened_at: '',
+    kakao_id: '',
+    line_id: '',
+    telegram_id: '',
   });
 
   const MANAGER_ROLES = ['사장', '실장', '팀장', '부장', '매니저'] as const;
@@ -386,6 +389,9 @@ export default function RegisterForm() {
           license_number: formData.license_number || null,
           floor_area: formData.floor_area || null,
           opened_at: formData.opened_at || null,
+          kakao_id: formData.kakao_id || null,
+          line_id: formData.line_id || null,
+          telegram_id: formData.telegram_id || null,
         }),
       });
       const result = await res.json();
@@ -785,6 +791,46 @@ export default function RegisterForm() {
                     <option key={r}>{r}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* 메신저 연락처 */}
+              <div className="space-y-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+                <label className="text-sm font-bold text-zinc-400">💬 메신저 연락처 <span className="text-zinc-600 font-normal">(선택사항 — 어드민 연락용)</span></label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-zinc-500 w-14 shrink-0 text-right">카카오톡</span>
+                    <input
+                      type="text"
+                      name="kakao_id"
+                      value={formData.kakao_id}
+                      onChange={handleInputChange}
+                      placeholder="카카오톡 ID"
+                      className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white text-sm focus:border-amber-500 focus:outline-none transition-all"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-zinc-500 w-14 shrink-0 text-right">라인</span>
+                    <input
+                      type="text"
+                      name="line_id"
+                      value={formData.line_id}
+                      onChange={handleInputChange}
+                      placeholder="라인 ID"
+                      className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white text-sm focus:border-amber-500 focus:outline-none transition-all"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-zinc-500 w-14 shrink-0 text-right">텔레그램</span>
+                    <input
+                      type="text"
+                      name="telegram_id"
+                      value={formData.telegram_id}
+                      onChange={handleInputChange}
+                      placeholder="@username"
+                      className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white text-sm focus:border-amber-500 focus:outline-none transition-all"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -161,6 +161,7 @@ export default function BusinessEditPage() {
     name: '', phone: '', address: '', addressDetail: '',
     openChatUrl: '', category: '', regionCode: '', regionSub: '',
     menu_main: '', menu_liquor: '', menu_snack: '',
+    kakao_id: '', line_id: '', telegram_id: '',
   });
 
   // 홍보 정보 (즉시 반영)
@@ -213,6 +214,9 @@ export default function BusinessEditPage() {
         menu_main: data.menu_main || '',
         menu_liquor: data.menu_liquor || '',
         menu_snack: data.menu_snack || '',
+        kakao_id: data.kakao_id || '',
+        line_id: data.line_id || '',
+        telegram_id: data.telegram_id || '',
       });
       setPromo({
         managerName: data.manager_name || '',
@@ -433,7 +437,26 @@ export default function BusinessEditPage() {
               <label className={labelCls}><MessageSquare size={13} /> 카카오톡 오픈채팅 URL</label>
               <input type="url" placeholder="https://open.kakao.com/..." className={inputCls} value={basic.openChatUrl} onChange={e => setBasic({...basic, openChatUrl: e.target.value})} />
             </div>
-            
+
+            {/* 메신저 연락처 */}
+            <div className="pt-3 border-t border-gray-200">
+              <h3 className="text-sm font-bold text-gray-900 mb-3">💬 메신저 연락처 <span className="text-gray-400 font-normal">(선택 — 어드민 연락용)</span></h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-14 shrink-0 text-right">카카오톡</span>
+                  <input className={inputCls} placeholder="카카오톡 ID" value={basic.kakao_id} onChange={e => setBasic({...basic, kakao_id: e.target.value})} />
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-14 shrink-0 text-right">라인</span>
+                  <input className={inputCls} placeholder="라인 ID" value={basic.line_id} onChange={e => setBasic({...basic, line_id: e.target.value})} />
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-14 shrink-0 text-right">텔레그램</span>
+                  <input className={inputCls} placeholder="@username" value={basic.telegram_id} onChange={e => setBasic({...basic, telegram_id: e.target.value})} />
+                </div>
+              </div>
+            </div>
+
             <div className="pt-4 border-t border-gray-200">
               <h3 className="text-sm font-bold text-gray-900 mb-4">간편 메뉴 (필수)</h3>
               <div className="space-y-4">

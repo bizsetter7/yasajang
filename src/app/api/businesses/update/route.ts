@@ -38,6 +38,8 @@ export async function PATCH(request: Request) {
       // 기본 정보 (재심사)
       name, phone, address, addressDetail, openChatUrl, category, regionCode,
       menu_main, menu_liquor, menu_snack,
+      // 메신저 연락처
+      kakao_id, line_id, telegram_id,
       // 홍보 정보 (즉시 반영)
       businessHours, managerName, managerPhone,
       roomCount, ageRange,
@@ -76,6 +78,10 @@ export async function PATCH(request: Request) {
       menu_main: menu_main || null,
       menu_liquor: menu_liquor || null,
       menu_snack: menu_snack || null,
+      // 메신저 연락처
+      kakao_id: kakao_id || null,
+      line_id: line_id || null,
+      telegram_id: telegram_id || null,
       // 홍보 정보
       business_hours: businessHours || null,
       manager_name: managerName || null,
@@ -108,20 +114,27 @@ export async function PATCH(request: Request) {
 
     // 업체명·카테고리·지역 변경 시 shops 테이블도 동기화 (코코알바/웨이터존 등 게시 광고 반영)
     {
-      const shopSync: Record<string, string> = {};
+      const shopSync: Record<string, unknown> = {};
       if (name) { shopSync.name = name; shopSync.title = name; }
       if (category) shopSync.category = category;
-      // region_code = "경기 평택시" → region="경기", work_region_sub="평택시"
-      if (regionCode) {
-        const parts = regionCode.split(' ');
-        shopSync.region = parts[0] || regionCode;
-        if (parts[1]) shopSync.work_region_sub = parts[1];
+      // address(한국어) 파싱: "경기 평택시 특구로5번길..." → [0]="경기", [1]="평택시"
+      // region_code는 영문코드('gyeonggi')라 절대 사용 금지 (M-048)
+      if (address) {
+        const [regionMain, regionSub = null] = address.split(/\s+/);
+        shopSync.region = regionMain;
+        shopSync.work_region_sub = regionSub;
       }
       if (Object.keys(shopSync).length > 0) {
-        await supabaseAdmin
-          .from('shops')
-          .update(shopSync)
-          .eq('user_id', user.id);
+        // options.regionGu(P2 ShopDetailView에서 읽음)도 병합 업데이트
+        const { data: userShops } = await supabaseAdmin
+          .from('shops').select('id, options').eq('user_id', user.id);
+        for (const shop of (userShops || [])) {
+          const opts = (shop.options as Record<string, unknown>) || {};
+          await supabaseAdmin.from('shops').update({
+            ...shopSync,
+            ...(address ? { options: { ...opts, regionGu: address.split(/\s+/)[1] || null } } : {}),
+          }).eq('id', shop.id);
+        }
       }
     }
 

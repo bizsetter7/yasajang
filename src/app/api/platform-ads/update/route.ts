@@ -76,17 +76,27 @@ export async function POST(request: Request) {
     let updatedCount = 0;
     for (const shop of shops) {
       const existingOptions = (shop.options || {}) as Record<string, unknown>;
-      const newOptions = {
+      const newOptions: Record<string, unknown> = {
         ...existingOptions,
         hiring_info: {
           ...(existingOptions.hiring_info as Record<string, unknown> || {}),
           [platform]: hiringInfo,
         },
+        // P2 ShopDetailView 호환: options.ageMin/ageMax 직접 읽음
+        ...(hiringInfo.age_min != null ? { ageMin: hiringInfo.age_min } : {}),
+        ...(hiringInfo.age_max != null ? { ageMax: hiringInfo.age_max } : {}),
       };
+
+      // P2가 읽는 work_time 컬럼(직접 컬럼 → shop.workTime)도 업데이트
+      const workTimeStr = (hiringInfo.work_start && hiringInfo.work_end)
+        ? `${hiringInfo.work_start}~${hiringInfo.work_end}`
+        : null;
+      const updatePayload: Record<string, unknown> = { options: newOptions };
+      if (workTimeStr) updatePayload.work_time = workTimeStr;
 
       const { error: updateError } = await supabaseAdmin
         .from('shops')
-        .update({ options: newOptions })
+        .update(updatePayload)
         .eq('id', shop.id);
 
       if (!updateError) updatedCount++;

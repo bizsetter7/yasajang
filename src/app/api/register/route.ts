@@ -41,7 +41,7 @@ const PLAN_TO_TIER: Record<string, string> = {
   standard: 'p5',
   special:  'p4',
   deluxe:   'p3',
-  premium:  'p2',
+  premium:  'p3', // p2=GRAND 사이드배너 — 별도 신청 필요. 야사장 구독으로 자동 게시 금지
 };
 
 const PLAN_TO_PRICE: Record<string, number> = {
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       platform_choice, owner_id, license_path, permit_path, plan,
       license_number, floor_area, opened_at,
       manager_name, manager_role,
+      kakao_id, line_id, telegram_id,
     } = body;
 
     if (!name || !phone) {
@@ -112,6 +113,9 @@ export async function POST(req: NextRequest) {
         license_number: license_number || null,
         floor_area: floor_area || null,
         opened_at: opened_at || null,
+        kakao_id: kakao_id || null,
+        line_id: line_id || null,
+        telegram_id: telegram_id || null,
         owner_id: owner_id || null,
         status: 'pending',
         cocoalba_tier: plan || 'basic',

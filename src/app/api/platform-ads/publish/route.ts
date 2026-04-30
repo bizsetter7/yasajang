@@ -27,7 +27,7 @@ const PLAN_TO_TIER: Record<string, string> = {
     standard: 'p5',
     special:  'p4',
     deluxe:   'p3',
-    premium:  'p2',
+    premium:  'p3', // p2=GRAND 사이드배너 — 별도 신청 필요. 야사장 구독으로 자동 게시 금지
 };
 
 function canPublish(plan: string, platformChoice: string | null, target: string): boolean {
@@ -132,10 +132,10 @@ export async function POST(request: NextRequest) {
                 title: title || business.name,
                 content: content || business.description || null,
                 category: category || business.category,
-                // region_code = "경기 평택시" 형태 → [0]="경기", [1]="평택시"로 분리
-                // address를 쓰면 "경기 평택시 ..." → slice(0,2) = "경기 평택시" → work_region_sub와 중복됨
-                region: region || business.region_code?.split(' ')[0] || business.address?.split(/\s+/)[0] || '서울',
-                work_region_sub: business.region_code?.split(' ')[1] || business.address?.split(/\s+/)[1] || null,
+                // address(한국어) 파싱: "경기 평택시 특구로5번길..." → [0]="경기", [1]="평택시"
+                // region_code는 영문코드('gyeonggi')라 절대 사용 금지 (M-048)
+                region: region || business.address?.split(/\s+/)[0] || '서울',
+                work_region_sub: business.address?.split(/\s+/)[1] || null,
                 phone: business.phone,
                 manager_name: business.manager_name,
                 manager_phone: business.phone,
@@ -150,6 +150,7 @@ export async function POST(request: NextRequest) {
                     yasajang_business_id: business.id,
                     business_number: business.business_reg_number || null,
                     address: business.address || null,
+                    regionGu: business.address?.split(/\s+/)[1] || null, // P2 ShopDetailView: options.regionGu
                     menu_main: business.menu_main || null,
                     menu_liquor: business.menu_liquor || null,
                     menu_snack: business.menu_snack || null,
