@@ -241,6 +241,12 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 - **영업진 다중 등록 패턴** — 같은 사업자(business_reg_number 동일)에 여러 영업진이 각자 별도 auth 계정으로 입점 등록 가능. P6에서 자동 그룹핑되어 캡처5처럼 영업진 N명 카드로 표시. 영업진별 plan/구독 독립 (한 명은 premium, 다른 한 명은 basic 가능)
 - **OCR Claude 모델**: `claude-haiku-4-5-20251001` (사업자등록증 → business_number/name/representative/open_date / 영업허가증 → license_number/floor_area). docType 파라미터로 분기
 - **shops.region 저장 규칙** (M-051): `businesses.region_code`는 영문코드('gyeonggi') → **절대 shops.region에 사용 금지**. 반드시 `businesses.address.split(/\s+/)[0]`(한국어 '경기') 사용. P2 ShopDetailView는 `options.regionGu`도 읽음 — options 저장 시 포함 필수.
-- **PLAN_TO_TIER premium 규칙** (M-052): publish/register/confirm-payment 모두 `premium: 'p3'` (p2=GRAND 사이드배너는 별도 어드민 신청+심사 전용, 야사장 구독으로 자동 할당 금지)
-- **P2 ShopDetailView 호환 필드**: shops.options에 `ageMin/ageMax`(나이), shops.`work_time`(직접 컬럼, workTime으로 읽힘) 저장 필요. platform-ads/update에서 hiringInfo 저장 시 이 필드도 동시 저장.
+- **PLAN_TO_TIER 현행 (2026-05-01 수정)** — publish/register/confirm-payment 일치:
+  ```
+  basic='p7' / standard='p4' / special='p4' / deluxe='p3' / premium='p2'
+  ```
+  premium='p2'가 맞음. BannerSidebar는 banner_status='none' 필터로 사이드배너 자동노출 차단(M-052 근본 수정).
+  p5 CLAUDE.md에 'premium=p3'라고 적혀있었던 것은 **잘못된 과거 기록 — 완전 무시**할 것.
+- **P2 ShopDetailView 호환 필드**: shops.options에 `ageMin/ageMax`(나이), `workTime`(근무시간) 저장 필요. platform-ads/update에서 hiringInfo 저장 시 동시 저장 구현됨.
+- **pay 컬럼 동기화 필수 (M-056)**: platform-ads/update에서 hiring_info 저장 시 반드시 top-level pay/pay_type/pay_amount도 업데이트. cocoalba=TC방식, waiterzone/sunsuzone=일급. options에만 있으면 P2/P9/P10 광고카드 급여 공백.
 - **메신저 연락처 3종**: businesses 테이블에 `kakao_id/line_id/telegram_id TEXT` 컬럼 (2026-04-30 추가, DB SQL 실행 필요). RegisterForm Step1 + edit/page + register/update API 반영 완료.
