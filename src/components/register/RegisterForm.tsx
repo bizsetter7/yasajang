@@ -142,11 +142,12 @@ export default function RegisterForm() {
     setFormData(prev => ({ ...prev, address: [addressMain, addressDetail].filter(Boolean).join(' ') }));
   }, [addressMain, addressDetail]);
 
-  // 플랜 변경 시 platform_choice 자동 선택 (스페셜/디럭스/프리미엄 → 웨이터존 기본)
+  // 플랜 변경 시 platform_choice 자동 선택
+  // 베이직/스페셜/디럭스/프리미엄 → 웨이터존 기본 / 스탠다드 → 코코알바 기본
   useEffect(() => {
-    if (['special', 'deluxe', 'premium'].includes(localSelectedPlan)) {
+    if (['basic', 'special', 'deluxe', 'premium'].includes(localSelectedPlan)) {
       setFormData(prev => ({ ...prev, platform_choice: 'waiterzone' }));
-    } else if (['basic', 'standard'].includes(localSelectedPlan)) {
+    } else if (localSelectedPlan === 'standard') {
       setFormData(prev => ({ ...prev, platform_choice: 'cocoalba' }));
     }
   }, [localSelectedPlan]);

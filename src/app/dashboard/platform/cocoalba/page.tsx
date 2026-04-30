@@ -149,9 +149,10 @@ export default function CocoalbaHiringPage() {
     );
   }
 
-  const inputCls = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white';
+  // text-gray-900 명시 — 글로벌 body가 다크테마(#fafafa)라 input/select 글자가 흰색으로 보임 방지
+  const inputCls = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white text-gray-900 placeholder:text-gray-400';
   // select는 appearance-none + 커스텀 화살표 (Chrome/Windows native dropdown 텍스트 누락 버그 방지)
-  const selectCls = 'w-full px-3 py-2.5 pr-8 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white cursor-pointer appearance-none';
+  const selectCls = 'w-full px-3 py-2.5 pr-8 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white text-gray-900 cursor-pointer appearance-none';
   const labelCls = 'block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5';
   const sectionCls = 'bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4';
 
