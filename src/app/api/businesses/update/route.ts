@@ -106,6 +106,19 @@ export async function PATCH(request: Request) {
 
     if (updateErr) throw updateErr;
 
+    // 업체명·카테고리·지역 변경 시 shops 테이블도 동기화 (코코알바/웨이터존 등 게시 광고 반영)
+    if (name || category) {
+      const shopSync: Record<string, string> = {};
+      if (name) shopSync.name = name;
+      if (name) shopSync.title = name;
+      if (category) shopSync.category = category;
+
+      await supabaseAdmin
+        .from('shops')
+        .update(shopSync)
+        .eq('user_id', user.id);
+    }
+
     return NextResponse.json({ ok: true, reaudit: basicChanged });
   } catch (err) {
     console.error('Business update error:', err);

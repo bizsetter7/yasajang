@@ -92,13 +92,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // 연관 shops도 삭제 (야사장 입점신청 공고)
+  // 연관 shops 전체 삭제 (active 포함 — 코코알바/웨이터존 게시광고까지 제거)
   if (biz?.owner_id) {
     await supabaseAdmin
       .from('shops')
       .delete()
-      .eq('user_id', biz.owner_id)
-      .in('status', ['PENDING_REVIEW', 'rejected']);
+      .eq('user_id', biz.owner_id);
   }
 
   return NextResponse.json({ ok: true });
