@@ -37,11 +37,11 @@ function toCategoryKo(category: string): string {
 
 const PLAN_TO_TIER: Record<string, string> = {
   free:     'p7',
-  basic:    'p7',
-  standard: 'p5',
-  special:  'p4',
-  deluxe:   'p3',
-  premium:  'p3', // p2=GRAND 사이드배너 — 별도 신청 필요. 야사장 구독으로 자동 게시 금지
+  basic:    'p7', // T7 베이직
+  standard: 'p4', // T4 스페셜 (이전 'p5'=급구/추천 오류 — plan_structure_confirmed 기준)
+  special:  'p4', // T4 스페셜
+  deluxe:   'p3', // T3 디럭스
+  premium:  'p2', // T2 프리미엄 (BannerSidebar banner_status 필터로 사이드배너 자동 노출 차단)
 };
 
 const PLAN_TO_PRICE: Record<string, number> = {
@@ -140,6 +140,10 @@ export async function POST(req: NextRequest) {
           id: owner_id,
           role: 'corporate',
           user_type: 'corporate',
+          // 야사장 입점 신청 완료(서류 OCR 검증) = 사업자 인증 완료
+          // P2/P9/P10 마이샵에서 '사업자 인증이 필요합니다' 배너 사라짐
+          business_verified: true,
+          business_verify_status: 'pending', // 어드민 최종 검토 전까지 pending
         }, { onConflict: 'id' });
       } catch (e) {
         console.warn('profiles upsert 실패 (무시하고 계속):', e);
