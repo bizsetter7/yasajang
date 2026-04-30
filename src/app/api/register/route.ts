@@ -142,58 +142,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. shops 테이블 INSERT → 코코알바 광고 목록 노출 (free 플랜은 스킵)
-    let shopId: string | null = null;
-
-    if (!isFree) {
-      // platform_choice → shops.platform 컬럼 매핑
-      // HomePortalClient는 .eq('platform', 'cocoalba') 로 필터 → 반드시 설정 필요
-      const platformMap: Record<string, string> = {
-        cocoalba: 'cocoalba',
-        waiterzone: 'waiterzone',
-        sunsuzone: 'sunsuzone',
-      };
-      const shopPlatform = platformMap[platform_choice || ''] || 'cocoalba';
-
-      const { data: shopData, error: shopError } = await supabase
-        .from('shops')
-        .insert({
-          user_id: owner_id || null,
-          name,
-          title: name,
-          content: description || null,
-          category,
-          region,
-          work_region_sub: region?.split(' ')[1] || null,
-          phone,
-          tier,
-          product_type: tier,
-          ad_price: adPrice,
-          status: 'PENDING_REVIEW',
-          is_closed: false,
-          platform: shopPlatform,
-          options: {
-            yasajang_plan: plan,
-            platform_choice: platform_choice || null,
-            business_number: business_number || null,
-            address: address || null,
-            yasajang_business_id: businessId || null,
-            menu_main: menu_main || null,
-            menu_liquor: menu_liquor || null,
-            menu_snack: menu_snack || null,
-            opened_at: opened_at || null,
-            floor_area: floor_area || null,
-            license_number: license_number || null,
-          },
-        })
-        .select('id')
-        .single();
-
-      if (shopError) {
-        console.error('shops insert error:', shopError);
-      }
-      shopId = shopData?.id ?? null;
-    }
+    // 2. shops 자동 INSERT 제거 (2026-04-30 정책 변경)
+    //    → 광고는 어드민 결제 승인 후 사장이 야사장 대시보드에서 [광고 게시하기] 버튼으로 직접 게시
+    //    → /api/platform-ads/publish 엔드포인트 활용
+    //    → 사장이 콘텐츠를 한번 더 검토·수정한 후 게시하여 실수 방지
+    const shopId: string | null = null;
 
     // 3. subscriptions 테이블 INSERT
     // free 플랜 = 밤길 3개월 무료, 그 외 = 7일 trial

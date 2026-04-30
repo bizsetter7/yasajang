@@ -795,13 +795,21 @@ export default function BusinessEditPage() {
           >
             출력 예시 보기
           </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-gray-200 disabled:text-gray-400 text-black font-black py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-lg shadow-amber-500/10"
-          >
-            {saving ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <><Save size={20} /> 저장하기</>}
-          </button>
+          <div className="flex gap-3">
+            <Link
+              href="/dashboard"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-black py-5 rounded-[2rem] transition-all flex items-center justify-center text-sm"
+            >
+              취소
+            </Link>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-[2] bg-amber-500 hover:bg-amber-400 disabled:bg-gray-200 disabled:text-gray-400 text-black font-black py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-lg shadow-amber-500/10"
+            >
+              {saving ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <><Save size={20} /> 저장하기</>}
+            </button>
+          </div>
         </form>
 
         {showPreview && (

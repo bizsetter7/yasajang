@@ -4,6 +4,8 @@ import Link from 'next/link';
 import BusinessCard from '@/components/dashboard/BusinessCard';
 import SubscriptionCard from '@/components/dashboard/SubscriptionCard';
 import BamgilStatsCard from '@/components/dashboard/BamgilStatsCard';
+import PlatformGrid from '@/components/dashboard/PlatformGrid';
+import AnnouncementModal from '@/components/dashboard/AnnouncementModal';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -47,18 +49,21 @@ export default async function DashboardPage() {
     bamgilCount = count ?? 0;
   }
 
-  // 플랫폼 현황 (코코알바/웨이터존 공고 확인)
+  // 플랫폼 현황 — platform 컬럼 기반 (Migration 07 이후)
   const { data: shops } = await supabase
     .from('shops')
-    .select('id, category')
+    .select('id, platform, status, category')
     .eq('user_id', user.id);
 
-  // [야사장] 입점신청 샵은 제외, 웨이터 키워드만 웨이터존으로 분류, 나머지 전체는 코코알바
-  const WAITER_KW = ['웨이터', '서빙', '바텐더', 'waiter'];
-  const isWaiter = (cat: string) => WAITER_KW.some(k => (cat || '').toLowerCase().includes(k));
-  const allShops = shops?.filter(s => !s.category?.includes('[야사장]')) ?? [];
-  const waiterShopCount = allShops.filter(s => isWaiter(s.category)).length;
-  const cocoShopCount = allShops.filter(s => !isWaiter(s.category)).length;
+  // 게시 상태(active)인 광고만 카운트
+  const publishedShops = (shops ?? [])
+    .filter(s => s.status === 'active' && s.platform)
+    .map(s => ({ platform: s.platform as string, id: s.id }));
+  const cocoShopCount = publishedShops.filter(s => s.platform === 'cocoalba').length;
+  const waiterShopCount = publishedShops.filter(s => s.platform === 'waiterzone').length;
+  // P5는 무료 플랜이면 'free', 그 외는 subscription.plan
+  const planName = subscription?.plan || 'free';
+  const platformChoice = subscription?.platform_choice ?? null;
 
   const platformCards = (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -97,6 +102,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
+      {/* 공지 모달 (1회 표시 + 다시 보지 않기) */}
+      <AnnouncementModal />
+
       <div className="max-w-6xl mx-auto">
         <header className="space-y-1 mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">사장님 대시보드</h1>
@@ -137,50 +145,18 @@ export default async function DashboardPage() {
                 {platformCards}
               </section>
 
-              {/* ── 플랫폼 구인 조건 관리 ── */}
+              {/* ── 플랫폼 구인 조건 관리 (2026-04-30 — 무료 비활성화 + 광고게시 흐름) ── */}
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">플랫폼 구인 조건</h2>
-                  <span className="text-[10px] text-gray-400 font-medium">각 플랫폼 공고에 자동 반영</span>
+                  <span className="text-[10px] text-gray-400 font-medium">광고 게시 후 각 플랫폼 마이샵에서 채용 메시지 작성</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Link href="/dashboard/edit"
-                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-purple-300 hover:shadow-md transition-all group">
-                    <span className="text-2xl shrink-0">🌙</span>
-                    <div>
-                      <p className="text-xs font-black text-gray-900">밤길</p>
-                      <p className="text-[11px] text-gray-400">업소 홍보정보 관리</p>
-                    </div>
-                    <span className="ml-auto text-gray-300 group-hover:text-purple-400 text-lg">→</span>
-                  </Link>
-                  <Link href="/dashboard/platform/cocoalba"
-                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-rose-300 hover:shadow-md transition-all group">
-                    <span className="text-2xl shrink-0">🍫</span>
-                    <div>
-                      <p className="text-xs font-black text-gray-900">코코알바</p>
-                      <p className="text-[11px] text-gray-400">아가씨 구인 조건</p>
-                    </div>
-                    <span className="ml-auto text-gray-300 group-hover:text-rose-400 text-lg">→</span>
-                  </Link>
-                  <Link href="/dashboard/platform/waiterzone"
-                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all group">
-                    <span className="text-2xl shrink-0">🤵</span>
-                    <div>
-                      <p className="text-xs font-black text-gray-900">웨이터존</p>
-                      <p className="text-[11px] text-gray-400">웨이터 구인 조건</p>
-                    </div>
-                    <span className="ml-auto text-gray-300 group-hover:text-blue-400 text-lg">→</span>
-                  </Link>
-                  <Link href="/dashboard/platform/sunsuzone"
-                    className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-yellow-300 hover:shadow-md transition-all group">
-                    <span className="text-2xl shrink-0">👑</span>
-                    <div>
-                      <p className="text-xs font-black text-gray-900">선수존</p>
-                      <p className="text-[11px] text-gray-400">선수 구인 조건</p>
-                    </div>
-                    <span className="ml-auto text-gray-300 group-hover:text-yellow-500 text-lg">→</span>
-                  </Link>
-                </div>
+                <PlatformGrid
+                  plan={planName}
+                  platformChoice={platformChoice}
+                  businessId={business?.id ?? null}
+                  publishedShops={publishedShops}
+                />
               </section>
             </div>
 
