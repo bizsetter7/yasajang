@@ -20,6 +20,7 @@ const PERIOD_OPTIONS = [
 
 // 월 기준 기본가 (원)
 const BASE_PRICE: Record<string, number> = {
+  free: 0,
   basic: 22000,
   standard: 66000,
   special: 88000,
@@ -40,6 +41,27 @@ function calcMonthlyPrice(planKey: string, discount: number) {
 }
 
 const tiers = [
+  {
+    name: '무료',
+    badge: null,
+    price: '0',
+    description: '밤길 3개월 무료 체험',
+    platforms: ['밤길'],
+    features: [
+      '밤길 지도 기본 핀 노출',
+      '3개월 무료 체험',
+      '※ 코코알바·웨이터존·선수존 미노출',
+    ],
+    cta: '무료로 시작하기',
+    href: '/register?plan=free',
+    mostPopular: false,
+    textColor: 'text-zinc-400',
+    borderColor: 'border-zinc-800',
+    cardBg: 'bg-zinc-900/40',
+    checkColor: 'text-zinc-500',
+    btnClass: 'bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10',
+    badgeClass: '',
+  },
   {
     name: '베이직',
     badge: null,
@@ -201,9 +223,9 @@ export default function Pricing() {
           ))}
         </div>
 
-        {/* 카드 그리드: 모바일 스와이프 / PC 5열 */}
+        {/* 카드 그리드: 모바일 스와이프 / PC 3열 × 2행 (무료 + 5단계 = 6개) */}
         <div className="
-          flex xl:grid xl:grid-cols-5
+          flex xl:grid xl:grid-cols-3
           gap-4
           overflow-x-auto xl:overflow-visible
           snap-x snap-mandatory xl:snap-none
@@ -240,25 +262,34 @@ export default function Pricing() {
 
               {/* 가격 */}
               <div className="mb-4">
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-xs text-zinc-500 font-medium">₩</span>
-                  <span className="text-3xl font-extrabold text-white">
-                    {calcMonthlyPrice(tier.name === '베이직' ? 'basic' : 
-                               tier.name === '스탠다드' ? 'standard' : 
-                               tier.name === '스페셜' ? 'special' : 
-                               tier.name === '디럭스' ? 'deluxe' : 'premium', 
-                               selectedPeriod.discount)}
-                  </span>
-                  <span className="text-zinc-500 text-xs font-medium">/월</span>
-                </div>
-                {selectedPeriod.months > 1 && (
-                  <p className="text-[10px] text-zinc-600 mt-1 font-medium">
-                    {selectedPeriod.label} 총 ₩{calcPrice(tier.name === '베이직' ? 'basic' : 
-                               tier.name === '스탠다드' ? 'standard' : 
-                               tier.name === '스페셜' ? 'special' : 
-                               tier.name === '디럭스' ? 'deluxe' : 'premium', 
-                               selectedPeriod.months, selectedPeriod.discount)}
-                  </p>
+                {tier.name === '무료' ? (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-extrabold text-white">무료</span>
+                    <span className="text-zinc-500 text-xs font-medium">/3개월</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-0.5">
+                      <span className="text-xs text-zinc-500 font-medium">₩</span>
+                      <span className="text-3xl font-extrabold text-white">
+                        {calcMonthlyPrice(tier.name === '베이직' ? 'basic' :
+                                   tier.name === '스탠다드' ? 'standard' :
+                                   tier.name === '스페셜' ? 'special' :
+                                   tier.name === '디럭스' ? 'deluxe' : 'premium',
+                                   selectedPeriod.discount)}
+                      </span>
+                      <span className="text-zinc-500 text-xs font-medium">/월</span>
+                    </div>
+                    {selectedPeriod.months > 1 && (
+                      <p className="text-[10px] text-zinc-600 mt-1 font-medium">
+                        {selectedPeriod.label} 총 ₩{calcPrice(tier.name === '베이직' ? 'basic' :
+                                   tier.name === '스탠다드' ? 'standard' :
+                                   tier.name === '스페셜' ? 'special' :
+                                   tier.name === '디럭스' ? 'deluxe' : 'premium',
+                                   selectedPeriod.months, selectedPeriod.discount)}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
