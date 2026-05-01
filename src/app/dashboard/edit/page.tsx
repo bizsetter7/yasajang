@@ -397,10 +397,9 @@ export default function BusinessEditPage() {
                 <select className={inputCls} value={basic.regionCode}
                   onChange={e => {
                     const newCode = e.target.value;
-                    const label = REGION_CODE_LABEL[newCode] || '';
-                    const subs = SIDO_TO_SIGUNGU[label] || [];
-                    setBasic({...basic, regionCode: newCode, regionSub: subs[0] || ''});
+                    setBasic({...basic, regionCode: newCode, regionSub: ''});
                   }}>
+                  <option value="">선택</option>
                   {REGIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </div>
@@ -409,7 +408,7 @@ export default function BusinessEditPage() {
                 <select className={inputCls} value={basic.regionSub}
                   onChange={e => setBasic({...basic, regionSub: e.target.value})}>
                   <option value="">선택</option>
-                  {(SIDO_TO_SIGUNGU[REGION_CODE_LABEL[basic.regionCode] || ''] || []).map(s => (
+                  {[...(SIDO_TO_SIGUNGU[REGION_CODE_LABEL[basic.regionCode] || ''] || [])].sort((a, b) => a.localeCompare(b, 'ko')).map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
@@ -417,6 +416,7 @@ export default function BusinessEditPage() {
               <div>
                 <label className={labelCls}><Tag size={13} /> 업종</label>
                 <select className={inputCls} value={basic.category} onChange={e => setBasic({...basic, category: e.target.value})}>
+                  <option value="">선택</option>
                   {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
