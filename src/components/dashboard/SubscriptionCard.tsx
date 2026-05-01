@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, Calendar, CheckCircle2, AlertTriangle, Clock, ArrowRight } from 'lucide-react';
+import { CreditCard, Calendar, CheckCircle2, AlertTriangle, Clock, ArrowRight, TrendingUp } from 'lucide-react';
 import PaymentModal from './PaymentModal';
+import UpgradeModal from './UpgradeModal';
 
 interface SubscriptionCardProps {
   subscription: {
@@ -18,6 +19,10 @@ interface SubscriptionCardProps {
 
 export default function SubscriptionCard({ subscription, businessId, jumpBalance }: SubscriptionCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+
+  const isPremium = subscription?.plan === 'premium';
+  const isActive = subscription?.status === 'active';
 
   const getPlanLabel = (plan: string) => {
     const labels: Record<string, string> = {
@@ -101,20 +106,6 @@ export default function SubscriptionCard({ subscription, businessId, jumpBalance
         </div>
       </div>
 
-      {/* 기간별 할인 안내 */}
-      <div className="pt-3 border-t border-gray-100">
-        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">기간 구독 할인</p>
-        <div className="grid grid-cols-4 gap-1 text-center">
-          {([['1개월', '0%'], ['3개월', '5%'], ['6개월', '10%'], ['12개월', '17%']] as const).map(([m, d]) => (
-            <div key={m} className="bg-gray-50 rounded-lg py-1.5 px-1">
-              <p className="text-[9px] text-gray-400 font-medium">{m}</p>
-              <p className="text-xs font-black text-gray-700">{d}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-[9px] text-gray-400 mt-1.5">입점신청·구독 갱신 시 기간 선택으로 할인 적용</p>
-      </div>
-
       {/* 점프 잔액 */}
       {jumpBalance != null && (
         <div className="pt-3 border-t border-gray-100">
@@ -145,9 +136,19 @@ export default function SubscriptionCard({ subscription, businessId, jumpBalance
           </div>
         )}
 
-        {subscription?.status === 'active' && (
-          <div className="w-full py-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-600 font-bold text-sm flex items-center justify-center gap-2">
-            <CheckCircle2 size={14} /> 활성화됨
+        {isActive && (
+          <div className="space-y-2">
+            <div className="w-full py-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-600 font-bold text-sm flex items-center justify-center gap-2">
+              <CheckCircle2 size={14} /> 활성화됨
+            </div>
+            {!isPremium && (
+              <button
+                onClick={() => setIsUpgradeOpen(true)}
+                className="w-full py-2.5 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-2xl text-amber-600 font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+              >
+                <TrendingUp size={14} /> 상위 플랜 업그레이드
+              </button>
+            )}
           </div>
         )}
 
@@ -163,6 +164,13 @@ export default function SubscriptionCard({ subscription, businessId, jumpBalance
         onClose={() => setIsModalOpen(false)}
         businessId={businessId}
         plan={subscription?.plan || 'basic'}
+      />
+      <UpgradeModal
+        isOpen={isUpgradeOpen}
+        onClose={() => setIsUpgradeOpen(false)}
+        businessId={businessId}
+        currentPlan={subscription?.plan || 'basic'}
+        nextBillingAt={subscription?.next_billing_at ?? null}
       />
     </div>
   );

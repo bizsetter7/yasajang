@@ -44,7 +44,7 @@ export default function BamgilStatsCard({ count }: BamgilStatsCardProps) {
           <div className="flex items-start gap-2 text-gray-500">
             <HelpCircle size={14} className="mt-0.5 shrink-0 text-gray-400" />
             <p className="text-xs">
-              아직 밤길 유입이 없습니다. 밤길에 무료 등록하시면 더 많은 손님과 연결됩니다.
+              야사장의 각 플랫폼을 통해 더 많은 손님과 연결하세요.
             </p>
           </div>
         )}
