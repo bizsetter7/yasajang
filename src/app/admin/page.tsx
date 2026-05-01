@@ -48,14 +48,14 @@ export default async function AdminDashboard() {
         <p className="text-zinc-500 text-sm mt-1">야사장 전체 운영 현황입니다.</p>
       </div>
 
-      {/* Stats */}
+      {/* Stats — actionRequired: 진짜 어드민 액션이 필요한 항목만 '처리 필요' 표시 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: '전체 업소', value: totalBiz ?? 0, icon: Building2, color: 'text-zinc-400' },
-          { label: '심사 대기', value: pendingBiz ?? 0, icon: Clock, color: 'text-amber-400', href: '/admin/register-audit' },
-          { label: '활성 업소', value: activeBiz ?? 0, icon: CheckCircle2, color: 'text-green-400', href: '/admin/register-audit?status=active' },
-          { label: '입금 확인 대기', value: pendingPay ?? 0, icon: CreditCard, color: 'text-blue-400', href: '/admin/payments' },
-        ].map(({ label, value, icon: Icon, color, href }) => (
+          { label: '전체 업소', value: totalBiz ?? 0, icon: Building2, color: 'text-zinc-400', actionRequired: false },
+          { label: '심사 대기', value: pendingBiz ?? 0, icon: Clock, color: 'text-amber-400', href: '/admin/register-audit', actionRequired: true },
+          { label: '활성 업소', value: activeBiz ?? 0, icon: CheckCircle2, color: 'text-green-400', href: '/admin/register-audit?status=active', actionRequired: false, hint: '운영중' },
+          { label: '입금 확인 대기', value: pendingPay ?? 0, icon: CreditCard, color: 'text-blue-400', href: '/admin/payments', actionRequired: true },
+        ].map(({ label, value, icon: Icon, color, href, actionRequired, hint }) => (
           <div key={label} className={`bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 ${href ? 'hover:border-amber-500/30 transition-all' : ''}`}>
             {href ? (
               <Link href={href} className="block">
@@ -64,7 +64,8 @@ export default async function AdminDashboard() {
                   <Icon size={16} className={color} />
                 </div>
                 <div className="text-3xl font-black text-white">{value}</div>
-                {value > 0 && <p className="text-[10px] text-amber-500 font-bold mt-1">→ 처리 필요</p>}
+                {actionRequired && value > 0 && <p className="text-[10px] text-amber-500 font-bold mt-1">→ 처리 필요</p>}
+                {!actionRequired && hint && value > 0 && <p className="text-[10px] text-green-500 font-bold mt-1">→ {hint}</p>}
               </Link>
             ) : (
               <>
