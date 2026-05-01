@@ -95,7 +95,7 @@ const tiers = [
       '밤길 지도 강조 핀 노출',
       '웨이터존 구인 공고 등록',
       '코코알바·선수존 중 1개 선택',
-      '⚡ 광고 점프: 무료 10회 + 자동 3회/일',
+      '광고 점프:\n무료 10회 + 자동 3회/일',
       '실시간 유입 통계',
       '합법 영업 인증 배지',
     ],
@@ -119,7 +119,7 @@ const tiers = [
       '스페셜의 모든 기능 포함',
       '인기 업소 아이콘 강조 표시',
       '밤길 대형 핀 노출',
-      '⚡ 광고 점프: 무료 30회 + 자동 6회/일',
+      '광고 점프:\n무료 30회 + 자동 6회/일',
     ],
     cta: '디럭스 시작하기',
     href: '/register?plan=deluxe',
@@ -142,7 +142,7 @@ const tiers = [
       'PC·모바일 목록 최상단 고정',
       '밤길 ELITE 핀 (최상단·대형)',
       '코코알바 프리미엄 크기 노출',
-      '⚡ 광고 점프: 무료 30회 + 매일 +1회 추가 + 자동 8회/일',
+      '광고 점프:\n무료 30회 +\n매일 +1회 추가 + 자동 8회/일',
       '우선 고객 지원',
     ],
     cta: '프리미엄 문의하기',
@@ -281,7 +281,7 @@ export default function Pricing() {
                 {tier.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-xs text-zinc-400">
                     <Check size={13} className={`mt-0.5 shrink-0 ${tier.checkColor}`} />
-                    <span>{f}</span>
+                    <span className="whitespace-pre-line">{f}</span>
                   </li>
                 ))}
               </ul>
