@@ -101,11 +101,11 @@ export async function POST(request: Request) {
         paySuffixesNew.push('숙소제공');
       }
 
-      // ─── cocoalba: 복지혜택→options.icons, 근무복장→options.workClothes, 경력조건→options.workCareer
+      // ─── 복지혜택 → options.icons (cocoalba/waiterzone 모두)
       const OLD_CLOTHES = ['자율', '홈복', '홀복', '캐주얼', '유니폼', '자율 복장', '홈복 착용', '홀복 착용'];
       const existingIcons = (existingOptions.icons as string[] || []).filter(i => !OLD_CLOTHES.includes(i));
-      // benefits: 새로 선택된 복지혜택 목록 → icons에 반영 (기존 비복장 아이콘 제거 후 교체)
-      const newBenefits = (platform === 'cocoalba' && Array.isArray(hiringInfo.benefits)) ? hiringInfo.benefits as string[] : null;
+      const hasBenefits = Array.isArray(hiringInfo.benefits);
+      const newBenefits = hasBenefits ? hiringInfo.benefits as string[] : null;
       const newIcons = newBenefits !== null ? newBenefits : existingIcons;
 
       const newOptions: Record<string, unknown> = {
@@ -123,10 +123,10 @@ export async function POST(request: Request) {
         ...(workTypeMapped ? { workType: workTypeMapped } : {}),
         // 룸티/보너스 → paySuffixes
         ...(paySuffixesNew.length > 0 ? { paySuffixes: paySuffixesNew } : {}),
-        // cocoalba: 복지혜택→icons, 근무복장→workClothes, 경력조건→workCareer
+        // 복지혜택→icons (cocoalba/waiterzone 공통), 근무복장/경력→workClothes/workCareer
         ...(newIcons.length > 0 ? { icons: newIcons } : { icons: [] }),
         ...(platform === 'cocoalba' && hiringInfo.clothes ? { workClothes: String(hiringInfo.clothes) } : {}),
-        ...(platform === 'cocoalba' && hiringInfo.career ? { workCareer: hiringInfo.career } : {}),
+        ...((platform === 'cocoalba' || platform === 'waiterzone') && hiringInfo.career ? { workCareer: hiringInfo.career } : {}),
       };
 
       // ─── top-level pay 컬럼 매핑 — P2/P9/P10 광고카드가 읽는 컬럼 (M-056)
@@ -139,7 +139,9 @@ export async function POST(request: Request) {
         payType = selectedPayType;
         if (selectedPayType !== '협의' && hiringInfo.tc) payAmount = Number(hiringInfo.tc);
       } else if (platform === 'waiterzone') {
-        if (hiringInfo.salary) { payType = '일급'; payAmount = Number(hiringInfo.salary); }
+        const selectedPayType = hiringInfo.pay_type ? String(hiringInfo.pay_type) : '일급';
+        payType = selectedPayType;
+        if (hiringInfo.salary) payAmount = Number(hiringInfo.salary);
       } else if (platform === 'sunsuzone') {
         if (hiringInfo.salary) { payType = '일급'; payAmount = Number(hiringInfo.salary); }
       }

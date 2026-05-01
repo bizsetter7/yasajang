@@ -6,11 +6,28 @@ import { createBrowserClient } from '@supabase/ssr';
 import { ChevronLeft, Save, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
-const JOB_TYPES = ['웨이터', '바텐더', '서빙', '기타'] as const;
+const JOB_TYPES = ['웨이터', '실무자 (실장, 매니저)', '영업진 (PR)'] as const;
 const DAYS_OFF = ['월', '화', '수', '목', '금', '토', '일'] as const;
-const CAREER_OPTIONS = ['무관', '신입만', '경력만', '경력우대'] as const;
+const CAREER_OPTIONS = ['초보자, 경력자 모두 환영', '경력자만 지원 가능'] as const;
+const DRIVING_OPTIONS = ['운전 업무 없음', '운전 면허 필수 (차량 운전 업무가 있는 경우)'] as const;
+const PAY_TYPES = ['일급', '월급'] as const;
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 const MINS = ['00', '15', '30', '45'];
+
+const BENEFIT_GROUPS = [
+  {
+    title: '생활지원',
+    items: ['식사 제공', '숙소 제공'],
+  },
+  {
+    title: '금전지원',
+    items: ['꽁비 별도 지급', '1년 이상 근무 시, 퇴직금 지급'],
+  },
+  {
+    title: '근로지원',
+    items: ['주방 업무 없음', '청소 업무 없음', '4대보험 가입', '근로계약서 작성'],
+  },
+] as const;
 
 export default function WaiterzoneHiringPage() {
   const router = useRouter();
@@ -38,8 +55,10 @@ export default function WaiterzoneHiringPage() {
   const [workEndH, setWorkEndH] = useState('04');
   const [workEndM, setWorkEndM] = useState('00');
   const [daysOff, setDaysOff] = useState<string[]>([]);
-  const [career, setCareer] = useState('무관');
-  const [drivingRequired, setDrivingRequired] = useState(false);
+  const [career, setCareer] = useState('초보자, 경력자 모두 환영');
+  const [driving, setDriving] = useState('운전 업무 없음');
+  const [payType, setPayType] = useState('일급');
+  const [benefits, setBenefits] = useState<string[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -83,8 +102,18 @@ export default function WaiterzoneHiringPage() {
               if (m) setWorkEndM(m);
             }
             if (Array.isArray(saved.days_off)) setDaysOff(saved.days_off as string[]);
-            if (saved.career) setCareer(String(saved.career));
-            if (typeof saved.driving_required === 'boolean') setDrivingRequired(saved.driving_required);
+            if (saved.career) {
+              const raw = String(saved.career);
+              const careerMigrated = (raw === '경력만' || raw === '경력우대') ? '경력자만 지원 가능' : raw === '경력자만 지원 가능' ? raw : '초보자, 경력자 모두 환영';
+              setCareer(careerMigrated);
+            }
+            if (saved.driving_required !== undefined) {
+              setDriving(saved.driving_required === true || saved.driving === '운전 면허 필수 (차량 운전 업무가 있는 경우)' ? '운전 면허 필수 (차량 운전 업무가 있는 경우)' : '운전 업무 없음');
+            } else if (saved.driving) {
+              setDriving(String(saved.driving));
+            }
+            if (saved.pay_type) setPayType(String(saved.pay_type));
+            if (Array.isArray(saved.benefits)) setBenefits(saved.benefits as string[]);
             break;
           }
         }
@@ -111,6 +140,7 @@ export default function WaiterzoneHiringPage() {
     const hiringInfo = {
       job_type: jobType,
       salary: salary ? Number(salary) : null,
+      pay_type: payType,
       room_tip: roomTip ? Number(roomTip) : null,
       age_min: Number(ageMin),
       age_max: Number(ageMax),
@@ -118,7 +148,9 @@ export default function WaiterzoneHiringPage() {
       work_end: `${workEndH}:${workEndM}`,
       days_off: daysOff,
       career,
-      driving_required: drivingRequired,
+      driving: driving,
+      driving_required: driving === '운전 면허 필수 (차량 운전 업무가 있는 경우)',
+      benefits,
     };
 
     try {
@@ -183,21 +215,23 @@ export default function WaiterzoneHiringPage() {
             🤵 직종
             <span className="text-[10px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded-full">필수</span>
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {JOB_TYPES.map(type => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => toggleJobType(type)}
-                className={`px-4 py-2 rounded-xl text-sm font-black border transition-all ${
-                  jobType.includes(type)
-                    ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
+          <div className="flex flex-col gap-2">
+            {JOB_TYPES.map(type => {
+              const checked = jobType.includes(type);
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => toggleJobType(type)}
+                  className="flex items-center gap-2.5 cursor-pointer text-left"
+                >
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${checked ? 'bg-blue-500 border-blue-500' : 'bg-white border-gray-300'}`}>
+                    {checked && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                  </div>
+                  <span className="text-sm font-bold text-gray-700">{type}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -207,9 +241,18 @@ export default function WaiterzoneHiringPage() {
             💰 급여 & 룸티
             <span className="text-[10px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded-full">필수</span>
           </h2>
+          <div>
+            <label className={labelCls}>급여방식</label>
+            <div className="relative">
+              <select value={payType} onChange={e => setPayType(e.target.value)} className={selectCls}>
+                {PAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>기본 급여</label>
+              <label className={labelCls}>급여 금액</label>
               <div className="relative">
                 <input
                   type="text"
@@ -218,14 +261,14 @@ export default function WaiterzoneHiringPage() {
                   onFocus={() => setSalaryFocused(true)}
                   onChange={e => setSalary(e.target.value.replace(/[^0-9]/g, ''))}
                   onBlur={() => setSalaryFocused(false)}
-                  placeholder="예: 150,000"
+                  placeholder="0원 또는 미입력시, 미노출"
                   className={inputCls}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">원</span>
               </div>
             </div>
             <div>
-              <label className={labelCls}>룸티 (방 수당)</label>
+              <label className={labelCls}>룸티</label>
               <div className="relative">
                 <input
                   type="text"
@@ -234,7 +277,7 @@ export default function WaiterzoneHiringPage() {
                   onFocus={() => setRoomTipFocused(true)}
                   onChange={e => setRoomTip(e.target.value.replace(/[^0-9]/g, ''))}
                   onBlur={() => setRoomTipFocused(false)}
-                  placeholder="예: 20,000"
+                  placeholder="0원 또는 미입력시, 미노출"
                   className={inputCls}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">원</span>
@@ -337,38 +380,77 @@ export default function WaiterzoneHiringPage() {
         {/* 경력 */}
         <div className={sectionCls}>
           <h2 className="text-sm font-black text-gray-800">📋 경력 조건</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2">
             {CAREER_OPTIONS.map(opt => (
               <button
                 key={opt}
                 type="button"
                 onClick={() => setCareer(opt)}
-                className={`px-4 py-2 rounded-xl text-sm font-black border transition-all ${
+                className={`w-full px-4 py-3 rounded-xl text-sm font-black border transition-all text-left flex items-center gap-3 ${
                   career === opt
                     ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
+                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${career === opt ? 'border-white' : 'border-gray-300'}`}>
+                  {career === opt && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
                 {opt}
               </button>
             ))}
           </div>
         </div>
 
-        {/* 운전 필수 */}
+        {/* 운전 필수 여부 */}
         <div className={sectionCls}>
-          <h2 className="text-sm font-black text-gray-800">🚗 운전 가능자 우대</h2>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              onClick={() => setDrivingRequired(!drivingRequired)}
-              className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${drivingRequired ? 'bg-blue-500' : 'bg-gray-200'}`}
-            >
-              <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-all ${drivingRequired ? 'left-6' : 'left-0.5'}`} />
+          <h2 className="text-sm font-black text-gray-800">🚗 운전 필수 여부</h2>
+          <div className="flex flex-col gap-2">
+            {DRIVING_OPTIONS.map(opt => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setDriving(opt)}
+                className={`w-full px-4 py-3 rounded-xl text-sm font-black border transition-all text-left flex items-center gap-3 ${
+                  driving === opt
+                    ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${driving === opt ? 'border-white' : 'border-gray-300'}`}>
+                  {driving === opt && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 복지혜택 */}
+        <div className={sectionCls}>
+          <h2 className="text-sm font-black text-gray-800">🎁 복지혜택 <span className="text-[10px] font-bold text-gray-400">(선택사항)</span></h2>
+          {BENEFIT_GROUPS.map(group => (
+            <div key={group.title}>
+              <p className="text-[11px] font-black text-gray-400 uppercase tracking-wider mb-2">{group.title}</p>
+              <div className="flex flex-col gap-1.5">
+                {group.items.map(item => {
+                  const checked = benefits.includes(item);
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setBenefits(prev => checked ? prev.filter(b => b !== item) : [...prev, item])}
+                      className="flex items-center gap-2.5 cursor-pointer text-left"
+                    >
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${checked ? 'bg-blue-500 border-blue-500' : 'bg-white border-gray-300'}`}>
+                        {checked && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                      </div>
+                      <span className="text-sm font-bold text-gray-700">{item}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <span className="text-sm font-bold text-gray-700">
-              {drivingRequired ? '운전 가능자 필수' : '운전 필수 아님'}
-            </span>
-          </label>
+          ))}
         </div>
 
         {/* 안내 */}
