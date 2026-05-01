@@ -52,16 +52,23 @@ export default function AdsPage() {
   const [bannerStatus, setBannerStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [updating, setUpdating] = useState<number | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setApiError(null);
     const params = new URLSearchParams();
     if (platform !== 'all') params.set('platform', platform);
     if (bannerStatus !== 'all') params.set('banner_status', bannerStatus);
     const qs = params.toString() ? `?${params}` : '';
     const res = await fetch(`/api/admin/ads${qs}`);
     const json = await res.json();
-    setAds(json.ads ?? []);
+    if (json.error) {
+      setApiError(`API 오류 (${res.status}): ${json.error}`);
+      setAds([]);
+    } else {
+      setAds(json.ads ?? []);
+    }
     setLoading(false);
   }, [platform, bannerStatus]);
 
@@ -158,6 +165,13 @@ export default function AdsPage() {
           className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white outline-none focus:border-zinc-600 transition-all"
         />
       </div>
+
+      {/* API 오류 표시 */}
+      {apiError && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-red-400 font-mono break-all">
+          {apiError}
+        </div>
+      )}
 
       {/* 테이블 */}
       {loading ? (
