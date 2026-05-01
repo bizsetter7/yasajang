@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   // shops.user_id → profiles.id 간 FK constraint 미보장이므로 2-step 쿼리
   let query = supabaseAdmin
     .from('shops')
-    .select('id, user_id, platform, banner_status, ad_tier, deadline, status')
+    .select('id, user_id, platform, banner_status, tier, deadline, status')
     .order('deadline', { ascending: true });
 
   if (platform !== 'all') {

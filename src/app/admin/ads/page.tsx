@@ -26,7 +26,7 @@ interface Ad {
   user_id: string;
   platform: string;
   banner_status: string | null;
-  ad_tier: string | null;
+  tier: string | null;
   deadline: string | null;
   status: string | null;
   business_name: string | null;
@@ -207,7 +207,7 @@ export default function AdsPage() {
                     {PLATFORM_LABEL[ad.platform] ?? ad.platform}
                   </span>
                   <span className="text-xs text-zinc-400">
-                    {TIER_LABEL[ad.ad_tier ?? ''] ?? ad.ad_tier ?? '-'}
+                    {TIER_LABEL[ad.tier ?? ''] ?? ad.tier ?? '-'}
                   </span>
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full w-fit ${bm.color}`}>
                     {bm.label}
