@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
@@ -57,7 +57,58 @@ export async function GET() {
     username: profileMap[u.id]?.username || null,
     role: profileMap[u.id]?.role || profileMap[u.id]?.user_type || 'individual',
     business: bizMap[u.id] || null,
+    banned_until: (u as unknown as { banned_until?: string }).banned_until || null,
   }));
 
   return NextResponse.json({ members });
+}
+
+// PATCH /api/admin/members — ban/unban 또는 역할 변경
+export async function PATCH(request: NextRequest) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { userId, action, role } = await request.json() as {
+    userId: string;
+    action: 'ban' | 'unban' | 'changeRole';
+    role?: string;
+  };
+
+  if (!userId || !action) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  }
+
+  if (action === 'ban' || action === 'unban') {
+    const ban_duration = action === 'ban' ? '876600h' : 'none';
+    const { error } = await (supabaseAdmin.auth.admin as unknown as {
+      updateUserById: (id: string, attrs: { ban_duration: string }) => Promise<{ error: { message: string } | null }>;
+    }).updateUserById(userId, { ban_duration });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  } else if (action === 'changeRole' && role) {
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({ role })
+      .eq('id', userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  } else {
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+// DELETE /api/admin/members — 회원 탈퇴 (auth 계정만 삭제, 업소 데이터 별도 정리 필요)
+export async function DELETE(request: NextRequest) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { userId } = await request.json() as { userId: string };
+  if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true });
 }

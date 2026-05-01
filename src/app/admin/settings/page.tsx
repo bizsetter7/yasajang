@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Building2, Mail, Search, RefreshCw, Shield } from 'lucide-react';
+import { Users, Building2, Mail, Search, RefreshCw, Shield, Ban, Trash2 } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -12,6 +12,7 @@ interface Member {
   username?: string;
   role: string;
   business?: { name: string; status: string } | null;
+  banned_until?: string | null;
 }
 
 const PROVIDER_BADGE: Record<string, string> = {
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -45,6 +47,28 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAction = async (userId: string, action: 'ban' | 'unban' | 'delete', email: string) => {
+    const labels = { ban: '정지', unban: '정지 해제', delete: '탈퇴 처리' };
+    if (!window.confirm(`${email} 회원을 ${labels[action]}하시겠습니까?${action === 'delete' ? '\n\n⚠️ auth 계정만 삭제됩니다. 업소 데이터는 별도로 정리하세요.' : ''}`)) return;
+
+    setActionLoading(userId + action);
+    if (action === 'delete') {
+      await fetch('/api/admin/members', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+    } else {
+      await fetch('/api/admin/members', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action }),
+      });
+    }
+    setActionLoading(null);
+    await fetchMembers();
   };
 
   useEffect(() => { fetchMembers(); }, []);
@@ -117,18 +141,19 @@ export default function SettingsPage() {
         </div>
       ) : (
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_100px_120px_160px_160px] gap-3 px-5 py-3 border-b border-zinc-800 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+          <div className="grid grid-cols-[1fr_100px_120px_160px_120px_auto] gap-3 px-5 py-3 border-b border-zinc-800 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
             <span>회원 정보</span>
             <span>가입 경로</span>
             <span>역할</span>
             <span>연결 업소</span>
             <span>가입일</span>
+            <span>액션</span>
           </div>
           <div className="divide-y divide-zinc-800/60">
             {filtered.map((m) => (
               <div
                 key={m.id}
-                className="grid grid-cols-[1fr_100px_120px_160px_160px] gap-3 px-5 py-4 items-center hover:bg-zinc-900/40 transition-colors"
+                className="grid grid-cols-[1fr_100px_120px_160px_120px_auto] gap-3 px-5 py-4 items-center hover:bg-zinc-900/40 transition-colors"
               >
                 {/* 회원 정보 */}
                 <div className="min-w-0">
@@ -172,6 +197,37 @@ export default function SettingsPage() {
                 {/* 가입일 */}
                 <div className="text-[11px] text-zinc-600">
                   {new Date(m.created_at).toLocaleDateString('ko-KR')}
+                </div>
+
+                {/* 액션 */}
+                <div className="flex gap-1.5">
+                  {m.banned_until ? (
+                    <button
+                      onClick={() => handleAction(m.id, 'unban', m.email)}
+                      disabled={actionLoading === m.id + 'unban'}
+                      title="정지 해제"
+                      className="p-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-lg transition-all disabled:opacity-40"
+                    >
+                      <Shield size={13} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAction(m.id, 'ban', m.email)}
+                      disabled={actionLoading === m.id + 'ban'}
+                      title="계정 정지"
+                      className="p-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-lg transition-all disabled:opacity-40"
+                    >
+                      <Ban size={13} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleAction(m.id, 'delete', m.email)}
+                    disabled={actionLoading === m.id + 'delete'}
+                    title="탈퇴 처리"
+                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-all disabled:opacity-40"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
             ))}

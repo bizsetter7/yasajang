@@ -3,13 +3,16 @@
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
-import { LayoutDashboard, ClipboardCheck, Settings, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, LogOut, ShieldCheck, Users, CreditCard, ReceiptText, Zap, Monitor } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
   { href: '/admin/register-audit', label: '업소 입점 심사', icon: ClipboardCheck, exact: false },
+  { href: '/admin/payments', label: '입금 확인', icon: CreditCard, exact: false },
+  { href: '/admin/subscriptions', label: '구독 관리', icon: ReceiptText, exact: false },
+  { href: '/admin/jumps', label: '점프 모니터링', icon: Zap, exact: false },
   { href: '/admin/settings', label: '회원 관리', icon: Users, exact: false },
-  { href: '/admin/platform-settings', label: '플랫폼 설정', icon: Settings, exact: false },
+  { href: '/admin/ads', label: '광고 모니터링', icon: Monitor, exact: false },
 ] as const;
 
 interface AdminSidebarProps {
