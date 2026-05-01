@@ -30,6 +30,26 @@
 
 ---
 
+## ⚡ 점프(JUMP) 시스템 정책 (M-060, 2026-05-02 확정 — 절대 일반화 금지)
+
+> P5 confirm-payment에서 무료 점프 즉시 지급. cron 실행은 P2 daily-jump-tasks가 담당.
+
+| 플랜 | 즉시 무료 점프 | 매일 +1 자동 적립 | 자동 점프 (cron set/일) |
+|------|------------|----------------|--------------------|
+| 베이직 | - | - | - |
+| 스탠다드 | - | - | - |
+| 스페셜 | 10회 | - | 3회/일 |
+| 디럭스 | 30회 | - | 6회/일 |
+| **프리미엄** | **30회** | **+1회/일** | **8회/일** |
+
+- **⚠️ 매일 +1 자동 적립은 프리미엄 한정** — Pricing.tsx·요금제 페이지·register 안내 등 다른 플랜 일반화 표기 금지 (M-060)
+- 무료 점프 즉시 지급 코드: `src/app/api/admin/confirm-payment/route.ts` 라인 144-184
+- `PLAN_INITIAL_JUMPS = { special: 10, deluxe: 30, premium: 30 }` 변경 시 P2 cron의 `PLAN_MANUAL_JUMP_RESET`도 동기 업데이트 필수
+- AuthProvider(P2/P9/P10) 표시: `user_jumps.subscription_balance` 단독
+- 상세: `memory/jump_system_policy.md` (전사 마스터)
+
+---
+
 ## 3. DB 스키마 (핵심 테이블)
 
 ### businesses (업소 정보)
