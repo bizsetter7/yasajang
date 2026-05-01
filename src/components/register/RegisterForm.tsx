@@ -74,6 +74,7 @@ export default function RegisterForm() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrPermitLoading, setOcrPermitLoading] = useState(false);
   const [ocrFilledSet, setOcrFilledSet] = useState<Set<string>>(new Set());
+  const [ocrOverlay, setOcrOverlay] = useState<'none' | 'loading-license' | 'loading-permit' | 'failed-license' | 'failed-permit'>('none');
   const [hasAnthropicKey, setHasAnthropicKey] = useState(true); // SSR에서는 true로 가정하고 클라이언트에서 확인, 다만 클라이언트 환경변수가 아니면 API 호출 시 알 수 있음. (API에서 에러로 반환되면 숨김)
 
   const searchParams = useSearchParams();
@@ -223,6 +224,7 @@ export default function RegisterForm() {
     const fileToUse = fileOverride ?? files.license;
     if (!fileToUse) return;
     setOcrLoading(true);
+    setOcrOverlay('loading-license');
     setError(null);
 
     try {
@@ -239,11 +241,12 @@ export default function RegisterForm() {
           if (!res.ok) {
              if (res.status === 500 && data.error === 'OCR service is not configured') {
                  setHasAnthropicKey(false);
+                 setOcrOverlay('none');
                  throw new Error('AI 자동입력 기능이 비활성화되었습니다.');
              }
              throw new Error(data.error || 'OCR 처리 실패');
           }
-          
+
           if (data.success && data.data) {
              const updates: Partial<typeof formData> = {};
              const filled = new Set(ocrFilledSet);
@@ -256,23 +259,28 @@ export default function RegisterForm() {
              if (Object.keys(updates).length > 0) {
                  setFormData(prev => ({ ...prev, ...updates }));
                  setOcrFilledSet(filled);
-                 alert('AI가 사업자등록증 정보를 성공적으로 읽어왔습니다.');
+                 setOcrOverlay('none');
              } else {
-                 alert('인식된 정보가 없습니다. 수동으로 입력해주세요.');
+                 setOcrOverlay('failed-license');
              }
+          } else {
+             setOcrOverlay('failed-license');
           }
         } catch (err: any) {
           setError(err.message);
+          setOcrOverlay('failed-license');
         } finally {
           setOcrLoading(false);
         }
       };
       reader.onerror = () => {
+         setOcrOverlay('failed-license');
          throw new Error('파일 읽기 실패');
       };
     } catch (err: any) {
       setError(err.message);
       setOcrLoading(false);
+      setOcrOverlay('failed-license');
     }
   };
 
@@ -280,6 +288,7 @@ export default function RegisterForm() {
     const fileToUse = fileOverride ?? files.permit;
     if (!fileToUse) return;
     setOcrPermitLoading(true);
+    setOcrOverlay('loading-permit');
     setError(null);
 
     try {
@@ -317,21 +326,25 @@ export default function RegisterForm() {
             if (Object.keys(updates).length > 0) {
               setFormData(prev => ({ ...prev, ...updates }));
               setOcrFilledSet(filled);
-              alert('AI가 영업허가증에서 규모(면적)와 영업허가번호를 읽어왔습니다.');
+              setOcrOverlay('none');
             } else {
-              alert('인식된 정보가 없습니다. 수동으로 입력해주세요.');
+              setOcrOverlay('failed-permit');
             }
+          } else {
+            setOcrOverlay('failed-permit');
           }
         } catch (err: any) {
           setError(err.message);
+          setOcrOverlay('failed-permit');
         } finally {
           setOcrPermitLoading(false);
         }
       };
-      reader.onerror = () => { throw new Error('파일 읽기 실패'); };
+      reader.onerror = () => { setOcrOverlay('failed-permit'); throw new Error('파일 읽기 실패'); };
     } catch (err: any) {
       setError(err.message);
       setOcrPermitLoading(false);
+      setOcrOverlay('failed-permit');
     }
   };
 
@@ -610,6 +623,49 @@ export default function RegisterForm() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* OCR Overlay */}
+      {ocrOverlay !== 'none' && (
+        <div className="fixed inset-0 z-50 bg-zinc-950/95 flex flex-col items-center justify-center px-6">
+          {ocrOverlay.startsWith('loading') ? (
+            <div className="text-center max-w-sm">
+              <div className="w-16 h-16 border-4 border-zinc-700 border-t-amber-500 rounded-full animate-spin mx-auto mb-8" />
+              <h2 className="text-2xl font-black text-white mb-3">서류를 확인 중입니다.</h2>
+              <p className="text-zinc-400 text-sm leading-relaxed mb-2">
+                사업자등록증과 영업허가증을 검토 중이에요.<br />최대 1분 정도 걸릴 수 있습니다.
+              </p>
+              <p className="text-zinc-600 text-xs leading-relaxed">
+                인식이 안 될 경우, 재업로드 안내가 표시됩니다.<br />잠시만 기다려 주세요.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center max-w-sm">
+              <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <h2 className="text-2xl font-black text-white mb-3">서류 확인이 어렵습니다.</h2>
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 mb-4 text-left">
+                <p className="text-rose-400 text-xs font-bold mb-2">확인이 어려운 이유</p>
+                <ul className="text-zinc-400 text-xs space-y-1 list-disc list-inside">
+                  <li>사진이 흐릿하거나 어둡게 찍힌 경우</li>
+                  <li>서류 전체가 잘리거나 가려진 경우</li>
+                  <li>파일 형식이 맞지 않는 경우</li>
+                </ul>
+              </div>
+              <p className="text-zinc-400 text-sm mb-6">
+                선명하게 다시 촬영한 후 재업로드해 주세요.<br />
+                <span className="text-zinc-500 text-xs">수동으로 직접 입력도 가능합니다.</span>
+              </p>
+              <button
+                onClick={() => setOcrOverlay('none')}
+                className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl transition-colors"
+              >
+                다시 업로드하기
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Stepper */}
       <div className="flex justify-between items-center mb-12">
         {steps.map((step) => (
@@ -934,6 +990,15 @@ export default function RegisterForm() {
         {/* Step 2: Document Upload */}
         {currentStep === 2 && (
           <div className="space-y-8 animate-fade-in-up">
+            {/* 사진 품질 안내 */}
+            <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+              <span className="text-amber-400 mt-0.5 shrink-0">⚠️</span>
+              <p className="text-amber-300 text-xs leading-relaxed">
+                흐릿하거나 어두운 사진은 승인 지연의 원인이 될 수 있습니다.<br />
+                <span className="text-zinc-400">서류 전체가 잘 보이도록 밝은 곳에서 촬영해 주세요.</span>
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               {/* 사업자등록증 */}
               <div className="p-5 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-950/50 text-center group hover:border-amber-500/50 transition-all cursor-pointer"
@@ -1044,6 +1109,22 @@ export default function RegisterForm() {
                 )}
               </div>
             )}
+
+            {/* 업소 미검색 안내 */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-4">
+              <p className="text-zinc-300 text-sm font-bold mb-1">혹시, 내 업소가 보이지 않나요?</p>
+              <p className="text-zinc-500 text-xs leading-relaxed">
+                업소 검색은 사업자등록증의 상호명과 주소를 기반으로 이루어집니다.<br />
+                상호명이 다르거나 신규 개업한 경우 검색되지 않을 수 있어요.<br />
+                아래 양식에 직접 입력해 주시면 담당자가 확인 후 등록해 드립니다.
+              </p>
+            </div>
+
+            {/* 서류 사진 필수 안내 */}
+            <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3">
+              <span className="text-rose-400 shrink-0">🚫</span>
+              <p className="text-rose-300 text-xs font-bold">서류 사진이 없으면 광고를 시작할 수 없어요.</p>
+            </div>
 
             <div className="space-y-4">
               <div className="flex items-center text-zinc-100 font-bold">
