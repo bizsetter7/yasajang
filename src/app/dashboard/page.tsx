@@ -28,6 +28,15 @@ export default async function DashboardPage() {
   // 구독 및 밤길 통계 조회 (business가 있을 때만)
   let subscription = null;
   let bamgilCount = 0;
+  let jumpBalance: number | null = null;
+
+  // 점프 잔액 조회 (user 기준)
+  const { data: jumpData } = await supabase
+    .from('user_jumps')
+    .select('subscription_balance')
+    .eq('user_id', user.id)
+    .single();
+  jumpBalance = jumpData?.subscription_balance ?? null;
 
   if (business) {
     const { data: subData } = await supabase
@@ -164,7 +173,7 @@ export default async function DashboardPage() {
             <div className="space-y-6">
               <section className="space-y-3">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">멤버십 상태</h2>
-                <SubscriptionCard subscription={subscription} businessId={business.id} />
+                <SubscriptionCard subscription={subscription} businessId={business.id} jumpBalance={jumpBalance} />
               </section>
               <section className="space-y-3">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 성과</h2>

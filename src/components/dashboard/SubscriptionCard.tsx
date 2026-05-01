@@ -13,9 +13,10 @@ interface SubscriptionCardProps {
     payment_reference: string | null;
   } | null;
   businessId: string;
+  jumpBalance?: number | null;
 }
 
-export default function SubscriptionCard({ subscription, businessId }: SubscriptionCardProps) {
+export default function SubscriptionCard({ subscription, businessId, jumpBalance }: SubscriptionCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getPlanLabel = (plan: string) => {
@@ -83,13 +84,48 @@ export default function SubscriptionCard({ subscription, businessId }: Subscript
         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">주요 일정</p>
         <div className="flex items-center gap-2 text-gray-700 text-sm font-medium">
           <Calendar size={13} className="text-gray-400 shrink-0" />
-          <span>
+          <span className="flex-1">
             {subscription?.status === 'trial'
               ? `만료: ${formatDate(subscription.trial_ends_at)}`
               : `결제일: ${formatDate(subscription?.next_billing_at)}`}
           </span>
+          {subscription?.status === 'active' && (
+            <button
+              disabled
+              title="구독 연장 기능 준비 중"
+              className="text-[10px] px-2 py-1 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg cursor-not-allowed font-bold shrink-0"
+            >
+              연장 준비중
+            </button>
+          )}
         </div>
       </div>
+
+      {/* 기간별 할인 안내 */}
+      <div className="pt-3 border-t border-gray-100">
+        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">기간 구독 할인</p>
+        <div className="grid grid-cols-4 gap-1 text-center">
+          {([['1개월', '0%'], ['3개월', '5%'], ['6개월', '10%'], ['12개월', '17%']] as const).map(([m, d]) => (
+            <div key={m} className="bg-gray-50 rounded-lg py-1.5 px-1">
+              <p className="text-[9px] text-gray-400 font-medium">{m}</p>
+              <p className="text-xs font-black text-gray-700">{d}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-[9px] text-gray-400 mt-1.5">입점신청·구독 갱신 시 기간 선택으로 할인 적용</p>
+      </div>
+
+      {/* 점프 잔액 */}
+      {jumpBalance != null && (
+        <div className="pt-3 border-t border-gray-100">
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">이번 달 점프 잔액</p>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-amber-500">{jumpBalance}</span>
+            <span className="text-gray-500 text-sm font-bold">회 남음</span>
+          </div>
+          <p className="text-[9px] text-gray-400 mt-0.5">점프는 공고를 상단에 올려 노출을 높이는 기능입니다</p>
+        </div>
+      )}
 
       {/* CTA */}
       <div>
