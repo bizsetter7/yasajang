@@ -30,12 +30,10 @@ export async function GET(request: NextRequest) {
   const platform = searchParams.get('platform') ?? 'all';
   const bannerStatus = searchParams.get('banner_status') ?? 'all';
 
+  // shops.user_id → profiles.id 간 FK constraint 미보장이므로 2-step 쿼리
   let query = supabaseAdmin
     .from('shops')
-    .select(`
-      id, user_id, platform, banner_status, ad_tier, deadline, status,
-      profiles ( business_name )
-    `)
+    .select('id, user_id, platform, banner_status, ad_tier, deadline, status')
     .order('deadline', { ascending: true });
 
   if (platform !== 'all') {
@@ -49,10 +47,25 @@ export async function GET(request: NextRequest) {
     query = query.is('banner_status', null);
   }
 
-  const { data, error } = await query;
+  const { data: shops, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ ads: data ?? [] });
+  const userIds = [...new Set((shops ?? []).map(s => s.user_id).filter(Boolean))];
+  let profileMap = new Map<string, string | null>();
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabaseAdmin
+      .from('profiles')
+      .select('id, business_name')
+      .in('id', userIds);
+    profileMap = new Map((profiles ?? []).map(p => [p.id as string, p.business_name as string | null]));
+  }
+
+  const result = (shops ?? []).map(s => ({
+    ...s,
+    business_name: profileMap.get(s.user_id) ?? null,
+  }));
+
+  return NextResponse.json({ ads: result });
 }
 
 export async function PATCH(request: NextRequest) {

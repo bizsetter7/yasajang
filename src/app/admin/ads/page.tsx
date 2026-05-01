@@ -29,7 +29,7 @@ interface Ad {
   ad_tier: string | null;
   deadline: string | null;
   status: string | null;
-  profiles: { business_name: string | null } | null;
+  business_name: string | null;
 }
 
 const PLATFORM_TABS = ['all', 'bamgil', 'cocoalba', 'waiterzone', 'sunsuzone'];
@@ -80,7 +80,7 @@ export default function AdsPage() {
   };
 
   const filtered = search
-    ? ads.filter(a => (a.profiles?.business_name ?? '').toLowerCase().includes(search.toLowerCase()))
+    ? ads.filter(a => (a.business_name ?? '').toLowerCase().includes(search.toLowerCase()))
     : ads;
 
   const approvedCount = ads.filter(a => a.banner_status === 'approved').length;
@@ -187,7 +187,7 @@ export default function AdsPage() {
                   className="grid grid-cols-[1fr_90px_80px_80px_90px_auto] gap-3 px-5 py-3.5 items-center hover:bg-zinc-900/40 transition-colors"
                 >
                   <span className="text-sm text-zinc-200 font-medium truncate">
-                    {ad.profiles?.business_name ?? '(업소명 없음)'}
+                    {ad.business_name ?? '(업소명 없음)'}
                   </span>
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full w-fit ${pc}`}>
                     {PLATFORM_LABEL[ad.platform] ?? ad.platform}
