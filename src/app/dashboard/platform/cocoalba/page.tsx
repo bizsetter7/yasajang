@@ -6,7 +6,24 @@ import { createBrowserClient } from '@supabase/ssr';
 import { ChevronLeft, Save, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
-const WORK_CLOTHES = ['자율 복장', '홈복 착용'] as const;
+const WORK_CLOTHES = ['자율 복장', '홀복 착용'] as const;
+
+const PAY_TYPES = ['TC', '시급', '일급', '주급', '월급', '연봉', '건별', '협의'] as const;
+
+const BENEFIT_GROUPS = [
+  {
+    title: '생활지원',
+    items: ['식사를 제공합니다', '숙소를 제공합니다', '출퇴근을 지원합니다'],
+  },
+  {
+    title: '금전지원',
+    items: ['대기 시간비를 지원합니다', '꽁비를 지원합니다', '만근비를 지원합니다', '선불을 지원합니다', '지명비 별도 지급합니다', '1년 이상 근무 시 퇴직금을 지급해 드립니다'],
+  },
+  {
+    title: '근로지원',
+    items: ['4대보험을 가입합니다', '근로계약서를 작성합니다'],
+  },
+] as const;
 const DAYS_OFF = ['월', '화', '수', '목', '금', '토', '일'] as const;
 const CAREER_OPTIONS = ['초보자, 경력자 모두 환영', '경력자만 지원 가능'] as const;
 
@@ -37,6 +54,8 @@ export default function CocoalbaHiringPage() {
   const [workEndM, setWorkEndM] = useState('00');
   const [daysOff, setDaysOff] = useState<string[]>([]);
   const [clothes, setClothes] = useState('자율 복장');
+  const [payType, setPayType] = useState('TC');
+  const [benefits, setBenefits] = useState<string[]>([]);
   const [weekendOnly, setWeekendOnly] = useState(false);
   const [career, setCareer] = useState('초보자, 경력자 모두 환영');
 
@@ -84,9 +103,13 @@ export default function CocoalbaHiringPage() {
             if (Array.isArray(saved.days_off)) setDaysOff(saved.days_off as string[]);
             if (saved.clothes) {
               const raw = Array.isArray(saved.clothes) ? String((saved.clothes as string[])[0] || '') : String(saved.clothes);
-              const clothesMigrated = raw === '홈복' ? '홈복 착용' : raw.startsWith('홈복') ? '홈복 착용' : raw === '자율 복장' || raw === '홈복 착용' ? raw : '자율 복장';
+              const clothesMigrated = (raw === '홈복' || raw === '홀복' || raw.startsWith('홈복') || raw.startsWith('홀복'))
+                ? '홀복 착용'
+                : raw === '자율 복장' || raw === '홀복 착용' ? raw : '자율 복장';
               setClothes(clothesMigrated);
             }
+            if (saved.pay_type) setPayType(String(saved.pay_type));
+            if (Array.isArray(saved.benefits)) setBenefits(saved.benefits as string[]);
             if (typeof saved.weekend_only === 'boolean') setWeekendOnly(saved.weekend_only);
             if (saved.career) {
               const raw = String(saved.career);
@@ -114,12 +137,14 @@ export default function CocoalbaHiringPage() {
 
     const hiringInfo = {
       tc: tc ? Number(tc) : null,
+      pay_type: payType,
       age_min: Number(ageMin),
       age_max: Number(ageMax),
       work_start: `${workStartH}:${workStartM}`,
       work_end: `${workEndH}:${workEndM}`,
       days_off: daysOff,
       clothes,
+      benefits,
       weekend_only: weekendOnly,
       career,
     };
@@ -181,28 +206,39 @@ export default function CocoalbaHiringPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
-        {/* TC */}
+        {/* 급여타입 */}
         <div className={sectionCls}>
           <h2 className="text-sm font-black text-gray-800 flex items-center gap-2">
-            💰 TC (기본 이용료)
+            💰 급여타입
             <span className="text-[10px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded-full">필수</span>
           </h2>
           <div>
-            <label className={labelCls}>TC 금액</label>
+            <label className={labelCls}>급여 방식</label>
             <div className="relative">
-              <input
-                type="text"
-                inputMode="numeric"
-                value={tcFocused ? tc : (tc ? Number(tc).toLocaleString() : '')}
-                onFocus={() => setTcFocused(true)}
-                onChange={e => setTc(e.target.value.replace(/[^0-9]/g, ''))}
-                onBlur={() => setTcFocused(false)}
-                placeholder="예: 200,000"
-                className={inputCls}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">원</span>
+              <select value={payType} onChange={e => setPayType(e.target.value)} className={selectCls}>
+                {PAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">▼</span>
             </div>
           </div>
+          {payType !== '협의' && (
+            <div>
+              <label className={labelCls}>급여 금액</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={tcFocused ? tc : (tc ? Number(tc).toLocaleString() : '')}
+                  onFocus={() => setTcFocused(true)}
+                  onChange={e => setTc(e.target.value.replace(/[^0-9]/g, ''))}
+                  onBlur={() => setTcFocused(false)}
+                  placeholder="예: 200,000"
+                  className={inputCls}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">원</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 모집 연령 */}
@@ -366,6 +402,34 @@ export default function CocoalbaHiringPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* 복지혜택 */}
+        <div className={sectionCls}>
+          <h2 className="text-sm font-black text-gray-800">🎁 복지혜택</h2>
+          {BENEFIT_GROUPS.map(group => (
+            <div key={group.title}>
+              <p className="text-[11px] font-black text-gray-400 uppercase tracking-wider mb-2">{group.title}</p>
+              <div className="flex flex-col gap-1.5">
+                {group.items.map(item => {
+                  const checked = benefits.includes(item);
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setBenefits(prev => checked ? prev.filter(b => b !== item) : [...prev, item])}
+                      className="flex items-center gap-2.5 cursor-pointer text-left"
+                    >
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${checked ? 'bg-rose-500 border-rose-500' : 'bg-white border-gray-300'}`}>
+                        {checked && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                      </div>
+                      <span className="text-sm font-bold text-gray-700">{item}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* 안내 */}
