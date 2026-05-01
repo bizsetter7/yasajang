@@ -6,9 +6,9 @@ import { createBrowserClient } from '@supabase/ssr';
 import { ChevronLeft, Save, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
-const WORK_CLOTHES = ['자율', '홈복', '캐주얼', '유니폼'] as const;
+const WORK_CLOTHES = ['자율 복장', '홈복 착용'] as const;
 const DAYS_OFF = ['월', '화', '수', '목', '금', '토', '일'] as const;
-const CAREER_OPTIONS = ['무관', '신입만', '경력만', '경력우대'] as const;
+const CAREER_OPTIONS = ['초보자, 경력자 모두 환영', '경력자만 지원 가능'] as const;
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 const MINS = ['00', '15', '30', '45'];
@@ -36,9 +36,9 @@ export default function CocoalbaHiringPage() {
   const [workEndH, setWorkEndH] = useState('04');
   const [workEndM, setWorkEndM] = useState('00');
   const [daysOff, setDaysOff] = useState<string[]>([]);
-  const [clothes, setClothes] = useState<string[]>(['자율']);
+  const [clothes, setClothes] = useState('자율 복장');
   const [weekendOnly, setWeekendOnly] = useState(false);
-  const [career, setCareer] = useState('무관');
+  const [career, setCareer] = useState('초보자, 경력자 모두 환영');
 
   useEffect(() => {
     const load = async () => {
@@ -82,9 +82,17 @@ export default function CocoalbaHiringPage() {
               if (m) setWorkEndM(m);
             }
             if (Array.isArray(saved.days_off)) setDaysOff(saved.days_off as string[]);
-            if (Array.isArray(saved.clothes)) setClothes(saved.clothes as string[]);
+            if (saved.clothes) {
+              const raw = Array.isArray(saved.clothes) ? String((saved.clothes as string[])[0] || '') : String(saved.clothes);
+              const clothesMigrated = raw === '홈복' ? '홈복 착용' : raw.startsWith('홈복') ? '홈복 착용' : raw === '자율 복장' || raw === '홈복 착용' ? raw : '자율 복장';
+              setClothes(clothesMigrated);
+            }
             if (typeof saved.weekend_only === 'boolean') setWeekendOnly(saved.weekend_only);
-            if (saved.career) setCareer(String(saved.career));
+            if (saved.career) {
+              const raw = String(saved.career);
+              const careerMigrated = (raw === '경력만' || raw === '경력우대') ? '경력자만 지원 가능' : raw === '경력자만 지원 가능' ? raw : '초보자, 경력자 모두 환영';
+              setCareer(careerMigrated);
+            }
             break;
           }
         }
@@ -97,10 +105,6 @@ export default function CocoalbaHiringPage() {
 
   const toggleDay = (day: string) => {
     setDaysOff(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
-  };
-
-  const toggleCloth = (cloth: string) => {
-    setClothes(prev => prev.includes(cloth) ? prev.filter(c => c !== cloth) : [...prev, cloth]);
   };
 
   const handleSave = async () => {
@@ -319,18 +323,21 @@ export default function CocoalbaHiringPage() {
         {/* 근무 복장 */}
         <div className={sectionCls}>
           <h2 className="text-sm font-black text-gray-800">👗 근무 복장</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2">
             {WORK_CLOTHES.map(cloth => (
               <button
                 key={cloth}
                 type="button"
-                onClick={() => toggleCloth(cloth)}
-                className={`px-4 py-2 rounded-xl text-sm font-black border transition-all ${
-                  clothes.includes(cloth)
+                onClick={() => setClothes(cloth)}
+                className={`w-full px-4 py-3 rounded-xl text-sm font-black border transition-all text-left flex items-center gap-3 ${
+                  clothes === cloth
                     ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
                 }`}
               >
+                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${clothes === cloth ? 'border-white' : 'border-gray-300'}`}>
+                  {clothes === cloth && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
                 {cloth}
               </button>
             ))}
@@ -340,18 +347,21 @@ export default function CocoalbaHiringPage() {
         {/* 경력 */}
         <div className={sectionCls}>
           <h2 className="text-sm font-black text-gray-800">📋 경력 조건</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2">
             {CAREER_OPTIONS.map(opt => (
               <button
                 key={opt}
                 type="button"
                 onClick={() => setCareer(opt)}
-                className={`px-4 py-2 rounded-xl text-sm font-black border transition-all ${
+                className={`w-full px-4 py-3 rounded-xl text-sm font-black border transition-all text-left flex items-center gap-3 ${
                   career === opt
                     ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
                 }`}
               >
+                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${career === opt ? 'border-white' : 'border-gray-300'}`}>
+                  {career === opt && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
                 {opt}
               </button>
             ))}

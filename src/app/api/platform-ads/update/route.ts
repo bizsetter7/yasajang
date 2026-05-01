@@ -101,6 +101,12 @@ export async function POST(request: Request) {
         paySuffixesNew.push('숙소제공');
       }
 
+      // ─── cocoalba: 근무복장 → options.icons(복지혜택 배지), 경력조건 → options.workCareer
+      const OLD_CLOTHES = ['자율', '홈복', '캐주얼', '유니폼', '자율 복장', '홈복 착용'];
+      const existingIcons = (existingOptions.icons as string[] || []).filter(i => !OLD_CLOTHES.includes(i));
+      const clothesIcon = (platform === 'cocoalba' && hiringInfo.clothes) ? String(hiringInfo.clothes) : null;
+      const newIcons = clothesIcon ? [...existingIcons, clothesIcon] : existingIcons;
+
       const newOptions: Record<string, unknown> = {
         ...existingOptions,
         hiring_info: {
@@ -116,6 +122,9 @@ export async function POST(request: Request) {
         ...(workTypeMapped ? { workType: workTypeMapped } : {}),
         // 룸티/보너스 → paySuffixes
         ...(paySuffixesNew.length > 0 ? { paySuffixes: paySuffixesNew } : {}),
+        // cocoalba: 근무복장 → 복지혜택 배지(icons), 경력조건 → 근무조건 표시
+        ...(newIcons.length > 0 ? { icons: newIcons } : {}),
+        ...(platform === 'cocoalba' && hiringInfo.career ? { workCareer: hiringInfo.career } : {}),
       };
 
       // ─── top-level pay 컬럼 매핑 — P2/P9/P10 광고카드가 읽는 컬럼 (M-056)
