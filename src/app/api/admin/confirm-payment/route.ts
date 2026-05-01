@@ -186,7 +186,11 @@ export async function PATCH(request: Request) {
       // [shop deadline 갱신] 구독 만료일 → 연동 광고의 마감일 업데이트
       if (ownerId) {
         try {
-          const deadlineStr = nextBilling.toISOString().split('T')[0];
+          // UTC → KST(+9h) 보정 후 날짜 추출: Vercel 서버는 UTC이므로 toISOString()이 UTC 날짜를 반환
+          // 브라우저 KST 렌더링과 일치시키기 위해 9시간 오프셋 적용 (M-deadline-kst)
+          const kstOffset = 9 * 60 * 60 * 1000;
+          const nextBillingKST = new Date(nextBilling.getTime() + kstOffset);
+          const deadlineStr = nextBillingKST.toISOString().split('T')[0];
           const { data: linkedShops } = await supabaseAdmin
             .from('shops')
             .select('id')

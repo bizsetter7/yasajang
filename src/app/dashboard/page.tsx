@@ -30,13 +30,15 @@ export default async function DashboardPage() {
   let bamgilCount = 0;
   let jumpBalance: number | null = null;
 
-  // 점프 잔액 조회 (user 기준)
+  // 점프 잔액 조회 — subscription_balance + package_balance + auto_remaining_today 합산 (P2 마이샵과 동일 기준)
   const { data: jumpData } = await supabase
     .from('user_jumps')
-    .select('subscription_balance')
+    .select('subscription_balance, package_balance, auto_remaining_today')
     .eq('user_id', user.id)
     .single();
-  jumpBalance = jumpData?.subscription_balance ?? null;
+  jumpBalance = jumpData
+    ? (jumpData.subscription_balance ?? 0) + (jumpData.package_balance ?? 0) + (jumpData.auto_remaining_today ?? 0)
+    : null;
 
   if (business) {
     const { data: subData } = await supabase

@@ -17,7 +17,7 @@ export default function BamgilStatsCard({ count }: BamgilStatsCardProps) {
         <div className="min-w-0">
           <h2 className="text-base font-black text-gray-900 leading-tight">밤길 이번 달 유입</h2>
           <p className="text-gray-500 text-xs mt-0.5 leading-snug">
-            밤길(bamgil.kr) 서비스를 통한 잠재 고객 연결 현황
+            밤길(bamgil.kr) 서비스를 통한<br className="hidden md:block" />잠재 고객 연결 현황
           </p>
         </div>
       </div>
