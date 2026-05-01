@@ -103,7 +103,7 @@ export async function POST(request: Request) {
 
       // ─── 복지혜택 → options.icons (cocoalba/waiterzone 모두)
       const OLD_CLOTHES = ['자율', '홈복', '홀복', '캐주얼', '유니폼', '자율 복장', '홈복 착용', '홀복 착용'];
-      const existingIcons = (existingOptions.icons as string[] || []).filter(i => !OLD_CLOTHES.includes(i));
+      const existingIcons = (existingOptions.icons as string[] || []).filter(i => !OLD_CLOTHES.includes(i)).filter(i => !i.endsWith('합니다'));
       const hasBenefits = Array.isArray(hiringInfo.benefits);
       const newBenefits = hasBenefits ? hiringInfo.benefits as string[] : null;
       const newIcons = newBenefits !== null ? newBenefits : existingIcons;
