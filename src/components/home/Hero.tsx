@@ -40,11 +40,20 @@ export default function Hero() {
           </p>
 
           {/* 노출 플랫폼 표시 */}
-          <div className="flex items-center gap-3 mb-10 flex-wrap">
-            <span className="text-zinc-600 text-xs font-bold uppercase tracking-widest">노출 플랫폼</span>
-            <span className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black rounded-full">📍 밤길 지도</span>
-            <span className="px-3 py-1.5 bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-black rounded-full">🏢 야사장 프로필</span>
-            <span className="px-3 py-1.5 bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-black rounded-full">👔 구인·구직</span>
+          <div className="flex items-center gap-2 mb-10 flex-wrap">
+            <span className="text-zinc-600 text-xs font-bold uppercase tracking-widest mr-1">노출 플랫폼</span>
+            <span className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black rounded-full flex items-center gap-1">
+              📍 밤길 <span className="text-amber-600/60 font-medium">손님전용</span>
+            </span>
+            <span className="px-3 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black rounded-full flex items-center gap-1">
+              🌸 코코알바 <span className="text-rose-600/60 font-medium">여성구인구직</span>
+            </span>
+            <span className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-black rounded-full flex items-center gap-1">
+              🍾 웨이터존 <span className="text-blue-600/60 font-medium">웨이터구인구직</span>
+            </span>
+            <span className="px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-black rounded-full flex items-center gap-1">
+              ⭐ 선수존 <span className="text-purple-600/60 font-medium">선수구인구직</span>
+            </span>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
