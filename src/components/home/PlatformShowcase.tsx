@@ -184,7 +184,7 @@ export default function PlatformShowcase() {
             여기에 노출됩니다
           </h3>
           <p className="text-zinc-500 text-base">
-            야사장 하나로 코코 생태계 3개 플랫폼에 동시 노출
+            야사장 하나로 손님유입부터 직원채용까지 한번에
           </p>
         </div>
 
