@@ -1,4 +1,5 @@
 import { SEO_REGIONS } from '@/lib/regions';
+import { decodeRegionSlug, buildCanonicalUrl } from '@/lib/seo';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -8,13 +9,14 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
-  const found = SEO_REGIONS.find(r => r.slug === region);
+  const decoded = decodeRegionSlug(region);                  // P-03: NFC 정규화
+  const found = SEO_REGIONS.find(r => r.slug === decoded);
   if (!found) return {};
-  
+
   return {
     title: `${found.display} 룸살롱 사장님 광고 플랫폼 | 야사장`,
     description: `${found.display} 유흥업 업소 광고, 야사장에서 시작하세요. 월 22,000원부터 밤길·웨이터존·코코알바 동시 노출.`,
-    alternates: { canonical: `https://yasajang.kr/seo/${region}` },
+    alternates: { canonical: buildCanonicalUrl('https://www.yasajang.kr', ['seo', decoded]) },
     openGraph: {
       title: `${found.display} 유흥업 사장님 전용 광고 플랫폼 | 야사장`,
       description: `${found.display} 지역 업소를 야사장에 등록하면 밤길·웨이터존 동시 광고. 가장 저렴한 업소 광고 플랫폼.`,
@@ -24,7 +26,8 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
 
 export default async function RegionSeoPage({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
-  const found = SEO_REGIONS.find(r => r.slug === region);
+  const decoded = decodeRegionSlug(region);                  // P-03: NFC 정규화
+  const found = SEO_REGIONS.find(r => r.slug === decoded);
   if (!found) notFound();
 
   return (
