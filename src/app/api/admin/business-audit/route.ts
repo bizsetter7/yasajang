@@ -57,7 +57,8 @@ export async function PATCH(request: Request) {
 
     if (error) throw error;
 
-    // [연동] 야사장 승인 시 P2 shops 도 동시 활성화
+    // [연동] 야사장 승인 시 P2/P9/P10 shops 도 동시 활성화
+    // publish API는 status='active'로 즉시 INSERT하므로 PENDING_REVIEW + active 모두 대상
     if (status === 'active' && business?.owner_id) {
       const { error: shopErr } = await supabaseAdmin
         .from('shops')
@@ -66,7 +67,8 @@ export async function PATCH(request: Request) {
           approved_at: new Date().toISOString(),
         })
         .eq('user_id', business.owner_id)
-        .eq('status', 'PENDING_REVIEW');
+        .in('status', ['PENDING_REVIEW', 'active'])
+        .eq('is_closed', false);
 
       if (shopErr) {
         console.error('[business-audit] shops activate error:', shopErr.message);

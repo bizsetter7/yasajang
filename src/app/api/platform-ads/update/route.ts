@@ -56,22 +56,13 @@ export async function POST(request: Request) {
     }
 
     if (!shops || shops.length === 0) {
-      // shops가 없으면 businesses 테이블에 임시 저장 (platform_info JSONB)
-      // businesses 테이블의 options 컬럼에 저장 시도
-      const { error: bizError } = await supabaseAdmin
-        .from('businesses')
-        .update({
-          [`platform_hiring_${platform}`]: hiringInfo,
-        } as Record<string, unknown>)
-        .eq('id', businessId)
-        .eq('owner_id', user.id);
-
-      if (bizError) {
-        // 컬럼이 없을 수 있으므로 무시하고 성공 반환
-        console.warn('[platform-ads/update] businesses update skipped:', bizError.message);
-      }
-
-      return NextResponse.json({ success: true, updatedCount: 0, message: 'No linked shops found — saved to business profile' });
+      // shops가 없으면 구인조건 저장 불가 — 광고 게시 후 입력하도록 안내
+      // (존재하지 않는 컬럼에 저장 시도하면 데이터 유실됨 — M-056 교훈)
+      return NextResponse.json({
+        error: '게시된 광고가 없습니다',
+        code: 'NO_ACTIVE_SHOP',
+        message: `${platform} 광고를 먼저 게시한 후 구인 조건을 작성해주세요.`,
+      }, { status: 404 });
     }
 
     // 각 shop의 options에 hiring_info 병합 저장

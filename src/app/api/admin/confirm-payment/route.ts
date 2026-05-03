@@ -116,6 +116,15 @@ export async function PATCH(request: Request) {
 
       const planName = sub.plan_name || sub.plan || '';
 
+      // [businesses 활성화] P6 밤길 지도 노출 게이트
+      // confirm-payment = 입금 확인 = 즉시 사업장 활성화 (business-audit과 병행 가능, 멱등성 보장)
+      const { error: bizActivateErr } = await supabaseAdmin
+        .from('businesses')
+        .update({ is_active: true, is_verified: true, status: 'active' })
+        .eq('id', sub.business_id);
+      if (bizActivateErr) console.error('[confirm-payment] businesses 활성화 실패:', bizActivateErr);
+      else console.log(`[confirm-payment] businesses 활성화 완료 (business_id: ${sub.business_id})`);
+
       // [P2 연동] 코코알바 플랫폼 선택 시 cocoalba_tier 동기화
       if (sub.platform_choice === 'cocoalba') {
         let tier: string | null = null;

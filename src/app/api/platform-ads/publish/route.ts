@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         // subscription 활성 확인
         const { data: sub } = await supabaseAdmin
             .from('subscriptions')
-            .select('plan, status, platform_choice')
+            .select('plan, status, platform_choice, next_billing_at, trial_ends_at')
             .eq('business_id', business.id)
             .in('status', ['active', 'trial'])
             .maybeSingle();
@@ -124,6 +124,16 @@ export async function POST(request: NextRequest) {
 
         // shops INSERT (status='active' 즉시 게시)
         const tier = PLAN_TO_TIER[sub.plan] ?? 'p7';
+
+        // deadline: 구독 만료일(KST) → expire-ads cron이 이 값으로 자동 만료 처리
+        const deadlineSrc = (sub as any).next_billing_at || (sub as any).trial_ends_at || null;
+        const deadlineStr: string | null = deadlineSrc
+            ? (() => {
+                const kstOffset = 9 * 60 * 60 * 1000;
+                return new Date(new Date(deadlineSrc).getTime() + kstOffset).toISOString().split('T')[0];
+              })()
+            : null;
+
         const { data: shopData, error: shopError } = await supabaseAdmin
             .from('shops')
             .insert({
@@ -149,6 +159,7 @@ export async function POST(request: NextRequest) {
                 banner_status: 'none',
                 is_closed: false,
                 platform,
+                deadline: deadlineStr,
                 options: {
                     yasajang_plan: sub.plan,
                     yasajang_business_id: business.id,
