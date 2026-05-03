@@ -255,6 +255,7 @@ export default function Pricing() {
           overflow-x-auto xl:overflow-visible
           snap-x snap-mandatory xl:snap-none
           -mx-4 px-8 xl:mx-0 xl:px-0
+          pt-6
           pb-6 xl:pb-0
           [&::-webkit-scrollbar]:hidden
           [-ms-overflow-style:none]

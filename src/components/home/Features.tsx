@@ -61,9 +61,6 @@ export default function Features() {
               key={index}
               className="group p-8 rounded-3xl bg-zinc-900/50 border border-zinc-800 hover:border-amber-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/5 transform hover:-translate-y-1"
             >
-              <div className="w-14 h-14 rounded-2xl bg-zinc-950 flex items-center justify-center mb-6 border border-zinc-800 group-hover:bg-amber-500 group-hover:text-black transition-all duration-300">
-                <feature.icon className={index === 0 ? 'text-amber-500 group-hover:text-black' : feature.color + ' group-hover:text-black'} size={28} />
-              </div>
               <h4 className="text-xl font-bold text-white mb-4 group-hover:text-amber-400 transition-colors">
                 {feature.title}
               </h4>
