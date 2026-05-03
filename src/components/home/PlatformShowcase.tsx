@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Users, Briefcase, ExternalLink } from 'lucide-react';
+import { MapPin, Users, Briefcase, Star, ExternalLink } from 'lucide-react';
 
 const PLATFORMS = [
   {
@@ -73,6 +73,27 @@ const PLATFORMS = [
       { name: '갤럭시', region: '#경기 #성남', wage: '최저 TC 80,000원', plan: 'N' },
       { name: '상상음악홀', region: '#서울 #인천', wage: '최저 TC 70,000원', plan: '' },
       { name: '하루로', region: '#부산 #해운대', wage: '최저 TC 90,000원', plan: '' },
+    ],
+  },
+  {
+    key: 'sunsuzone',
+    label: '선수존',
+    url: 'sunsuzone.kr',
+    icon: Star,
+    color: 'text-purple-400',
+    activeColor: 'border-purple-400 text-purple-400',
+    tagline: '선수 구인 플랫폼',
+    description: '업소 전문 선수 구인,\n빠르게 검증된 인재를 연결합니다.',
+    cta: '선수존 둘러보기',
+    ctaHref: 'https://sunsuzone.kr',
+    badge: '선수 구인 정보가\n바로 보여요',
+    mockup: 'grid',
+    mockupBg: 'from-purple-950/30 to-zinc-950',
+    cards: [
+      { name: '블랙다이아', region: '#서울 #강남', wage: '일급 250,000원', plan: 'N' },
+      { name: '럭셔리클럽', region: '#경기 #성남', wage: '일급 200,000원', plan: 'N' },
+      { name: '클럽엘리트', region: '#부산 #해운대', wage: '일급 180,000원', plan: '' },
+      { name: '골드나이트', region: '#대구 #중구', wage: '일급 160,000원', plan: '' },
     ],
   },
 ];
@@ -243,7 +264,7 @@ export default function PlatformShowcase() {
 
               {/* glow */}
               <div className={`absolute -inset-4 rounded-full blur-3xl opacity-10 pointer-events-none
-                ${active === 0 ? 'bg-amber-500' : active === 1 ? 'bg-blue-500' : 'bg-rose-500'}`} />
+                ${active === 0 ? 'bg-amber-500' : active === 1 ? 'bg-blue-500' : active === 2 ? 'bg-rose-500' : 'bg-purple-500'}`} />
             </div>
           </div>
 
@@ -308,6 +329,22 @@ export default function PlatformShowcase() {
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-rose-400 mt-1.5 shrink-0" />
                     <p className="text-zinc-400 text-xs">합법 인증 배지로 신뢰도 있는 업소 이미지 구축</p>
+                  </div>
+                </>
+              )}
+              {active === 3 && (
+                <>
+                  <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+                    <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+                    <p className="text-zinc-400 text-xs">업소 전문 선수 구인 플랫폼 선수존에 공고 자동 게재</p>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+                    <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+                    <p className="text-zinc-400 text-xs">일급·조건 카드로 검증된 선수에게 바로 노출</p>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+                    <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+                    <p className="text-zinc-400 text-xs">중간 수수료 없이 선수와 업소 직접 연결</p>
                   </div>
                 </>
               )}

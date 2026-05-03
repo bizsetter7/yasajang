@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Building2, Mail, Search, RefreshCw, Shield, Ban, Trash2 } from 'lucide-react';
+import { Users, Building2, Mail, Search, RefreshCw, Shield, Ban, Trash2, MapPin, Briefcase, Users2, Star } from 'lucide-react';
+
+interface PlatformCounts {
+  bamgil: number;
+  cocoalba: number;
+  waiterzone: number;
+  sunsuzone: number;
+}
 
 interface Member {
   id: string;
@@ -12,8 +19,16 @@ interface Member {
   username?: string;
   role: string;
   business?: { name: string; status: string } | null;
+  platforms?: PlatformCounts;
   banned_until?: string | null;
 }
+
+const PLATFORM_BADGES = [
+  { key: 'bamgil' as const, label: '밤길', icon: MapPin, activeColor: 'text-amber-400 bg-amber-400/10 border-amber-400/30' },
+  { key: 'cocoalba' as const, label: '코코알바', icon: Briefcase, activeColor: 'text-rose-400 bg-rose-400/10 border-rose-400/30' },
+  { key: 'waiterzone' as const, label: '웨이터존', icon: Users2, activeColor: 'text-blue-400 bg-blue-400/10 border-blue-400/30' },
+  { key: 'sunsuzone' as const, label: '선수존', icon: Star, activeColor: 'text-purple-400 bg-purple-400/10 border-purple-400/30' },
+];
 
 const PROVIDER_BADGE: Record<string, string> = {
   google: 'text-blue-400 bg-blue-400/10 border border-blue-400/20',
@@ -153,9 +168,9 @@ export default function SettingsPage() {
             {filtered.map((m) => (
               <div
                 key={m.id}
-                className="grid grid-cols-[1fr_100px_120px_160px_120px_auto] gap-3 px-5 py-4 items-center hover:bg-zinc-900/40 transition-colors"
+                className="grid grid-cols-[1fr_100px_120px_160px_120px_auto] gap-3 px-5 py-4 items-start hover:bg-zinc-900/40 transition-colors"
               >
-                {/* 회원 정보 */}
+                {/* 회원 정보 + 플랫폼 활동 뱃지 */}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 bg-zinc-800 rounded-full flex items-center justify-center shrink-0">
@@ -165,6 +180,26 @@ export default function SettingsPage() {
                       <p className="text-sm font-bold text-white truncate">{m.email}</p>
                       {m.username && <p className="text-[11px] text-zinc-600 truncate">@{m.username}</p>}
                     </div>
+                  </div>
+                  {/* 플랫폼별 활동 뱃지 */}
+                  <div className="flex items-center gap-1 mt-2 ml-9">
+                    {PLATFORM_BADGES.map(({ key, label, icon: PIcon, activeColor }) => {
+                      const count = m.platforms?.[key] ?? 0;
+                      const active = count > 0;
+                      return (
+                        <span
+                          key={key}
+                          title={`${label}: ${count}개 광고`}
+                          className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border flex items-center gap-0.5 ${
+                            active ? activeColor : 'text-zinc-700 bg-zinc-900 border-zinc-800'
+                          }`}
+                        >
+                          <PIcon size={9} />
+                          {label}
+                          {active && <span className="ml-0.5">{count}</span>}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 

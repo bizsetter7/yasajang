@@ -44,21 +44,54 @@ export async function GET() {
   // businesses 테이블에서 업체 연결 여부 확인
   const { data: bizes } = await supabaseAdmin
     .from('businesses')
-    .select('owner_id, name, status');
-  const bizMap: Record<string, { name: string; status: string }> = {};
+    .select('owner_id, name, status, is_active');
+  const bizMap: Record<string, { name: string; status: string; is_active?: boolean }> = {};
   (bizes || []).forEach(b => { if (b.owner_id) bizMap[b.owner_id] = b; });
 
-  const members = (users || []).map(u => ({
-    id: u.id,
-    email: u.email,
-    provider: u.app_metadata?.provider || 'email',
-    created_at: u.created_at,
-    last_sign_in_at: u.last_sign_in_at,
-    username: profileMap[u.id]?.username || null,
-    role: profileMap[u.id]?.role || profileMap[u.id]?.user_type || 'individual',
-    business: bizMap[u.id] || null,
-    banned_until: (u as unknown as { banned_until?: string }).banned_until || null,
-  }));
+  // 플랫폼별 활동 카운트 — shops(P2/P9/P10 공유)에서 user_id별 platform 집계
+  // bamgil은 shops에 INSERT하지 않으므로 businesses 자체로 추적
+  const userIds = (users || []).map(u => u.id).filter(Boolean);
+  type PlatformCounts = { bamgil: number; cocoalba: number; waiterzone: number; sunsuzone: number };
+  const platformMap: Record<string, PlatformCounts> = {};
+
+  if (userIds.length > 0) {
+    const { data: shopsData } = await supabaseAdmin
+      .from('shops')
+      .select('user_id, platform, status')
+      .in('user_id', userIds)
+      .neq('status', 'rejected');
+
+    (shopsData || []).forEach(s => {
+      if (!s.user_id) return;
+      if (!platformMap[s.user_id]) {
+        platformMap[s.user_id] = { bamgil: 0, cocoalba: 0, waiterzone: 0, sunsuzone: 0 };
+      }
+      const p = s.platform as keyof PlatformCounts;
+      if (p === 'cocoalba' || p === 'waiterzone' || p === 'sunsuzone') {
+        platformMap[s.user_id][p]++;
+      }
+    });
+  }
+
+  const members = (users || []).map(u => {
+    const biz = bizMap[u.id];
+    const platforms = platformMap[u.id] || { bamgil: 0, cocoalba: 0, waiterzone: 0, sunsuzone: 0 };
+    // bamgil = businesses.is_active 기준 (업소가 활성이면 밤길에 노출됨)
+    if (biz?.is_active) platforms.bamgil = 1;
+
+    return {
+      id: u.id,
+      email: u.email,
+      provider: u.app_metadata?.provider || 'email',
+      created_at: u.created_at,
+      last_sign_in_at: u.last_sign_in_at,
+      username: profileMap[u.id]?.username || null,
+      role: profileMap[u.id]?.role || profileMap[u.id]?.user_type || 'individual',
+      business: biz || null,
+      platforms,
+      banned_until: (u as unknown as { banned_until?: string }).banned_until || null,
+    };
+  });
 
   return NextResponse.json({ members });
 }
