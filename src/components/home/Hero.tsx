@@ -26,7 +26,7 @@ export default function Hero() {
             🔥 밤 업소 사장님 전용 마케팅 플랫폼
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-[1.1] mb-8 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-[1.1] mb-8 tracking-tight text-center md:text-left">
             손님 모집부터<br />
             직원 채용까지<br />
             <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-600 bg-clip-text text-transparent">
@@ -40,20 +40,22 @@ export default function Hero() {
           </p>
 
           {/* 노출 플랫폼 표시 */}
-          <div className="flex items-center gap-2 mb-10 flex-wrap">
-            <span className="text-zinc-600 text-xs font-bold uppercase tracking-widest mr-1">노출 플랫폼</span>
-            <span className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black rounded-full flex items-center gap-1">
-              📍 밤길 <span className="text-amber-600/60 font-medium">손님전용</span>
-            </span>
-            <span className="px-3 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black rounded-full flex items-center gap-1">
-              🌸 코코알바 <span className="text-rose-600/60 font-medium">여성구인구직</span>
-            </span>
-            <span className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-black rounded-full flex items-center gap-1">
-              🍾 웨이터존 <span className="text-blue-600/60 font-medium">웨이터구인구직</span>
-            </span>
-            <span className="px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-black rounded-full flex items-center gap-1">
-              ⭐ 선수존 <span className="text-purple-600/60 font-medium">선수구인구직</span>
-            </span>
+          <div className="mb-10">
+            <span className="text-zinc-600 text-xs font-bold uppercase tracking-widest mb-2 block">노출 플랫폼</span>
+            <div className="grid grid-cols-2 gap-1.5 md:flex md:flex-wrap">
+              <span className="px-2 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-black rounded-full flex items-center gap-1 whitespace-nowrap">
+                📍 밤길 <span className="text-amber-600/60 font-medium">손님전용</span>
+              </span>
+              <span className="px-2 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[11px] font-black rounded-full flex items-center gap-1 whitespace-nowrap">
+                🌸 코코알바 <span className="text-rose-600/60 font-medium text-[9px]">여성구인구직</span>
+              </span>
+              <span className="px-2 py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[11px] font-black rounded-full flex items-center gap-1 whitespace-nowrap">
+                🍾 웨이터존 <span className="text-blue-600/60 font-medium text-[9px]">웨이터구인구직</span>
+              </span>
+              <span className="px-2 py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-black rounded-full flex items-center gap-1 whitespace-nowrap">
+                ⭐ 선수존 <span className="text-purple-600/60 font-medium text-[9px]">선수구인구직</span>
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">

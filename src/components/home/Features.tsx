@@ -48,11 +48,10 @@ export default function Features() {
             야사장이 하는 일
           </h2>
           <h3 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            손님 유입부터 직원 채용까지<br className="md:hidden" /> 모든 것을 해결합니다
+            손님 유입부터<br /> 직원 채용까지
           </h3>
-          <p className="text-zinc-500 text-lg max-w-2xl mx-auto">
-            밤길(손님) · 코코알바(아가씨 구인) · 웨이터존(웨이터 구인) · 선수존(선수 구인)<br className="hidden md:block" />
-            야사장 하나로 4개 플랫폼에 동시 노출, 따로 광고할 필요 없습니다.
+          <p className="text-zinc-500 text-lg max-w-2xl mx-auto whitespace-pre-line">
+            {`밤길(손님) · 코코알바(아가씨 구인)\n웨이터존(웨이터 구인) · 선수존(선수 구인)\n야사장 하나로 4개 플랫폼에\n동시 노출, 한번에 관리하세요!`}
           </p>
         </div>
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { Check, Zap } from 'lucide-react';
+import { Check, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 const PLATFORM_CHIP: Record<string, string> = {
   '밤길': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
@@ -181,6 +181,14 @@ const tiers = [
 
 export default function Pricing() {
   const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPTIONS[0]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCards = (dir: 'left' | 'right') => {
+    if (!scrollRef.current) return;
+    const card = scrollRef.current.querySelector('[class*="snap-center"]') as HTMLElement;
+    const cardWidth = card ? card.offsetWidth + 16 : 300;
+    scrollRef.current.scrollBy({ left: dir === 'left' ? -cardWidth : cardWidth, behavior: 'smooth' });
+  };
 
   return (
     <section id="pricing" className="py-24 bg-zinc-950 relative overflow-hidden">
@@ -200,36 +208,53 @@ export default function Pricing() {
         </div>
 
         {/* 기간 선택 토글 */}
-        <div className="flex bg-zinc-900 rounded-full p-1 border border-zinc-800 w-fit mx-auto mb-12 relative z-20">
+        <div className="flex bg-zinc-900 rounded-2xl p-1 border border-zinc-800 w-fit mx-auto mb-12 relative z-20 gap-0.5">
           {PERIOD_OPTIONS.map(opt => (
             <button
               key={opt.months}
               onClick={() => setSelectedPeriod(opt)}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center min-w-[52px] ${
                 selectedPeriod.months === opt.months
                   ? 'bg-amber-500 text-black shadow-lg'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
               <span>{opt.label}</span>
-              {opt.discount > 0 && (
-                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${
-                  selectedPeriod.months === opt.months ? 'bg-black/20' : 'bg-amber-500/10 text-amber-500'
+              {opt.discount > 0 ? (
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black mt-0.5 ${
+                  selectedPeriod.months === opt.months ? 'bg-black/20 text-black' : 'bg-amber-500/10 text-amber-500'
                 }`}>
                   -{Math.round(opt.discount * 100)}%
                 </span>
+              ) : (
+                <span className="h-[18px]" />
               )}
             </button>
           ))}
         </div>
 
         {/* 카드 그리드: 모바일 스와이프 / PC 3열 × 2행 (무료 + 5단계 = 6개) */}
-        <div className="
+        <div className="relative">
+          {/* 모바일 좌우 화살표 */}
+          <button
+            onClick={() => scrollCards('left')}
+            className="xl:hidden absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-zinc-800/90 border border-zinc-700 rounded-full text-white shadow-lg hover:bg-zinc-700 transition-colors"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={() => scrollCards('right')}
+            className="xl:hidden absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-zinc-800/90 border border-zinc-700 rounded-full text-white shadow-lg hover:bg-zinc-700 transition-colors"
+          >
+            <ChevronRight size={16} />
+          </button>
+
+        <div ref={scrollRef} className="
           flex xl:grid xl:grid-cols-3
           gap-4
           overflow-x-auto xl:overflow-visible
           snap-x snap-mandatory xl:snap-none
-          -mx-4 px-4 xl:mx-0 xl:px-0
+          -mx-4 px-8 xl:mx-0 xl:px-0
           pb-6 xl:pb-0
           [&::-webkit-scrollbar]:hidden
           [-ms-overflow-style:none]
@@ -326,6 +351,7 @@ export default function Pricing() {
               </Link>
             </div>
           ))}
+        </div>
         </div>
 
         {/* 모바일 스와이프 안내 */}

@@ -190,19 +190,19 @@ export default function PlatformShowcase() {
 
         {/* 탭 */}
         <div className="flex justify-center mb-12">
-          <div className="flex gap-2 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-1.5">
+          <div className="flex gap-1 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-1.5">
             {PLATFORMS.map((p, i) => (
               <button
                 key={p.key}
                 onClick={() => setActive(i)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+                className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 min-w-[64px] ${
                   active === i
                     ? `bg-zinc-800 border ${p.activeColor}`
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                <p.icon size={15} />
-                {p.label}
+                <p.icon size={16} />
+                <span>{p.label}</span>
               </button>
             ))}
           </div>
