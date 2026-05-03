@@ -267,15 +267,15 @@ export default function PlatformShowcase() {
                 <>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">카카오맵 기반 풀스크린 지도에 업소 핀으로 표시</p>
+                    <p className="text-zinc-400 text-xs">카카오맵 기반 풀스크린 지도에 업소 핀으로 표시</p>
                   </div>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">프리미엄일수록 더 크고 눈에 띄는 핀으로 상위 노출</p>
+                    <p className="text-zinc-400 text-xs">프리미엄일수록 더 크고 눈에 띄는 핀으로 상위 노출</p>
                   </div>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">로그인 없이 누구나 바로 조회 → 손님 유입 극대화</p>
+                    <p className="text-zinc-400 text-xs">로그인 없이 누구나 바로 조회 → 손님 유입 극대화</p>
                   </div>
                 </>
               )}
@@ -283,15 +283,15 @@ export default function PlatformShowcase() {
                 <>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">웨이터 전문 구직 플랫폼에 구인 공고 자동 게재</p>
+                    <p className="text-zinc-400 text-xs">웨이터 전문 구직 플랫폼에 구인 공고 자동 게재</p>
                   </div>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">지역·업종 필터로 딱 맞는 웨이터에게 바로 노출</p>
+                    <p className="text-zinc-400 text-xs">지역·업종 필터로 딱 맞는 웨이터에게 바로 노출</p>
                   </div>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">중간 수수료 없이 구직자와 직접 연결</p>
+                    <p className="text-zinc-400 text-xs">중간 수수료 없이 구직자와 직접 연결</p>
                   </div>
                 </>
               )}
@@ -299,15 +299,15 @@ export default function PlatformShowcase() {
                 <>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-rose-400 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">여성 구직자 전문 플랫폼 코코알바에 구인 공고 노출</p>
+                    <p className="text-zinc-400 text-xs">여성 구직자 전문 플랫폼 코코알바에 구인 공고 노출</p>
                   </div>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-rose-400 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">TC·급여 정보 카드로 지원자가 직접 선택</p>
+                    <p className="text-zinc-400 text-xs">TC·급여 정보 카드로 지원자가 직접 선택</p>
                   </div>
                   <div className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
                     <div className="w-2 h-2 rounded-full bg-rose-400 mt-1.5 shrink-0" />
-                    <p className="text-zinc-400 text-sm">합법 인증 배지로 신뢰도 있는 업소 이미지 구축</p>
+                    <p className="text-zinc-400 text-xs">합법 인증 배지로 신뢰도 있는 업소 이미지 구축</p>
                   </div>
                 </>
               )}
