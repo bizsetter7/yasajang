@@ -136,8 +136,38 @@ export async function POST(req: NextRequest) {
     // (callback에서 이미 처리되지만 안전망: 이메일/비밀번호 가입, 트리거 누락 등 대비)
     if (owner_id) {
       try {
+        // auth.users에서 email 조회 (contact_email + username placeholder 보정용)
+        let authEmail: string | null = null;
+        try {
+          const { data: auData } = await supabase.auth.admin.getUserById(owner_id);
+          authEmail = auData?.user?.email ?? null;
+        } catch (e) { /* 조회 실패 시 email은 null로 진행 */ }
+
+        // 기존 profile placeholder 상태 확인 (username='신규회원' 등 트리거 기본값)
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('username, full_name, business_name, phone, contact_email, nickname')
+          .eq('id', owner_id)
+          .maybeSingle();
+
+        const finalUsername =
+          (existing?.username && existing.username !== '신규회원')
+            ? existing.username
+            : (authEmail?.split('@')[0] || `user_${owner_id.slice(0, 8)}`);
+        const finalNickname = existing?.nickname || finalManagerName || name;
+
         await supabase.from('profiles').upsert({
           id: owner_id,
+          username: finalUsername,
+          full_name: existing?.full_name || finalManagerName || representative || '',
+          nickname: finalNickname,
+          business_name: existing?.business_name || name, // 상호명 = 어드민 회원관리 첫 표시
+          phone: existing?.phone || phone || null,
+          contact_email: existing?.contact_email || authEmail || null,
+          business_number: business_number || null,
+          business_address: address || null,
+          business_address_detail: address_detail || null,
+          manager_phone: phone || null,
           role: 'corporate',
           user_type: 'corporate',
           // 야사장 입점 신청 완료(서류 OCR 검증) = 사업자 인증 완료
