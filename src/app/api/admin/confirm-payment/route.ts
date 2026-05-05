@@ -129,7 +129,8 @@ export async function PATCH(request: Request) {
       if (sub.platform_choice === 'cocoalba') {
         let tier: string | null = null;
         if (planName === 'premium') tier = 'premium';
-        else if (['standard', 'special', 'deluxe'].includes(planName)) tier = 'standard';
+        else if (planName === 'deluxe') tier = 'deluxe';
+        else if (['standard', 'special'].includes(planName)) tier = 'standard';
 
         if (tier) {
           const { error: bizError } = await supabaseAdmin
