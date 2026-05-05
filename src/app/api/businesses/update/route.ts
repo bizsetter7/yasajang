@@ -112,7 +112,7 @@ export async function PATCH(request: Request) {
 
     if (updateErr) throw updateErr;
 
-    // 업체명·카테고리·지역 변경 시 shops 테이블도 동기화 (코코알바/웨이터존 등 게시 광고 반영)
+    // 업체명·카테고리·지역·이미지 변경 시 shops 테이블도 동기화 (코코알바/웨이터존 등 게시 광고 반영)
     {
       const shopSync: Record<string, unknown> = {};
       if (name) { shopSync.name = name; shopSync.title = name; }
@@ -124,15 +124,22 @@ export async function PATCH(request: Request) {
         shopSync.region = regionMain;
         shopSync.work_region_sub = regionSub;
       }
+      const newImages = Array.isArray(images) ? images : null;
+      if (newImages) {
+        shopSync.media_url = newImages[0] || null;
+      }
       if (Object.keys(shopSync).length > 0) {
-        // options.regionGu(P2 ShopDetailView에서 읽음)도 병합 업데이트
+        // options.regionGu(P2 ShopDetailView에서 읽음) + mediaUrl/images도 병합 업데이트
         const { data: userShops } = await supabaseAdmin
           .from('shops').select('id, options').eq('user_id', user.id);
         for (const shop of (userShops || [])) {
           const opts = (shop.options as Record<string, unknown>) || {};
+          const optsPatch: Record<string, unknown> = { ...opts };
+          if (address) optsPatch.regionGu = address.split(/\s+/)[1] || null;
+          if (newImages) { optsPatch.mediaUrl = newImages[0] || null; optsPatch.images = newImages; }
           await supabaseAdmin.from('shops').update({
             ...shopSync,
-            ...(address ? { options: { ...opts, regionGu: address.split(/\s+/)[1] || null } } : {}),
+            options: optsPatch,
           }).eq('id', shop.id);
         }
       }

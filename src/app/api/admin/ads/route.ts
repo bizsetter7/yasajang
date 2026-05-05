@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   // shops.user_id → profiles.id 간 FK constraint 미보장이므로 2-step 쿼리
   let query = supabaseAdmin
     .from('shops')
-    .select('id, user_id, platform, banner_status, tier, deadline, status')
+    .select('id, user_id, platform, banner_status, banner_image_url, tier, deadline, status, options')
     .order('deadline', { ascending: true });
 
   if (platform !== 'all') {
@@ -41,6 +41,12 @@ export async function GET(request: NextRequest) {
   }
   if (bannerStatus === 'approved') {
     query = query.eq('banner_status', 'approved');
+  } else if (bannerStatus === 'approved_banner') {
+    query = query.eq('banner_status', 'approved_banner');
+  } else if (bannerStatus === 'pending_banner') {
+    query = query.eq('banner_status', 'pending_banner');
+  } else if (bannerStatus === 'rejected_banner') {
+    query = query.eq('banner_status', 'rejected_banner');
   } else if (bannerStatus === 'none') {
     query = query.eq('banner_status', 'none');
   } else if (bannerStatus === 'null') {
@@ -52,17 +58,26 @@ export async function GET(request: NextRequest) {
 
   const userIds = [...new Set((shops ?? []).map(s => s.user_id).filter(Boolean))];
   let profileMap = new Map<string, string | null>();
+  let platformsMap = new Map<string, string[]>();
   if (userIds.length > 0) {
-    const { data: profiles } = await supabaseAdmin
-      .from('profiles')
-      .select('id, business_name')
-      .in('id', userIds);
+    const [{ data: profiles }, { data: allShops }] = await Promise.all([
+      supabaseAdmin.from('profiles').select('id, business_name').in('id', userIds),
+      supabaseAdmin.from('shops').select('user_id, platform, status').in('user_id', userIds),
+    ]);
     profileMap = new Map((profiles ?? []).map(p => [p.id as string, p.business_name as string | null]));
+    // 유저별 활성 플랫폼 목록
+    for (const s of (allShops ?? [])) {
+      if (!s.user_id) continue;
+      const list = platformsMap.get(s.user_id) ?? [];
+      if (s.status === 'active' && !list.includes(s.platform)) list.push(s.platform);
+      platformsMap.set(s.user_id, list);
+    }
   }
 
   const result = (shops ?? []).map(s => ({
     ...s,
     business_name: profileMap.get(s.user_id) ?? null,
+    active_platforms: platformsMap.get(s.user_id) ?? [],
   }));
 
   return NextResponse.json({ ads: result });
@@ -74,7 +89,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { shopId, banner_status } = await request.json() as { shopId: string | number; banner_status: string };
-  const allowed = ['approved', 'none'];
+  const allowed = ['approved', 'none', 'approved_banner', 'rejected_banner', 'pending_banner'];
   if (!shopId || !allowed.includes(banner_status)) {
     return NextResponse.json({ error: 'Invalid fields' }, { status: 400 });
   }

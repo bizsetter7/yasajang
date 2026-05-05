@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
       license_number, floor_area, opened_at,
       manager_name, manager_role,
       kakao_id, line_id, telegram_id,
+      photo_urls,
     } = body;
 
     if (!name || !phone) {
@@ -116,6 +117,8 @@ export async function POST(req: NextRequest) {
         kakao_id: kakao_id || null,
         line_id: line_id || null,
         telegram_id: telegram_id || null,
+        images: Array.isArray(photo_urls) && photo_urls.length > 0 ? photo_urls : [],
+        cover_image_url: Array.isArray(photo_urls) && photo_urls.length > 0 ? photo_urls[0] : null,
         owner_id: owner_id || null,
         status: 'pending',
         cocoalba_tier: plan || 'basic',

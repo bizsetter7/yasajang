@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Building2, CreditCard, Clock, CheckCircle2, TrendingUp, Users } from 'lucide-react';
+import { Building2, CreditCard, Clock, CheckCircle2, TrendingUp, Users, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminDashboard() {
@@ -10,19 +10,49 @@ export default async function AdminDashboard() {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
+  const now = new Date();
+  const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
   const [
     { count: totalBiz },
     { count: pendingBiz },
     { count: activeBiz },
     { count: pendingPay },
     { data: recentBiz },
+    { count: bamgilCount },
+    { count: cocoCount },
+    { count: waiterCount },
+    { count: sunsuCount },
+    { data: expiringSubs },
   ] = await Promise.all([
     supabase.from('businesses').select('*', { count: 'exact', head: true }),
     supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('businesses').select('id, name, category, region_code, status, created_at').order('created_at', { ascending: false }).limit(8),
+    // Phase 1: 플랫폼별 활성 광고 수
+    supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('shops').select('*', { count: 'exact', head: true }).eq('status', 'active').eq('platform', 'cocoalba'),
+    supabase.from('shops').select('*', { count: 'exact', head: true }).eq('status', 'active').eq('platform', 'waiterzone'),
+    supabase.from('shops').select('*', { count: 'exact', head: true }).eq('status', 'active').eq('platform', 'sunsuzone'),
+    // Phase 1: 만료 임박 구독 (7일 이내)
+    supabase.from('subscriptions')
+      .select('id, business_id, plan, next_billing_at, status')
+      .in('status', ['active', 'trial'])
+      .gte('next_billing_at', now.toISOString())
+      .lte('next_billing_at', in7Days.toISOString())
+      .order('next_billing_at', { ascending: true }),
   ]);
+
+  // 만료 임박 구독 업소명 매핑
+  type ExpiringSub = { id: string; business_id: string; plan: string; next_billing_at: string; status: string; business_name: string | null };
+  let expiringWithNames: ExpiringSub[] = [];
+  if (expiringSubs && expiringSubs.length > 0) {
+    const bizIds = expiringSubs.map(s => s.business_id).filter(Boolean);
+    const { data: bizNames } = await supabase.from('businesses').select('id, name').in('id', bizIds);
+    const nameMap = new Map((bizNames ?? []).map(b => [b.id as string, b.name as string]));
+    expiringWithNames = expiringSubs.map(s => ({ ...s, business_name: nameMap.get(s.business_id) ?? null }));
+  }
 
   const statusColor: Record<string, string> = {
     active: 'text-green-400 bg-green-400/10',
@@ -79,6 +109,61 @@ export default async function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      {/* Phase 1: 플랫폼별 활성 광고 현황 */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp size={13} className="text-amber-500" />
+          <h2 className="text-xs font-black uppercase tracking-wider text-zinc-400">플랫폼별 활성 광고</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: '밤길', count: bamgilCount ?? 0, color: 'text-amber-400', bg: 'bg-amber-400/10', dot: 'bg-amber-500', href: 'https://www.bamgil.kr' },
+            { label: '코코알바', count: cocoCount ?? 0, color: 'text-pink-400', bg: 'bg-pink-400/10', dot: 'bg-pink-500', href: 'https://www.cocoalba.kr' },
+            { label: '웨이터존', count: waiterCount ?? 0, color: 'text-blue-400', bg: 'bg-blue-400/10', dot: 'bg-blue-500', href: 'https://www.waiterzone.kr' },
+            { label: '선수존', count: sunsuCount ?? 0, color: 'text-yellow-400', bg: 'bg-yellow-400/10', dot: 'bg-yellow-500', href: 'https://www.sunsuzone.kr' },
+          ].map(({ label, count, color, bg, dot, href }) => (
+            <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+              className={`${bg} border border-zinc-800 rounded-xl p-4 hover:border-zinc-600 transition-all`}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                <span className="text-[11px] font-bold text-zinc-500">{label}</span>
+              </div>
+              <div className={`text-2xl font-black ${color}`}>{count}</div>
+              <div className="text-[10px] text-zinc-600 font-bold mt-0.5">활성 광고</div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Phase 1: 만료 임박 구독 경보 */}
+      {expiringWithNames.length > 0 && (
+        <div className="bg-zinc-900/50 border border-amber-500/40 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertCircle size={13} className="text-amber-400" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-amber-400">만료 임박 구독</h2>
+            <span className="ml-auto text-[10px] text-amber-500/70 font-bold">{expiringWithNames.length}건 · 7일 이내</span>
+          </div>
+          <div className="space-y-2">
+            {expiringWithNames.map(sub => {
+              const daysLeft = Math.max(0, Math.ceil((new Date(sub.next_billing_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+              const urgentCls = daysLeft <= 3 ? 'text-red-400 bg-red-400/10' : 'text-amber-400 bg-amber-400/10';
+              return (
+                <div key={sub.id} className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl">
+                  <span className={`text-[10px] font-black px-2 py-1 rounded-lg shrink-0 ${urgentCls}`}>
+                    D-{daysLeft}
+                  </span>
+                  <span className="text-sm font-bold text-white flex-1 truncate">{sub.business_name ?? '(업소명 없음)'}</span>
+                  <span className="text-[11px] text-zinc-500 capitalize shrink-0">{sub.plan}</span>
+                  <span className="text-[11px] text-zinc-600 shrink-0">
+                    {new Date(sub.next_billing_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} 만료
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 바로가기 */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

@@ -160,19 +160,22 @@ export async function POST(request: NextRequest) {
                 is_closed: false,
                 platform,
                 deadline: deadlineStr,
-                options: {
+                media_url: (business as any).images?.[0] || (business as any).cover_image_url || null,
+        options: {
                     yasajang_plan: sub.plan,
                     yasajang_business_id: business.id,
                     business_number: business.business_reg_number || null,
                     address: business.address || null,
-                    businessAddress: business.address || null, // P2 enrichAdData/anyAdToShop: options.businessAddress → 지도 표시
-                    regionGu: business.address?.split(/\s+/)[1] || null, // P2 ShopDetailView: options.regionGu
+                    businessAddress: business.address || null,
+                    regionGu: business.address?.split(/\s+/)[1] || null,
                     menu_main: business.menu_main || null,
                     menu_liquor: business.menu_liquor || null,
                     menu_snack: business.menu_snack || null,
                     opened_at: business.opened_at || null,
                     floor_area: business.floor_area || null,
                     license_number: business.license_number || null,
+                    mediaUrl: (business as any).images?.[0] || (business as any).cover_image_url || null,
+                    images: (business as any).images || [],
                     published_at: new Date().toISOString(),
                     published_via: 'yasajang-dashboard',
                 },

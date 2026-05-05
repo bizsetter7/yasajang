@@ -375,6 +375,19 @@ export default function RegisterForm() {
       let permitUrl = '';
       if (files.permit) permitUrl = await uploadFile(files.permit, 'permit');
 
+      // 1-b. Upload shop photos via upload-image API (public business-images bucket)
+      //      businessId는 아직 미발급이므로 user.id를 임시 경로로 사용
+      const photoUrls: string[] = [];
+      for (let i = 0; i < files.shop_images.length; i++) {
+        const img = files.shop_images[i];
+        const fd = new FormData();
+        fd.append('file', img);
+        fd.append('businessId', user.id);
+        const r = await fetch('/api/storage/upload-image', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (r.ok && j.url) photoUrls.push(j.url);
+      }
+
       // 2. Insert via API route (service_role bypasses RLS)
       const res = await fetch('/api/register', {
         method: 'POST',
@@ -405,6 +418,7 @@ export default function RegisterForm() {
           kakao_id: formData.kakao_id || null,
           line_id: formData.line_id || null,
           telegram_id: formData.telegram_id || null,
+          photo_urls: photoUrls,
         }),
       });
       const result = await res.json();

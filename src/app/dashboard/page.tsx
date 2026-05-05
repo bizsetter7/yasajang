@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Tag, Calendar, Image as ImageIcon, Megaphone } from 'lucide-react';
 import BusinessCard from '@/components/dashboard/BusinessCard';
 import SubscriptionCard from '@/components/dashboard/SubscriptionCard';
 import BamgilStatsCard from '@/components/dashboard/BamgilStatsCard';
@@ -29,6 +31,14 @@ export default async function DashboardPage() {
   let subscription = null;
   let bamgilCount = 0;
   let jumpBalance: number | null = null;
+  let lastMonthBamgilCount = 0;
+  let callCount = 0;
+  let chatCount = 0;
+  let visitCount = 0;
+  let daily7d: number[] = [0, 0, 0, 0, 0, 0, 0];
+  let activeCouponCount = 0;
+  let activeEventCount = 0;
+  let activeNoticeCount = 0;
 
   // 점프 잔액 조회 — subscription_balance 단독 표시 (자정마다 cron이 +1, P2도 동일 기준으로 수정됨)
   const { data: jumpData } = await supabase
@@ -39,43 +49,117 @@ export default async function DashboardPage() {
   jumpBalance = jumpData?.subscription_balance ?? null;
 
   if (business) {
-    const { data: subData } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('business_id', business.id)
-      .single();
+    const svc = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const [
+      { data: subData },
+      { count: thisMonthCount },
+      { count: lastMonthCount },
+      { data: typeRows },
+      { data: recent7dRows },
+      { count: couponCount },
+      { count: eventCount },
+      { count: noticeCount },
+    ] = await Promise.all([
+      supabase.from('subscriptions').select('*').eq('business_id', business.id).single(),
+      supabase.from('bamgil_contacts').select('*', { count: 'exact', head: true })
+        .eq('business_id', business.id).gte('contacted_at', thisMonthStart.toISOString()),
+      supabase.from('bamgil_contacts').select('*', { count: 'exact', head: true })
+        .eq('business_id', business.id)
+        .gte('contacted_at', lastMonthStart.toISOString())
+        .lt('contacted_at', thisMonthStart.toISOString()),
+      supabase.from('bamgil_contacts').select('contact_type')
+        .eq('business_id', business.id).gte('contacted_at', thisMonthStart.toISOString()),
+      supabase.from('bamgil_contacts').select('contacted_at')
+        .eq('business_id', business.id).gte('contacted_at', sevenDaysAgo.toISOString()),
+      svc.from('bamgil_coupons').select('*', { count: 'exact', head: true })
+        .eq('business_id', business.id).eq('is_active', true),
+      svc.from('business_events').select('*', { count: 'exact', head: true })
+        .eq('business_id', business.id).eq('is_active', true),
+      svc.from('business_notices').select('*', { count: 'exact', head: true })
+        .eq('business_id', business.id).eq('is_active', true),
+    ]);
+
     subscription = subData;
+    bamgilCount = thisMonthCount ?? 0;
+    lastMonthBamgilCount = lastMonthCount ?? 0;
+    activeCouponCount = couponCount ?? 0;
+    activeEventCount = eventCount ?? 0;
+    activeNoticeCount = noticeCount ?? 0;
 
-    const thisMonthStart = new Date();
-    thisMonthStart.setDate(1);
-    thisMonthStart.setHours(0, 0, 0, 0);
+    // 유형별 집계
+    for (const row of typeRows ?? []) {
+      if (row.contact_type === 'call') callCount++;
+      else if (row.contact_type === 'chat') chatCount++;
+      else if (row.contact_type === 'visit') visitCount++;
+    }
 
-    const { count } = await supabase
-      .from('bamgil_contacts')
-      .select('*', { count: 'exact', head: true })
-      .eq('business_id', business.id)
-      .gte('contacted_at', thisMonthStart.toISOString());
-    bamgilCount = count ?? 0;
+    // 7일 일별 집계
+    const dayBuckets = new Array(7).fill(0);
+    for (const row of recent7dRows ?? []) {
+      const diff = Math.floor((new Date(row.contacted_at).getTime() - sevenDaysAgo.getTime()) / 86400000);
+      if (diff >= 0 && diff < 7) dayBuckets[diff]++;
+    }
+    daily7d = dayBuckets;
   }
 
   // 플랫폼 현황 — platform 컬럼 기반 (Migration 07 이후)
   const { data: shops } = await supabase
     .from('shops')
-    .select('id, platform, status, category')
+    .select('id, platform, status, category, banner_status')
     .eq('user_id', user.id);
 
   // 게시 상태(active)인 광고만 카운트
   const publishedShops = (shops ?? [])
     .filter(s => s.status === 'active' && s.platform)
     .map(s => ({ platform: s.platform as string, id: s.id }));
+
+  // 배너 상태 요약 (active shop 기준)
+  const activeShopBannerStatuses = (shops ?? [])
+    .filter(s => s.status === 'active')
+    .map(s => (s as { banner_status?: string | null }).banner_status);
+  const bannerSummary: 'approved' | 'pending' | 'none' =
+    activeShopBannerStatuses.some(b => b === 'approved_banner') ? 'approved' :
+    activeShopBannerStatuses.some(b => b === 'pending_banner') ? 'pending' : 'none';
   const cocoShopCount = publishedShops.filter(s => s.platform === 'cocoalba').length;
   const waiterShopCount = publishedShops.filter(s => s.platform === 'waiterzone').length;
+  const sunsuShopCount = publishedShops.filter(s => s.platform === 'sunsuzone').length;
+  const bamgilActive = business?.is_active === true;
   // P5는 무료 플랜이면 'free', 그 외는 subscription.plan
   const planName = subscription?.plan || 'free';
   const platformChoice = subscription?.platform_choice ?? null;
 
   const platformCards = (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* 밤길 */}
+      <a
+        href={business ? `https://www.bamgil.kr/places/${business.id}` : 'https://www.bamgil.kr'}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block p-6 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+      >
+        <h3 className="text-sm font-bold text-amber-500 mb-3">밤길 업소 현황</h3>
+        <div className="flex items-end gap-2 mb-4">
+          <span className={`text-4xl font-black ${bamgilActive ? 'text-gray-900' : 'text-gray-300'}`}>
+            {bamgilActive ? '게시중' : '미게시'}
+          </span>
+        </div>
+        <span className="text-xs font-bold text-amber-500 flex items-center gap-1 group-hover:gap-2 transition-all border-t border-gray-100 pt-4">
+          밤길 업소 페이지 바로가기 →
+        </span>
+      </a>
+      {/* 코코알바 */}
       <a
         href="https://cocoalba.kr/my-shop"
         target="_blank"
@@ -91,6 +175,7 @@ export default async function DashboardPage() {
           코코알바 마이샵 바로가기 →
         </span>
       </a>
+      {/* 웨이터존 */}
       <a
         href="https://waiterzone.kr/my"
         target="_blank"
@@ -104,6 +189,22 @@ export default async function DashboardPage() {
         </div>
         <span className="text-xs font-bold text-blue-500 flex items-center gap-1 group-hover:gap-2 transition-all border-t border-gray-100 pt-4">
           웨이터존 마이샵 바로가기 →
+        </span>
+      </a>
+      {/* 선수존 */}
+      <a
+        href="https://sunsuzone.kr/my"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block p-6 bg-white border border-gray-200 rounded-2xl hover:border-yellow-300 hover:shadow-md transition-all group"
+      >
+        <h3 className="text-sm font-bold text-yellow-600 mb-3">선수존 공고 현황</h3>
+        <div className="flex items-end gap-2 mb-4">
+          <span className="text-4xl font-black text-gray-900">{sunsuShopCount}</span>
+          <span className="text-gray-500 mb-1 font-medium">개 공고</span>
+        </div>
+        <span className="text-xs font-bold text-yellow-600 flex items-center gap-1 group-hover:gap-2 transition-all border-t border-gray-100 pt-4">
+          선수존 마이샵 바로가기 →
         </span>
       </a>
     </div>
@@ -167,6 +268,79 @@ export default async function DashboardPage() {
                   publishedShops={publishedShops}
                 />
               </section>
+
+              <section className="space-y-3">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 도구</h2>
+                <Link
+                  href="/dashboard/coupons"
+                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                >
+                  <Tag size={20} className="text-amber-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-gray-900 text-sm">쿠폰 관리</p>
+                    <p className="text-gray-500 text-xs mt-0.5">밤길 업소 쿠폰 발급 및 관리</p>
+                  </div>
+                  {activeCouponCount > 0 && (
+                    <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                      활성 {activeCouponCount}개
+                    </span>
+                  )}
+                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                </Link>
+                <Link
+                  href="/dashboard/events"
+                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                >
+                  <Calendar size={20} className="text-amber-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-gray-900 text-sm">이벤트 관리</p>
+                    <p className="text-gray-500 text-xs mt-0.5">밤길 업소 이벤트·할인 공지 등록</p>
+                  </div>
+                  {activeEventCount > 0 && (
+                    <span className="text-[11px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shrink-0">
+                      활성 {activeEventCount}개
+                    </span>
+                  )}
+                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                </Link>
+                <Link
+                  href="/dashboard/banner"
+                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                >
+                  <ImageIcon size={20} className="text-amber-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-gray-900 text-sm">배너 관리</p>
+                    <p className="text-gray-500 text-xs mt-0.5">플랫폼별 배너 이미지 등록 및 노출 위치 설정</p>
+                  </div>
+                  {bannerSummary === 'approved' && (
+                    <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                      게시중
+                    </span>
+                  )}
+                  {bannerSummary === 'pending' && (
+                    <span className="text-[11px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+                      심사중
+                    </span>
+                  )}
+                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                </Link>
+                <Link
+                  href="/dashboard/notices"
+                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                >
+                  <Megaphone size={20} className="text-amber-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-gray-900 text-sm">공지 관리</p>
+                    <p className="text-gray-500 text-xs mt-0.5">밤길 업소 페이지 공지사항 등록 및 관리</p>
+                  </div>
+                  {activeNoticeCount > 0 && (
+                    <span className="text-[11px] font-black text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full shrink-0">
+                      활성 {activeNoticeCount}개
+                    </span>
+                  )}
+                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                </Link>
+              </section>
             </div>
 
             {/* 우측 사이드바 */}
@@ -177,7 +351,14 @@ export default async function DashboardPage() {
               </section>
               <section className="space-y-3">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 성과</h2>
-                <BamgilStatsCard count={bamgilCount} />
+                <BamgilStatsCard
+                  count={bamgilCount}
+                  lastMonthCount={lastMonthBamgilCount}
+                  callCount={callCount}
+                  chatCount={chatCount}
+                  visitCount={visitCount}
+                  daily7d={daily7d}
+                />
               </section>
             </div>
           </div>

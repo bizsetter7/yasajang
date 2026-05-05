@@ -1,68 +1,80 @@
+import { createClient } from '@supabase/supabase-js';
+import { Bell, Pin } from 'lucide-react';
 import Link from 'next/link';
-import { Bell, ChevronRight } from 'lucide-react';
 
-const notices = [
-  {
-    id: 1,
-    category: '서비스 안내',
-    title: '야사장 플랫폼 정식 서비스 오픈 안내',
-    date: '2026-05-01',
-    content: '안녕하세요. 야사장입니다.\n\n밤 업소 사장님들을 위한 통합 마케팅 플랫폼, 야사장이 정식 서비스를 시작합니다.\n\n야사장은 밤길(손님 유입), 코코알바(아가씨 구인), 웨이터존(웨이터 구인), 선수존(선수 구인) 4개 플랫폼을 하나의 구독으로 관리할 수 있는 B2B SaaS 플랫폼입니다.\n\n오픈 기념으로 밤길 3개월 무료 체험을 제공하오니, 지금 바로 등록해보세요.',
-    pinned: true,
-  },
-  {
-    id: 2,
-    category: '이벤트',
-    title: '오픈 기념 밤길 3개월 무료 체험 이벤트',
-    date: '2026-05-01',
-    content: '야사장 정식 오픈을 기념하여 신규 등록 업소에 밤길 3개월 무료 체험을 제공합니다.\n\n기간: 2026년 5월 1일 ~ 종료 시까지\n대상: 야사장 신규 등록 업소\n혜택: 밤길 지도 핀 노출 3개월 무료\n\n지금 바로 업소를 등록하고 혜택을 받으세요.',
-    pinned: true,
-  },
-  {
-    id: 3,
-    category: '서비스 안내',
-    title: '플랫폼 연동 안내 — 코코알바·웨이터존·선수존',
-    date: '2026-05-01',
-    content: '야사장 구독 시 코코알바, 웨이터존, 선수존 플랫폼 광고가 자동으로 연동됩니다.\n\n별도 로그인이나 추가 설정 없이 야사장 대시보드 하나로 모든 플랫폼 구인 정보를 관리하실 수 있습니다.\n\n연동 플랜: 스탠다드 이상',
-    pinned: false,
-  },
-];
+export const revalidate = 60;
 
-export default function NoticePage() {
+const PLATFORM_LABELS: Record<string, string> = {
+  yasajang: '야사장', bamgil: '밤길', cocoalba: '코코알바',
+  waiterzone: '웨이터존', sunsuzone: '선수존',
+};
+
+export default async function NoticePage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const now = new Date().toISOString();
+  const { data: notices } = await supabase
+    .from('notices')
+    .select('id, badge, title, content, is_pinned, published_at, platforms')
+    .eq('is_published', true)
+    .contains('platforms', ['yasajang'])
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
+    .order('is_pinned', { ascending: false })
+    .order('published_at', { ascending: false })
+    .limit(50);
+
   return (
-    <main className="min-h-screen bg-zinc-950 pt-24 pb-20">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center gap-3 mb-10">
-          <Bell className="text-amber-500" size={24} />
-          <h1 className="text-3xl font-black text-white">공지사항</h1>
-        </div>
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
+      <div className="max-w-3xl mx-auto">
+        <header className="mb-8 flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+            <Bell size={20} className="text-amber-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-gray-900">공지사항</h1>
+            <p className="text-gray-500 text-sm">야사장 서비스 공지 및 업데이트</p>
+          </div>
+          <Link href="/dashboard" className="ml-auto text-sm text-gray-400 hover:text-gray-700 transition-colors">
+            ← 대시보드로
+          </Link>
+        </header>
 
-        <div className="space-y-3">
-          {notices.map((notice) => (
-            <details
-              key={notice.id}
-              className="group bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden"
-            >
-              <summary className="flex items-center gap-3 px-5 py-4 cursor-pointer list-none hover:bg-zinc-800/50 transition-colors">
-                {notice.pinned && (
-                  <span className="shrink-0 text-[10px] font-black bg-amber-500 text-black px-2 py-0.5 rounded-full">고정</span>
+        {!notices?.length ? (
+          <div className="text-center py-16 text-gray-400">등록된 공지사항이 없습니다.</div>
+        ) : (
+          <div className="space-y-3">
+            {notices.map(n => (
+              <div
+                key={n.id}
+                className={`bg-white rounded-2xl border p-5 shadow-sm ${n.is_pinned ? 'border-amber-200' : 'border-gray-200'}`}
+              >
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  {n.is_pinned && <Pin size={12} className="text-amber-500 shrink-0" />}
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                    {n.badge || '공지'}
+                  </span>
+                  <span className="text-xs text-gray-400 ml-auto shrink-0">
+                    {new Date(n.published_at).toLocaleDateString('ko-KR')}
+                  </span>
+                </div>
+                <h2 className="font-black text-gray-900 mb-2">{n.title}</h2>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{n.content}</p>
+                {n.platforms && n.platforms.length > 1 && (
+                  <div className="flex gap-1 mt-3 flex-wrap">
+                    {n.platforms.map((p: string) => (
+                      <span key={p} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+                        {PLATFORM_LABELS[p] || p}
+                      </span>
+                    ))}
+                  </div>
                 )}
-                <span className="text-[11px] text-zinc-500 shrink-0">{notice.category}</span>
-                <span className="text-sm font-semibold text-white flex-1 truncate">{notice.title}</span>
-                <span className="text-xs text-zinc-600 shrink-0">{notice.date}</span>
-                <ChevronRight size={14} className="text-zinc-600 group-open:rotate-90 transition-transform shrink-0" />
-              </summary>
-              <div className="px-5 pb-5 pt-2 border-t border-zinc-800">
-                <p className="text-sm text-zinc-400 leading-relaxed whitespace-pre-line">{notice.content}</p>
               </div>
-            </details>
-          ))}
-        </div>
-
-        <div className="mt-10 text-center">
-          <Link href="/" className="text-xs text-zinc-600 hover:text-amber-400 transition-colors">← 홈으로 돌아가기</Link>
-        </div>
+            ))}
+          </div>
+        )}
       </div>
-    </main>
+    </div>
   );
 }
