@@ -180,9 +180,9 @@ export default function BannerPage() {
           <div>
             <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
               <ImageIcon size={22} className="text-amber-500" />
-              배너 관리
+              배너 신청
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">플랫폼별 배너 이미지 등록 및 노출 위치를 설정합니다.</p>
+            <p className="text-sm text-gray-500 mt-0.5">플랫폼별 배너 이미지 등록 및 노출 위치를 신청/설정합니다.</p>
           </div>
           <a href="/dashboard" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">← 대시보드</a>
         </div>

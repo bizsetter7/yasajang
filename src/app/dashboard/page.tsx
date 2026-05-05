@@ -309,8 +309,8 @@ export default async function DashboardPage() {
                 >
                   <ImageIcon size={20} className="text-amber-500 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-gray-900 text-sm">배너 관리</p>
-                    <p className="text-gray-500 text-xs mt-0.5">플랫폼별 배너 이미지 등록 및 노출 위치 설정</p>
+                    <p className="font-black text-gray-900 text-sm">배너 신청</p>
+                    <p className="text-gray-500 text-xs mt-0.5">플랫폼별 배너 이미지 등록 및 노출 위치를 신청/설정합니다.</p>
                   </div>
                   {bannerSummary === 'approved' && (
                     <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
