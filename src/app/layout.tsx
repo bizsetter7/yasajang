@@ -100,7 +100,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50 notranslate">
-        {/* JSON-LD WebSite + SearchAction — P-12 SEO 표준 */}
+        {/* JSON-LD WebSite — P-12 SEO 표준 */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -111,6 +111,24 @@ export default function RootLayout({
               'alternateName': 'YASAJANG',
               'url': 'https://www.yasajang.kr',
               'description': '유흥업소 사장님 전용 비즈니스 멤버십 플랫폼',
+            }),
+          }}
+        />
+        {/* JSON-LD Organization — 브랜드 엔티티 신호 (Google 자동교정 방지) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              'name': '야사장',
+              'alternateName': ['YASAJANG', '야사장닷컴', '야간 사장님 플랫폼'],
+              'url': 'https://www.yasajang.kr',
+              'logo': 'https://www.yasajang.kr/logo.png',
+              'description': '유흥업소 사장님 전용 비즈니스 멤버십 플랫폼. 밤길 지도 노출, 구인공고, 손님 유입을 한 번에.',
+              'foundingDate': '2026',
+              'areaServed': 'KR',
+              'knowsAbout': ['유흥업소', '유흥알바', '구인구직', '밤길노출'],
             }),
           }}
         />
