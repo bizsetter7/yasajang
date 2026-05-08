@@ -34,7 +34,7 @@ export default async function AdminLayout({
       <AdminSidebar email={user.email!} />
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-12 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-500/[0.02] via-transparent to-transparent">
+      <main className="flex-1 lg:ml-64 pt-16 px-4 pb-6 sm:px-6 lg:p-12 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-500/[0.02] via-transparent to-transparent">
         {children}
       </main>
     </div>

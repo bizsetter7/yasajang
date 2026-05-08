@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { type User as SupabaseUser } from '@supabase/supabase-js';
 import { clsx, type ClassValue } from 'clsx';
@@ -89,8 +89,12 @@ export default function Navbar() {
 
             {user ? (
               <div className="flex items-center space-x-4">
-                <Link href={user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL ? '/admin' : '/dashboard'} className="text-zinc-400 hover:text-amber-400 transition-colors">
-                  <User size={20} />
+                <Link
+                  href={user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL ? '/admin' : '/dashboard'}
+                  className="text-sm font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5"
+                >
+                  <LayoutDashboard size={15} />
+                  대시보드
                 </Link>
                 <button
                   onClick={handleSignOut}
@@ -139,11 +143,25 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
-          <div className="pt-4 mt-4 border-t border-zinc-900">
+
+          {/* 대시보드 탭 — 로그인 시 해당 페이지, 비로그인 시 로그인 팝업 */}
+          <Link
+            href={user
+              ? (user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL ? '/admin' : '/dashboard')
+              : '/?auth=login'
+            }
+            className="flex items-center gap-2 px-3 py-4 text-base font-bold text-amber-400 hover:text-amber-300 hover:bg-zinc-900/50 rounded-lg transition-all"
+            onClick={() => setIsOpen(false)}
+          >
+            <LayoutDashboard size={18} />
+            대시보드
+          </Link>
+
+          <div className="pt-4 mt-2 border-t border-zinc-900">
             {user ? (
               <div className="flex items-center justify-between px-3">
-                <span className="text-sm text-zinc-500">{user.email}</span>
-                <button onClick={handleSignOut} className="text-red-400 text-sm font-medium">로그아웃</button>
+                <span className="text-sm text-zinc-500 truncate max-w-[180px]">{user.email}</span>
+                <button onClick={handleSignOut} className="text-red-400 text-sm font-medium shrink-0">로그아웃</button>
               </div>
             ) : (
               <Link
