@@ -33,12 +33,12 @@ export async function GET() {
     return NextResponse.json({ error: authErr.message }, { status: 500 });
   }
 
-  // profiles 테이블에서 추가 정보 조회
+  // profiles 테이블에서 추가 정보 조회 (referrer: 가입 플랫폼 출처)
   const { data: profiles } = await supabaseAdmin
     .from('profiles')
-    .select('id, username, role, user_type, created_at');
+    .select('id, username, role, user_type, created_at, referrer');
 
-  const profileMap: Record<string, { username?: string; role?: string; user_type?: string }> = {};
+  const profileMap: Record<string, { username?: string; role?: string; user_type?: string; referrer?: string }> = {};
   (profiles || []).forEach(p => { profileMap[p.id] = p; });
 
   // businesses 테이블에서 업체 연결 여부 확인
@@ -79,6 +79,16 @@ export async function GET() {
     // bamgil = businesses.is_active 기준 (업소가 활성이면 밤길에 노출됨)
     if (biz?.is_active) platforms.bamgil = 1;
 
+    // 가입 플랫폼 출처 도출: profiles.referrer 우선, 없으면 platforms 활동으로 추정
+    const profileRef = profileMap[u.id]?.referrer || null;
+    let signup_platform: string | null = profileRef;
+    if (!signup_platform) {
+      // 야사장에 없는 외부 플랫폼 활동이 있으면 그걸 기원으로 표시
+      if (platforms.cocoalba > 0) signup_platform = '코코알바';
+      else if (platforms.waiterzone > 0) signup_platform = '웨이터존';
+      else if (platforms.sunsuzone > 0) signup_platform = '선수존';
+    }
+
     return {
       id: u.id,
       email: u.email,
@@ -89,6 +99,7 @@ export async function GET() {
       role: profileMap[u.id]?.role || profileMap[u.id]?.user_type || 'individual',
       business: biz || null,
       platforms,
+      signup_platform,
       banned_until: (u as unknown as { banned_until?: string }).banned_until || null,
     };
   });

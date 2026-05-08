@@ -20,6 +20,7 @@ interface Member {
   role: string;
   business?: { name: string; status: string } | null;
   platforms?: PlatformCounts;
+  signup_platform?: string | null;
   banned_until?: string | null;
 }
 
@@ -203,11 +204,18 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {/* 가입 경로 */}
-                <div>
+                {/* 가입 경로 — OAuth 제공자 + 가입 플랫폼 출처 */}
+                <div className="space-y-1">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PROVIDER_BADGE[m.provider] || PROVIDER_BADGE.email}`}>
                     {m.provider}
                   </span>
+                  {m.signup_platform && (
+                    <div>
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20">
+                        {m.signup_platform}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 역할 */}
