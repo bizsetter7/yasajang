@@ -211,7 +211,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-10 px-4">
       {/* 공지 모달 (1회 표시 + 다시 보지 않기) */}
       <AnnouncementModal />
 
@@ -241,125 +241,128 @@ export default async function DashboardPage() {
         )}
 
         {business ? (
-          /* ── PC: 좌측 메인 + 우측 사이드바 ── */
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start mt-6">
-            {/* 좌측 */}
-            <div className="space-y-6">
-              <section className="space-y-3">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">내 업소 정보</h2>
-                <BusinessCard business={business} subscription={subscription} />
-              </section>
+          /* ── PC: 좌측 + 우측 | 모바일: 업소→구독→성과→플랫폼→도구 순 ── */
+          <div className="space-y-6 mt-6">
+            {/* 내 업소 정보 — 항상 최상단 */}
+            <section className="space-y-3">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">내 업소 정보</h2>
+              <BusinessCard business={business} subscription={subscription} />
+            </section>
 
-              <section className="space-y-3">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">플랫폼 현황</h2>
-                {platformCards}
-              </section>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+              {/* 우측 사이드바 — 모바일에서 먼저(order-1), PC에서 오른쪽(lg:order-2) */}
+              <div className="space-y-6 order-1 lg:order-2">
+                <section className="space-y-3">
+                  <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">멤버십 상태</h2>
+                  <SubscriptionCard subscription={subscription} businessId={business.id} jumpBalance={jumpBalance} />
+                </section>
+                <section className="space-y-3">
+                  <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 성과</h2>
+                  <BamgilStatsCard
+                    count={bamgilCount}
+                    lastMonthCount={lastMonthBamgilCount}
+                    callCount={callCount}
+                    chatCount={chatCount}
+                    visitCount={visitCount}
+                    daily7d={daily7d}
+                  />
+                </section>
+              </div>
 
-              {/* ── 플랫폼 구인 조건 관리 (2026-04-30 — 무료 비활성화 + 광고게시 흐름) ── */}
-              <section className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">플랫폼 구인 조건</h2>
-                  <span className="text-[10px] text-gray-400 font-medium">광고 게시 후 각 플랫폼 마이샵에서 채용 메시지 작성</span>
-                </div>
-                <PlatformGrid
-                  plan={planName}
-                  platformChoice={platformChoice}
-                  businessId={business?.id ?? null}
-                  publishedShops={publishedShops}
-                />
-              </section>
+              {/* 좌측 메인 — 모바일에서 아래(order-2), PC에서 왼쪽(lg:order-1) */}
+              <div className="space-y-6 order-2 lg:order-1">
+                <section className="space-y-3">
+                  <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">플랫폼 현황</h2>
+                  {platformCards}
+                </section>
 
-              <section className="space-y-3">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 도구</h2>
-                <Link
-                  href="/dashboard/coupons"
-                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
-                >
-                  <Tag size={20} className="text-amber-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-gray-900 text-sm">쿠폰 관리</p>
-                    <p className="text-gray-500 text-xs mt-0.5">밤길 업소 쿠폰 발급 및 관리</p>
+                {/* ── 플랫폼 구인 조건 관리 (2026-04-30 — 무료 비활성화 + 광고게시 흐름) ── */}
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest shrink-0">플랫폼 구인 조건</h2>
+                    <span className="hidden sm:inline text-[10px] text-gray-400 font-medium text-right">광고 게시 후 각 플랫폼 마이샵에서 채용 메시지 작성</span>
                   </div>
-                  {activeCouponCount > 0 && (
-                    <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
-                      활성 {activeCouponCount}개
-                    </span>
-                  )}
-                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
-                </Link>
-                <Link
-                  href="/dashboard/events"
-                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
-                >
-                  <Calendar size={20} className="text-amber-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-gray-900 text-sm">이벤트 관리</p>
-                    <p className="text-gray-500 text-xs mt-0.5">밤길 업소 이벤트·할인 공지 등록</p>
-                  </div>
-                  {activeEventCount > 0 && (
-                    <span className="text-[11px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shrink-0">
-                      활성 {activeEventCount}개
-                    </span>
-                  )}
-                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
-                </Link>
-                <Link
-                  href="/dashboard/banner"
-                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
-                >
-                  <ImageIcon size={20} className="text-amber-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-gray-900 text-sm">배너 신청</p>
-                    <p className="text-gray-500 text-xs mt-0.5">플랫폼별 배너 이미지 등록 및 노출 위치를 신청/설정합니다.</p>
-                  </div>
-                  {bannerSummary === 'approved' && (
-                    <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
-                      게시중
-                    </span>
-                  )}
-                  {bannerSummary === 'pending' && (
-                    <span className="text-[11px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
-                      심사중
-                    </span>
-                  )}
-                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
-                </Link>
-                <Link
-                  href="/dashboard/notices"
-                  className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
-                >
-                  <Megaphone size={20} className="text-amber-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-gray-900 text-sm">공지 관리</p>
-                    <p className="text-gray-500 text-xs mt-0.5">밤길 업소 페이지 공지사항 등록 및 관리</p>
-                  </div>
-                  {activeNoticeCount > 0 && (
-                    <span className="text-[11px] font-black text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full shrink-0">
-                      활성 {activeNoticeCount}개
-                    </span>
-                  )}
-                  <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
-                </Link>
-              </section>
-            </div>
+                  <PlatformGrid
+                    plan={planName}
+                    platformChoice={platformChoice}
+                    businessId={business?.id ?? null}
+                    publishedShops={publishedShops}
+                  />
+                </section>
 
-            {/* 우측 사이드바 */}
-            <div className="space-y-6">
-              <section className="space-y-3">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">멤버십 상태</h2>
-                <SubscriptionCard subscription={subscription} businessId={business.id} jumpBalance={jumpBalance} />
-              </section>
-              <section className="space-y-3">
-                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 성과</h2>
-                <BamgilStatsCard
-                  count={bamgilCount}
-                  lastMonthCount={lastMonthBamgilCount}
-                  callCount={callCount}
-                  chatCount={chatCount}
-                  visitCount={visitCount}
-                  daily7d={daily7d}
-                />
-              </section>
+                <section className="space-y-3">
+                  <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">마케팅 도구</h2>
+                  <Link
+                    href="/dashboard/coupons"
+                    className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                  >
+                    <Tag size={20} className="text-amber-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-gray-900 text-sm">쿠폰 관리</p>
+                      <p className="text-gray-500 text-xs mt-0.5">밤길 업소 쿠폰 발급 및 관리</p>
+                    </div>
+                    {activeCouponCount > 0 && (
+                      <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                        활성 {activeCouponCount}개
+                      </span>
+                    )}
+                    <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/events"
+                    className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                  >
+                    <Calendar size={20} className="text-amber-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-gray-900 text-sm">이벤트 관리</p>
+                      <p className="text-gray-500 text-xs mt-0.5">밤길 업소 이벤트·할인 공지 등록</p>
+                    </div>
+                    {activeEventCount > 0 && (
+                      <span className="text-[11px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shrink-0">
+                        활성 {activeEventCount}개
+                      </span>
+                    )}
+                    <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/banner"
+                    className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                  >
+                    <ImageIcon size={20} className="text-amber-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-gray-900 text-sm">배너 신청</p>
+                      <p className="text-gray-500 text-xs mt-0.5">플랫폼별 배너 이미지 등록 및 노출 위치를 신청/설정합니다.</p>
+                    </div>
+                    {bannerSummary === 'approved' && (
+                      <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                        게시중
+                      </span>
+                    )}
+                    {bannerSummary === 'pending' && (
+                      <span className="text-[11px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+                        심사중
+                      </span>
+                    )}
+                    <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/notices"
+                    className="flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
+                  >
+                    <Megaphone size={20} className="text-amber-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-gray-900 text-sm">공지 관리</p>
+                      <p className="text-gray-500 text-xs mt-0.5">밤길 업소 페이지 공지사항 등록 및 관리</p>
+                    </div>
+                    {activeNoticeCount > 0 && (
+                      <span className="text-[11px] font-black text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full shrink-0">
+                        활성 {activeNoticeCount}개
+                      </span>
+                    )}
+                    <span className="text-amber-500 font-bold group-hover:translate-x-1 transition-transform shrink-0">→</span>
+                  </Link>
+                </section>
+              </div>
             </div>
           </div>
         ) : (

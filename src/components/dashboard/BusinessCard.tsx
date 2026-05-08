@@ -68,7 +68,7 @@ export default function BusinessCard({ business, subscription }: BusinessCardPro
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500">
@@ -105,7 +105,7 @@ export default function BusinessCard({ business, subscription }: BusinessCardPro
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-2 shrink-0">
+        <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">심사 상태</span>
           {business.is_verified ? (
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full text-emerald-600 font-bold text-sm">
