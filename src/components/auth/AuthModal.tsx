@@ -14,7 +14,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
   if (!isOpen) return null;
 
-  const handleSocialLogin = async (provider: 'kakao' | 'google') => {
+  const handleSocialLogin = async (provider: 'google') => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -71,16 +71,6 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
         </h2>
 
         <div className="space-y-3 mb-8">
-          <button
-            onClick={() => handleSocialLogin('kakao')}
-            className="w-full h-12 bg-[#FEE500] text-black font-semibold rounded-lg flex items-center justify-center gap-2.5 hover:opacity-90 transition-all"
-          >
-            {/* Kakao logo */}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 3C6.477 3 2 6.477 2 10.5c0 2.548 1.516 4.786 3.81 6.19l-.97 3.603a.375.375 0 0 0 .547.415L9.78 18.4A11.3 11.3 0 0 0 12 18.75C17.523 18.75 22 15.273 22 11.25 22 7.228 17.523 3.75 12 3.75" fill="#3C1E1E"/>
-            </svg>
-            카카오로 시작하기
-          </button>
           <button
             onClick={() => handleSocialLogin('google')}
             className="w-full h-12 bg-white text-[#3c4043] font-semibold rounded-lg flex items-center justify-center gap-2.5 hover:bg-gray-100 transition-all border border-gray-200"
