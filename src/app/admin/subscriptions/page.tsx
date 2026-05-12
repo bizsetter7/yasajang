@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { ReceiptText, RefreshCw } from 'lucide-react';
+import { ReceiptText, RefreshCw, AlertTriangle } from 'lucide-react';
 
 const PLAN_LABEL: Record<string, string> = {
   free: '무료(밤길)', basic: '베이직', standard: '스탠다드', special: '스페셜',
@@ -59,8 +59,16 @@ function fmtDate(dateStr: string | null): string {
   return new Date(dateStr).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
+interface NoSubBiz {
+  id: string;
+  name: string;
+  status: string;
+  created_at: string;
+}
+
 export default function SubscriptionsPage() {
   const [subs, setSubs] = useState<Sub[]>([]);
+  const [noSubBizes, setNoSubBizes] = useState<NoSubBiz[]>([]);
   const [tab, setTab] = useState('all');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -71,6 +79,7 @@ export default function SubscriptionsPage() {
     const res = await fetch(`/api/admin/subscriptions${qs}`);
     const json = await res.json();
     setSubs(json.subscriptions ?? []);
+    setNoSubBizes(json.noSubBusinesses ?? []);
     setLoading(false);
   }, [tab]);
 
@@ -216,6 +225,39 @@ export default function SubscriptionsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+      {/* 구독 미생성 업체 (고아 업체) — 전체 탭에서만 표시 */}
+      {tab === 'all' && noSubBizes.length > 0 && (
+        <div className="mt-8 space-y-3">
+          <div className="flex items-center gap-2 text-amber-400">
+            <AlertTriangle size={16} />
+            <span className="text-sm font-bold">구독 레코드 없는 업체 ({noSubBizes.length}건) — 아래 SQL로 수동 생성 필요</span>
+          </div>
+          {noSubBizes.map(biz => (
+            <div
+              key={biz.id}
+              className="bg-zinc-900/50 rounded-xl border border-amber-500/20 p-4 flex flex-wrap items-center gap-4"
+            >
+              <div className="flex-1 min-w-36">
+                <p className="font-bold text-sm text-white">{biz.name}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">업체 상태: {biz.status} · 등록 {new Date(biz.created_at).toLocaleDateString('ko-KR')}</p>
+              </div>
+              <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                구독 미생성
+              </span>
+            </div>
+          ))}
+          <div className="mt-2 p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
+            <p className="text-[11px] text-zinc-500 font-mono leading-relaxed">
+              {'-- Supabase SQL 에디터에서 실행 (구독 레코드 없는 업체 일괄 생성)'}<br/>
+              {'INSERT INTO subscriptions (business_id, plan, status, trial_starts_at, trial_ends_at)'}<br/>
+              {'SELECT b.id, \'basic\', \'trial\', b.created_at, b.created_at + INTERVAL \'90 days\''}<br/>
+              {'FROM businesses b'}<br/>
+              {'LEFT JOIN subscriptions s ON s.business_id = b.id'}<br/>
+              {'WHERE s.id IS NULL;'}
+            </p>
+          </div>
         </div>
       )}
     </div>

@@ -52,7 +52,23 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query.order('next_billing_at', { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ subscriptions: data ?? [] });
+  // 구독 없는 업체 탐지 (고아 업체) — 전체 탭 한정으로 함께 반환
+  let noSubBusinesses: { id: string; name: string; status: string; created_at: string }[] = [];
+  if (!expiringSoon && statusFilter === 'all') {
+    const { data: allBizes } = await supabaseAdmin
+      .from('businesses')
+      .select('id, name, status, created_at')
+      .in('status', ['active', 'approved', 'pending']);
+
+    const { data: subBizData } = await supabaseAdmin
+      .from('subscriptions')
+      .select('business_id');
+
+    const subBizSet = new Set((subBizData || []).map(s => s.business_id));
+    noSubBusinesses = (allBizes || []).filter(b => !subBizSet.has(b.id));
+  }
+
+  return NextResponse.json({ subscriptions: data ?? [], noSubBusinesses });
 }
 
 export async function PATCH(request: NextRequest) {

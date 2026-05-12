@@ -205,7 +205,10 @@ export async function POST(req: NextRequest) {
         });
 
       if (subError) {
-        console.error('subscriptions insert error:', subError);
+        // 구독 생성 실패 → 방금 생성한 업체도 롤백 (고아 업체 방지)
+        console.error('subscriptions insert failed → rolling back business:', businessId, subError);
+        await supabase.from('businesses').delete().eq('id', businessId);
+        return NextResponse.json({ error: `구독 생성 실패: ${subError.message}` }, { status: 500 });
       }
     }
 
