@@ -61,6 +61,29 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ businesses: enriched });
 }
 
+// PATCH /api/admin/businesses  body: { businessId, is_active }  — 임시 비활성화/재활성화 토글
+export async function PATCH(req: NextRequest) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { businessId, is_active } = await req.json();
+  if (!businessId || is_active === undefined) {
+    return NextResponse.json({ error: 'businessId, is_active 필요' }, { status: 400 });
+  }
+
+  const { error } = await supabaseAdmin
+    .from('businesses')
+    .update({ is_active, updated_at: new Date().toISOString() })
+    .eq('id', businessId);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
 // DELETE /api/admin/businesses  body: { businessId }
 export async function DELETE(req: NextRequest) {
   if (!(await verifyAdmin())) {

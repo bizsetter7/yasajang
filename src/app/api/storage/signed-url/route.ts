@@ -1,21 +1,16 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+
+// service_role로 스토리지 서명 URL 생성 (createServerClient는 쿠키 auth 클라이언트라 storage 서비스롤 동작 불안정)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+);
 
 export async function POST(req: Request) {
   const { path } = await req.json();
   if (!path) return NextResponse.json({ error: 'path required' }, { status: 400 });
-
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { 
-      cookies: { 
-        get: (name) => cookieStore.get(name)?.value 
-      } 
-    }
-  );
 
   // ── path 정규화 (Object not found 방지) ────────────────────────────
   // 저장된 형식이 세 가지로 혼재:
@@ -38,10 +33,13 @@ export async function POST(req: Request) {
   // ① → 그대로 사용
   // ────────────────────────────────────────────────────────────────────
 
-  const { data, error } = await supabase.storage
+  const { data, error } = await supabaseAdmin.storage
     .from('businesses-docs')
     .createSignedUrl(storagePath, 60 * 60); // 1시간 유효
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[signed-url] createSignedUrl error:', error.message, '| path:', storagePath);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ url: data.signedUrl });
 }

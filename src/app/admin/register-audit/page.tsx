@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   Trash2,
   RefreshCw,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 
 interface Business {
@@ -31,6 +33,8 @@ interface Business {
   business_reg_url?: string;
   permit_path?: string;
   status: string;
+  is_active?: boolean;
+  is_verified?: boolean;
   audit_note?: string;
   audited_at?: string;
   owner_id?: string;
@@ -154,6 +158,32 @@ export default function RegisterAuditPage() {
     }
   };
 
+  const handleToggleActive = async (biz: Business) => {
+    const newActive = !biz.is_active;
+    const label = newActive ? '활성화' : '비활성화';
+    if (!confirm(`"${biz.name}" 업소를 ${label}하시겠습니까?`)) return;
+    setProcessing(true);
+    try {
+      const res = await fetch('/api/admin/businesses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId: biz.id, is_active: newActive }),
+      });
+      if (res.ok) {
+        alert(`${label} 완료`);
+        if (selectedShop?.id === biz.id) setSelectedShop({ ...biz, is_active: newActive });
+        fetchBusinesses();
+      } else {
+        const d = await res.json();
+        alert(d.error || `${label} 실패`);
+      }
+    } catch {
+      alert('서버 통신 오류');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const filtered = businesses.filter(b =>
     b.name?.toLowerCase().includes(search.toLowerCase()) ||
     (REGION_LABEL[b.region_code] ?? b.region_code)?.includes(search)
@@ -258,9 +288,29 @@ export default function RegisterAuditPage() {
                     {biz.subscription.plan}
                   </span>
                 )}
+                {biz.status === 'active' && biz.is_active === false && (
+                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full text-zinc-500 bg-zinc-800">
+                    비활성
+                  </span>
+                )}
                 <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase ${STATUS_BADGE[biz.status] || ''}`}>
                   {STATUS_KR[biz.status] ?? biz.status}
                 </span>
+                {/* 승인된 업소만 비활성화 토글 버튼 표시 */}
+                {(biz.status === 'active' || biz.status === 'approved') && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleActive(biz); }}
+                    disabled={processing}
+                    title={biz.is_active === false ? '업소 활성화' : '업소 임시 비활성화'}
+                    className={`p-2 transition-colors disabled:opacity-40 ${
+                      biz.is_active === false
+                        ? 'text-amber-500 hover:text-amber-400'
+                        : 'text-zinc-700 hover:text-amber-400'
+                    }`}
+                  >
+                    {biz.is_active === false ? <ToggleLeft size={18} /> : <ToggleRight size={18} />}
+                  </button>
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(biz); }}
                   disabled={processing}
@@ -300,6 +350,23 @@ export default function RegisterAuditPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {/* 승인된 업소 — 임시 비활성화 토글 */}
+                {(selectedShop.status === 'active' || selectedShop.status === 'approved') && (
+                  <button
+                    onClick={() => handleToggleActive(selectedShop)}
+                    disabled={processing}
+                    className={`flex items-center gap-1.5 px-3 py-2 border text-xs font-bold rounded-xl transition-all disabled:opacity-40 ${
+                      selectedShop.is_active === false
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-400'
+                    }`}
+                  >
+                    {selectedShop.is_active === false
+                      ? <><ToggleLeft size={14} /> 비활성 중 (클릭 시 활성화)</>
+                      : <><ToggleRight size={14} /> 임시 비활성화</>
+                    }
+                  </button>
+                )}
                 <button
                   onClick={() => handleDelete(selectedShop)}
                   disabled={processing}
