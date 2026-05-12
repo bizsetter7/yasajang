@@ -95,7 +95,8 @@ export async function PATCH(request: Request) {
       opened_at: openedAt || null,
       floor_area: floorArea || null,
       cover_image_url: coverImageUrl || null,
-      images: Array.isArray(images) ? images : [],
+      // 빈 배열로 기존 이미지가 지워지는 race condition 방지: 이미지가 있을 때만 업데이트
+      ...(Array.isArray(images) && images.length > 0 ? { images } : {}),
       menu_items: menuItems || null,
       extra_fees: Array.isArray(extraFees) ? extraFees : [],
       updated_at: new Date().toISOString(),
@@ -112,6 +113,16 @@ export async function PATCH(request: Request) {
 
     if (updateErr) throw updateErr;
 
+    // DB에서 최신 이미지 재조회 (race condition 방지: 빈 배열로 기존 이미지 덮어쓰지 않도록)
+    const { data: bizAfterUpdate } = await supabaseAdmin
+      .from('businesses')
+      .select('images, cover_image_url')
+      .eq('id', businessId)
+      .single();
+    const syncImages = Array.isArray(bizAfterUpdate?.images) && (bizAfterUpdate.images as string[]).length > 0
+      ? bizAfterUpdate.images as string[]
+      : null;
+
     // 업체명·카테고리·지역·이미지 변경 시 shops 테이블도 동기화 (코코알바/웨이터존 등 게시 광고 반영)
     {
       const shopSync: Record<string, unknown> = {};
@@ -124,9 +135,8 @@ export async function PATCH(request: Request) {
         shopSync.region = regionMain;
         shopSync.work_region_sub = regionSub;
       }
-      const newImages = Array.isArray(images) ? images : null;
-      if (newImages) {
-        shopSync.media_url = newImages[0] || null;
+      if (syncImages) {
+        shopSync.media_url = syncImages[0] || null;
       }
       if (Object.keys(shopSync).length > 0) {
         // options.regionGu(P2 ShopDetailView에서 읽음) + mediaUrl/images도 병합 업데이트
@@ -136,7 +146,8 @@ export async function PATCH(request: Request) {
           const opts = (shop.options as Record<string, unknown>) || {};
           const optsPatch: Record<string, unknown> = { ...opts };
           if (address) optsPatch.regionGu = address.split(/\s+/)[1] || null;
-          if (newImages) { optsPatch.mediaUrl = newImages[0] || null; optsPatch.images = newImages; }
+          // DB에서 가져온 최신 이미지 사용 (race condition 방지)
+          if (syncImages) { optsPatch.mediaUrl = syncImages[0] || null; optsPatch.images = syncImages; }
           await supabaseAdmin.from('shops').update({
             ...shopSync,
             options: optsPatch,
