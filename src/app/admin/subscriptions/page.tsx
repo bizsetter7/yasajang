@@ -18,6 +18,11 @@ const PLAN_COLOR: Record<string, string> = {
 const PLATFORM_LABEL: Record<string, string> = {
   cocoalba: '코코알바', waiterzone: '웨이터존', sunsuzone: '선수존',
 };
+// 플랜별 기본 플랫폼 (platform_choice=null인 경우 표시용)
+const PLAN_DEFAULT_PLATFORM: Record<string, string> = {
+  free: '밤길 기본',
+  basic: '밤길 기본',
+};
 const STATUS_META: Record<string, { label: string; color: string }> = {
   active: { label: '활성', color: 'text-green-400 bg-green-400/10' },
   trial: { label: '체험', color: 'text-blue-400 bg-blue-400/10' },
@@ -155,7 +160,9 @@ export default function SubscriptionsPage() {
                 <div className="flex-1 min-w-36">
                   <p className="font-bold text-sm text-white">{sub.businesses?.name ?? '(업소 없음)'}</p>
                   <p className="text-xs text-zinc-500 mt-0.5">
-                    {PLATFORM_LABEL[sub.platform_choice ?? ''] ?? '플랫폼 미선택'}
+                    {sub.platform_choice
+                      ? (PLATFORM_LABEL[sub.platform_choice] ?? sub.platform_choice)
+                      : (PLAN_DEFAULT_PLATFORM[sub.plan] ?? '플랫폼 미선택')}
                   </p>
                 </div>
 
