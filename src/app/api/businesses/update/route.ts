@@ -94,8 +94,9 @@ export async function PATCH(request: Request) {
       description: description || null,
       opened_at: openedAt || null,
       floor_area: floorArea || null,
-      cover_image_url: coverImageUrl || null,
-      // 빈 배열로 기존 이미지가 지워지는 race condition 방지: 이미지가 있을 때만 업데이트
+      // cover_image_url + images 둘 다 빈값이면 기존 DB 값 유지 (race condition 방지)
+      // edit 페이지가 photoUrls 로드 전에 저장하면 빈 값이 올 수 있음
+      ...(coverImageUrl ? { cover_image_url: coverImageUrl } : {}),
       ...(Array.isArray(images) && images.length > 0 ? { images } : {}),
       menu_items: menuItems || null,
       extra_fees: Array.isArray(extraFees) ? extraFees : [],
