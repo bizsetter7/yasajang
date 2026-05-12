@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { ReceiptText, RefreshCw } from 'lucide-react';
 
 const PLAN_LABEL: Record<string, string> = {
-  basic: '베이직', standard: '스탠다드', special: '스페셜',
+  free: '무료(밤길)', basic: '베이직', standard: '스탠다드', special: '스페셜',
   deluxe: '디럭스', premium: '프리미엄',
 };
 const PLAN_COLOR: Record<string, string> = {
+  free: 'text-zinc-400 bg-zinc-800',
   basic: 'text-zinc-300 bg-zinc-700/50',
   standard: 'text-emerald-400 bg-emerald-400/10',
   special: 'text-amber-400 bg-amber-400/10',
@@ -30,6 +31,8 @@ interface Sub {
   status: string;
   amount: number | null;
   period_months: number | null;
+  trial_starts_at: string | null;
+  trial_ends_at: string | null;
   billing_starts_at: string | null;
   next_billing_at: string | null;
   platform_choice: string | null;
@@ -125,9 +128,11 @@ export default function SubscriptionsPage() {
       ) : (
         <div className="space-y-2">
           {subs.map(sub => {
-            const days = daysUntil(sub.next_billing_at);
-            const isUrgent = days !== null && days <= 7 && sub.status === 'active';
-            const isWarn = days !== null && days <= 30 && days > 7 && sub.status === 'active';
+            // 만료일: 활성 → next_billing_at, 체험/무료 → trial_ends_at 사용
+            const expiryDate = sub.next_billing_at ?? sub.trial_ends_at;
+            const days = daysUntil(expiryDate);
+            const isUrgent = days !== null && days <= 7 && (sub.status === 'active' || sub.status === 'trial');
+            const isWarn = days !== null && days <= 30 && days > 7 && (sub.status === 'active' || sub.status === 'trial');
             const st = STATUS_META[sub.status] ?? { label: sub.status, color: 'text-zinc-400 bg-zinc-400/10' };
             const planColor = PLAN_COLOR[sub.plan] ?? 'text-zinc-300 bg-zinc-800';
 
@@ -161,10 +166,11 @@ export default function SubscriptionsPage() {
                 )}
 
                 <div className="text-xs text-zinc-500 min-w-32">
-                  <div>시작 {fmtDate(sub.billing_starts_at)}</div>
+                  {/* 시작일: 활성 → billing_starts_at, 체험 → trial_starts_at */}
+                  <div>시작 {fmtDate(sub.billing_starts_at ?? sub.trial_starts_at)}</div>
                   <div className={`mt-0.5 font-bold ${isUrgent ? 'text-red-400' : isWarn ? 'text-amber-400' : 'text-zinc-400'}`}>
-                    만료 {fmtDate(sub.next_billing_at)}
-                    {days !== null && sub.status === 'active' && (
+                    만료 {fmtDate(expiryDate)}
+                    {days !== null && (sub.status === 'active' || sub.status === 'trial') && (
                       <span className="ml-1 font-normal text-[10px]">({days > 0 ? `${days}일 후` : '만료됨'})</span>
                     )}
                   </div>

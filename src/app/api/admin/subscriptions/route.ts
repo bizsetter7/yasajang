@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     .from('subscriptions')
     .select(`
       id, plan, status, amount, period_months,
+      trial_starts_at, trial_ends_at,
       billing_starts_at, next_billing_at, platform_choice, confirmed_at,
       businesses ( name )
     `);
