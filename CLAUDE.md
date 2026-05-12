@@ -233,6 +233,7 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 | 14 | 04-29 | 어드민 대시보드 전면 재구현: service_role 통계(RLS 우회), AdminSidebar 클라이언트 분리(usePathname), register-audit 상태탭+삭제+검색, 회원관리(/admin/settings), platform-settings 리다이렉트, API(businesses+members) 신규. 서류조회 Object not found 수정(upload encodeURIComponent 버그), 어드민 상세지역+연락처하이픈 표시, approved status alias |
 | 15 | 04-29 | **영업진 시스템 도입** — RegisterForm Step 1: 담당자명(`manager_name`) 별도 입력 + 직책 드롭다운(사장/실장/팀장/부장/매니저) 추가. Step 2: 영업허가증 필수 검증(`!files.permit` 차단), 두 문서 모두 `*필수` 라벨. Step 3: 최종확인에 두 문서·직책·사업자번호 노출. /api/register: `manager_name`+`manager_role` 수신 → businesses 저장(fallback: representative → '실장'). DB SQL: `ALTER TABLE businesses ADD COLUMN manager_role TEXT`. P6에서 `business_reg_number`(OCR 자동추출)로 같은 사업자 영업진 그룹핑(Phase B) — 같은 사업자에 여러 영업진 별도 계정 등록 가능, 화면에서 자동 합쳐 표시. |
 | 16 | 04-30 | **5개 버그 수정 + 메신저 연락처 신설** (commit ba53256) — [A] M-051 region='gyeonggi' 근절: publish+update API에서 address(한국어)로 shops.region/regionGu 파싱 [B] 구인조건 P2 미반영: platform-ads/update에서 options.ageMin/ageMax + work_time 컬럼 동시 저장 [C] M-052 premium 사이드배너 자동게시: PLAN_TO_TIER premium='p2'→'p3' (publish/register 2곳) [D] 메신저 연락처 3종 신설: RegisterForm Step1+edit/page+register/update API에 kakao_id/line_id/telegram_id 추가 (⚠️ DB SQL 실행 필요: ALTER TABLE businesses ADD COLUMN IF NOT EXISTS kakao_id/line_id/telegram_id TEXT) |
+| 17 | 05-12 | **이미지 race condition 수정 + signed-url 수정 + 어드민 비활성화 토글** (commits 148ec6a·bce62ff·b2b1a56) — [A] businesses/update: images/cover_image_url race condition 수정(빈 배열·빈값으로 기존 이미지 덮어쓰기 방지), DB 재조회 후 shops.options.images 동기화 [B] M-070 signed-url: createServerClient→createClient 교체(service_role storage 서명 URL 안정화), 실패 시 storagePath 로그 추가 [C] 어드민 업소 임시 비활성화 토글: PATCH /api/admin/businesses + register-audit UI(ToggleLeft/ToggleRight 아이콘, 모달 헤더 토글 버튼) [D] 카카오 로그인 버튼 제거(commit 5d947c1) |
 
 ---
 
@@ -270,3 +271,6 @@ if (!user || user.email !== process.env.ADMIN_EMAIL) {
 - **P2 ShopDetailView 호환 필드**: shops.options에 `ageMin/ageMax`(나이), `workTime`(근무시간) 저장 필요. platform-ads/update에서 hiringInfo 저장 시 동시 저장 구현됨.
 - **pay 컬럼 동기화 필수 (M-056)**: platform-ads/update에서 hiring_info 저장 시 반드시 top-level pay/pay_type/pay_amount도 업데이트. cocoalba=TC방식, waiterzone/sunsuzone=일급. options에만 있으면 P2/P9/P10 광고카드 급여 공백.
 - **메신저 연락처 3종**: businesses 테이블에 `kakao_id/line_id/telegram_id TEXT` 컬럼 (2026-04-30 추가, DB SQL 실행 필요). RegisterForm Step1 + edit/page + register/update API 반영 완료.
+- **⚠️ M-070 service_role + storage**: `createServerClient`(@supabase/ssr)는 storage 서명 URL 생성 불안정 → **service_role 필요 작업은 항상 `createClient`(@supabase/supabase-js) + `{ auth: { autoRefreshToken: false, persistSession: false } }` 사용**
+- **어드민 업소 임시 비활성화**: `PATCH /api/admin/businesses { businessId, is_active }` → `businesses.is_active` 토글. register-audit 페이지에서 승인 업소 한정으로 토글 버튼 표시.
+- **이미지 미노출 원인 구분**: ① race condition → 수정 완료(bce62ff). ② 사장이 "광고 게시하기" 미클릭 → shops 레코드 없음 (정상, 버그 아님). SQL 검증 "No rows returned" — DB 불일치 없음 확인.
