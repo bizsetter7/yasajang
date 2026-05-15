@@ -2,7 +2,7 @@ import { SEO_REGIONS } from '@/lib/regions';
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://yasajang.kr';
+  const base = 'https://www.yasajang.kr';
   const regionPages = SEO_REGIONS.map(r => ({
     url: `${base}/seo/${r.slug}`,
     lastModified: new Date(),

@@ -50,6 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase,
+    alternates: { canonical: siteUrl },
     title,
     description,
     keywords: ['야사장', '유흥업소', '비즈니스플랫폼', '멤버십', '야간비즈니스', '마케팅솔루션', '룸살롱사장', '노래주점사장', '입점광고'],
